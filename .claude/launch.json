@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vimo-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--web", "--port", "8082"],
+      "cwd": "C:\\Users\\kse09\\VIMO\\vimo-fe",
+      "port": 8082
+    }
+  ]
+}

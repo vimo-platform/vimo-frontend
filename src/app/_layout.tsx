@@ -1,18 +1,25 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { Stack } from "expo-router";
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { AuthProvider } from "@/hooks/use-auth";
 
-SplashScreen.preventAutoHideAsync();
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <AuthProvider>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="posting/[id]"
+          options={{ title: "지원자 목록", headerTitleAlign: "center" }}
+        />
+        <Stack.Screen
+          name="posting/create"
+          options={{ title: "공고 작성", headerTitleAlign: "center" }}
+        />
+        <Stack.Screen
+          name="activity/[id]"
+          options={{ title: "상세보기", headerTitleAlign: "center" }}
+        />
+      </Stack>
+    </AuthProvider>
   );
 }
