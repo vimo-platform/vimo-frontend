@@ -16,6 +16,14 @@ export default function RootLayout() {
           options={{ title: "공고 작성", headerTitleAlign: "center" }}
         />
         <Stack.Screen
+          name="posting/preview"
+          options={{ title: "공고 작성", headerTitleAlign: "center" }}
+        />
+        <Stack.Screen
+          name="posting/edit"
+          options={{ title: "공고 수정", headerTitleAlign: "center" }}
+        />
+        <Stack.Screen
           name="activity/[id]"
           options={{ title: "상세보기", headerTitleAlign: "center" }}
         />

@@ -1,12 +1,14 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 
-import { fetchMyPostings } from "@/api/postings";
+import { fetchMyPostings, setWorkingPosting } from "@/api/postings";
 import { ActivityCard } from "@/components/activity-card";
 import { Colors } from "@/constants/theme";
 import type { Posting, PostingStatus } from "@/types";
+
+type FilterKey = "all" | "open" | "closed" | "draft";
 
 const FILTERS = [
   { key: "all", label: "전체" },
@@ -22,15 +24,22 @@ const STATUS_LABEL: Record<PostingStatus, string> = {
 };
 
 export default function PostingsScreen() {
+  const params = useLocalSearchParams<{ filter?: FilterKey }>();
   const [postings, setPostings] = useState<Posting[]>([]);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
+  const [filter, setFilter] = useState<FilterKey>("all");
 
   useFocusEffect(
     useCallback(() => {
       fetchMyPostings().then(setPostings);
     }, []),
   );
+
+  useEffect(() => {
+    if (params.filter) {
+      setFilter(params.filter);
+    }
+  }, [params.filter]);
 
   const visible = postings.filter(
     (p) => (filter === "all" || p.status === filter) && p.title.includes(query.trim()),
@@ -70,25 +79,45 @@ export default function PostingsScreen() {
           </View>
         }
         ListEmptyComponent={<Text style={styles.empty}>조건에 맞는 공고가 없어요.</Text>}
-        renderItem={({ item }) => (
-          <ActivityCard
-            title={item.title}
-            hoursPerSession={item.hoursPerSession}
-            location={item.location}
-            period={item.period}
-            time={`${item.startTime} ~ ${item.endTime}`}
-            onPress={() => router.push({ pathname: "/posting/[id]", params: { id: item.id } })}
-          >
-            <View style={styles.cardFooter}>
-              <Text style={styles.countText}>
-                모집{item.capacity}명 / 지원{item.applicants}명
-              </Text>
-              <View style={[styles.pill, item.status !== "open" && styles.pillOff]}>
-                <Text style={styles.pillText}>{STATUS_LABEL[item.status]}</Text>
+        renderItem={({ item }) => {
+          const isDraft = item.status === "draft";
+          const openDraft = () => {
+            setWorkingPosting(item);
+            router.push("/posting/preview");
+          };
+          return (
+            <ActivityCard
+              title={item.title}
+              hoursPerSession={item.hoursPerSession}
+              location={item.location}
+              period={item.period}
+              time={`${item.startTime} ~ ${item.endTime}`}
+              onPress={() =>
+                isDraft
+                  ? openDraft()
+                  : router.push({ pathname: "/posting/[id]", params: { id: item.id } })
+              }
+            >
+              <View style={styles.cardFooter}>
+                <Text style={styles.countText}>
+                  모집{item.capacity}명 / 지원{item.applicants}명
+                </Text>
+                {isDraft ? (
+                  <Pressable
+                    style={({ pressed }) => [styles.editPill, pressed && styles.pressed]}
+                    onPress={openDraft}
+                  >
+                    <Text style={styles.pillText}>수정</Text>
+                  </Pressable>
+                ) : (
+                  <View style={[styles.pill, item.status !== "open" && styles.pillOff]}>
+                    <Text style={styles.pillText}>{STATUS_LABEL[item.status]}</Text>
+                  </View>
+                )}
               </View>
-            </View>
-          </ActivityCard>
-        )}
+            </ActivityCard>
+          );
+        }}
       />
       <Pressable
         style={({ pressed }) => [styles.createButton, pressed && styles.pressed]}
@@ -171,6 +200,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#222222",
     borderRadius: 18,
     paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  editPill: {
+    backgroundColor: "#222222",
+    borderRadius: 18,
+    paddingHorizontal: 24,
     paddingVertical: 8,
   },
   pillOff: {

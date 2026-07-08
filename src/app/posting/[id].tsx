@@ -4,7 +4,6 @@ import { router, useLocalSearchParams } from "expo-router";
 
 import { fetchApplicants } from "@/api/applicants";
 import { closePosting, fetchPosting } from "@/api/postings";
-import { ImageToggle } from "@/components/figma";
 import { Colors } from "@/constants/theme";
 import type { Applicant, Posting } from "@/types";
 
@@ -35,6 +34,13 @@ export default function ApplicantsScreen() {
     return null;
   }
 
+  const countColor =
+    selectedCount < posting.capacity
+      ? "#59A76A"
+      : selectedCount > posting.capacity
+        ? "#C07777"
+        : Colors.text;
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -58,7 +64,8 @@ export default function ApplicantsScreen() {
         <View style={styles.listHeader}>
           <Text style={styles.listTitle}>지원자 목록</Text>
           <Text style={styles.count}>
-            <Text style={styles.countSelected}>{selectedCount}</Text> / {posting.capacity}
+            <Text style={[styles.countSelected, { color: countColor }]}>{selectedCount}</Text> /{" "}
+            {posting.capacity}
           </Text>
         </View>
         <FlatList
@@ -68,7 +75,14 @@ export default function ApplicantsScreen() {
             <View style={styles.row}>
               <Text style={styles.name}>{item.name}</Text>
               <Text style={styles.department}>{item.department}</Text>
-              <ImageToggle on={item.selected} onToggle={() => toggle(item.id)} />
+              <Pressable
+                style={[styles.selectBtn, item.selected && styles.selectBtnOn]}
+                onPress={() => toggle(item.id)}
+              >
+                <Text style={[styles.selectText, item.selected && styles.selectTextOn]}>
+                  채택
+                </Text>
+              </Pressable>
             </View>
           )}
         />
@@ -166,6 +180,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     textAlign: "center",
+  },
+  selectBtn: {
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 9,
+    backgroundColor: "#E8E8E8",
+  },
+  selectBtnOn: {
+    backgroundColor: "#222222",
+  },
+  selectText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: Colors.textSecondary,
+  },
+  selectTextOn: {
+    color: Colors.white,
   },
   closeButton: {
     backgroundColor: "#222222",

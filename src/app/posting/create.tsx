@@ -13,7 +13,12 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 
-import { createPosting, generatePostingDraft } from "@/api/postings";
+import {
+  generatePostingDraft,
+  newPostingId,
+  setWorkingPosting,
+} from "@/api/postings";
+import { LoadingOverlay } from "@/components/loading-overlay";
 import { Colors } from "@/constants/theme";
 
 const GENDERS = ["전체", "남성", "여성"] as const;
@@ -37,7 +42,8 @@ export default function CreatePostingScreen() {
     setSubmitting(true);
     try {
       const draft = await generatePostingDraft(memo);
-      await createPosting({
+      setWorkingPosting({
+        id: newPostingId(),
         title: draft.title,
         description: draft.description,
         location: location.trim() || "장소 미정",
@@ -45,18 +51,22 @@ export default function CreatePostingScreen() {
         startTime,
         endTime,
         capacity: count,
+        applicants: 0,
         hoursPerSession: 3,
-        tags: [gender],
+        status: "draft",
+        tags: draft.keywords,
+        gender,
+        createdAt: new Date().toISOString().slice(0, 10),
       });
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace("/postings");
-      }
+      router.replace("/posting/preview");
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (submitting) {
+    return <LoadingOverlay message="공고를 생성하고 있어요" />;
+  }
 
   return (
     <KeyboardAvoidingView
@@ -68,9 +78,9 @@ export default function CreatePostingScreen() {
           공고 내용을 입력해 주세요{"\n"}깔끔하게 정리해드릴게요
         </Text>
 
-        <View style={styles.memoBox}>
+        <View style={[styles.memoBox, memo ? styles.filled : null]}>
           <TextInput
-            style={styles.memoInput}
+            style={[styles.memoInput, memo ? styles.textWhite : null]}
             placeholder={
               "봉사 모집 내용을 간단히 작성해주세요.\n(예시: 장애학우 도우미 모집합니다. 수업 보조)"
             }
@@ -79,12 +89,12 @@ export default function CreatePostingScreen() {
             value={memo}
             onChangeText={setMemo}
           />
-          <Ionicons name="pencil" size={16} color={Colors.textSecondary} />
+          <Ionicons name="pencil" size={16} color={memo ? Colors.white : Colors.textSecondary} />
         </View>
 
         <Text style={styles.label}>장소</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, location ? styles.filled : null]}
           placeholder="활동 장소를 입력해 주세요"
           placeholderTextColor={Colors.textSecondary}
           value={location}
@@ -120,7 +130,7 @@ export default function CreatePostingScreen() {
         <Text style={styles.label}>날짜</Text>
         <View style={styles.rangeRow}>
           <TextInput
-            style={[styles.input, styles.rangeInput]}
+            style={[styles.input, styles.rangeInput, dateFrom ? styles.filled : null]}
             placeholder="YYYY / MM / DD"
             placeholderTextColor={Colors.textSecondary}
             value={dateFrom}
@@ -128,7 +138,7 @@ export default function CreatePostingScreen() {
           />
           <Text style={styles.rangeSep}>~</Text>
           <TextInput
-            style={[styles.input, styles.rangeInput]}
+            style={[styles.input, styles.rangeInput, dateTo ? styles.filled : null]}
             placeholder="YYYY / MM / DD"
             placeholderTextColor={Colors.textSecondary}
             value={dateTo}
@@ -141,7 +151,7 @@ export default function CreatePostingScreen() {
           <View style={styles.timeCol}>
             <Text style={styles.timeLabel}>시작</Text>
             <TextInput
-              style={[styles.input, styles.timeInput]}
+              style={[styles.input, styles.timeInput, startTime ? styles.filled : null]}
               value={startTime}
               onChangeText={setStartTime}
             />
@@ -150,7 +160,7 @@ export default function CreatePostingScreen() {
           <View style={styles.timeCol}>
             <Text style={styles.timeLabel}>종료</Text>
             <TextInput
-              style={[styles.input, styles.timeInput]}
+              style={[styles.input, styles.timeInput, endTime ? styles.filled : null]}
               value={endTime}
               onChangeText={setEndTime}
             />
@@ -215,6 +225,13 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     fontSize: 14,
     color: Colors.text,
+  },
+  filled: {
+    backgroundColor: "#222222",
+    color: Colors.white,
+  },
+  textWhite: {
+    color: Colors.white,
   },
   locationButton: {
     flexDirection: "row",

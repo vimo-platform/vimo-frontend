@@ -11,6 +11,8 @@ const ASSETS = {
   qrCreated: [require("@/assets/새로운 QR이 생성되었습니다.svg"), 206, 31],
   toggleOff: [require("@/assets/버튼 클릭 전.svg"), 46, 32],
   toggleOn: [require("@/assets/버튼 클릭.svg"), 46, 32],
+  loading: [require("@/assets/공고로딩중.svg"), 168, 160],
+  bookmark: [require("@/assets/임시저장 이모티콘.svg"), 35, 35],
 } as const;
 
 type Props = {

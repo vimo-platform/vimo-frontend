@@ -7,6 +7,8 @@ export type User = {
 
 export type PostingStatus = "open" | "closed" | "draft";
 
+export type Gender = "전체" | "남성" | "여성";
+
 export type Posting = {
   id: string;
   title: string;
@@ -20,6 +22,7 @@ export type Posting = {
   hoursPerSession: number;
   status: PostingStatus;
   tags: string[];
+  gender?: Gender;
   createdAt: string;
 };
 
