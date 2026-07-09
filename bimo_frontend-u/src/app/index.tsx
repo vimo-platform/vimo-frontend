@@ -7,6 +7,7 @@ import {
   getUserOnboardingCompleted,
   markUserAuthenticated,
   removeSavedLoginId,
+  setCurrentUser,
   setSavedLoginId,
 } from '@/storage/auth-storage';
 import EntryFlowScreen from '@shared/screens/EntryFlowScreen';
@@ -50,6 +51,10 @@ export default function EntryScreen() {
       if (response.user?.role === 'ADMIN') {
         setErrorMessage('관리자 계정은 관리자 앱에서 로그인해 주세요.');
         return;
+      }
+
+      if (response.user) {
+        await setCurrentUser(response.user);
       }
 
       markUserAuthenticated();

@@ -1,0 +1,2 @@
+export { CertificationScreen } from './CertificationScreen';
+

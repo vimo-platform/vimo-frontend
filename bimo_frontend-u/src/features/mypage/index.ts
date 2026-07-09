@@ -1,0 +1,2 @@
+export { MyPageScreen } from './MyPageScreen';
+

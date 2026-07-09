@@ -1,4 +1,3 @@
-export { ApplicationStatusButton } from './application-status-button';
 export { BottomActionBar } from './bottom-action-bar';
 export { Button } from './button';
 export { Gnb } from './gnb';

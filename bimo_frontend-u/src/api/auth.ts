@@ -39,7 +39,7 @@ export function login(requestBody: LoginRequest) {
       user: {
         id: 1,
         loginId: requestBody.loginId,
-        name: '비모 유저',
+        name: '김강대',
         role: 'USER',
       },
     });
@@ -58,7 +58,7 @@ export function getAuthStatus() {
       user: {
         id: 1,
         loginId: MOCK_LOGIN_ID,
-        name: '비모 유저',
+        name: '김강대',
         role: 'USER',
       },
     });
