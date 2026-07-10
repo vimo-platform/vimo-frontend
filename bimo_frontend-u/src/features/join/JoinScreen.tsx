@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AllLine } from '@/components/common';
 import { UserGnb } from '@/components/navigation/user-gnb';
 import {
   getCurrentUser,
@@ -18,7 +19,6 @@ import {
 } from '@/storage/auth-storage';
 
 import { CalendarCircle } from './components/CalendarCircle';
-import { JoinLine } from './components/JoinLine';
 import { JoinStatusButton } from './components/JoinStatusButton';
 import { ParticipationLogo } from './components/ParticipationLogo';
 import { ScheduleCard } from './components/ScheduleCard';
@@ -164,7 +164,7 @@ export function JoinScreen() {
             }}
           />
 
-          <JoinLine />
+          <AllLine />
 
           <View style={styles.scheduleSection}>
             {selectedSchedules.length > 0 ? (
@@ -308,4 +308,3 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 });
-

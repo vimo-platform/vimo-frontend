@@ -1,62 +1,216 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AllLine, TopBar } from '@/components/common';
+import { UserGnb } from '@/components/navigation/user-gnb';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
+
+import { mockApplicationStatusCards } from './application-status-mock';
+import type { ApplicationVolunteerCard as ApplicationVolunteerCardType } from './application-status-types';
+import { ApplicationVolunteerCard } from './components/ApplicationVolunteerCard';
+import { CancelApplicationSheet } from './components/CancelApplicationSheet';
+import { CancelCompleteModal } from './components/CancelCompleteModal';
 
 export function ApplicationStatusScreen() {
   useUserSessionGuard();
 
+  const { width } = useWindowDimensions();
+  const contentWidth = Math.min(width, 393);
+  const [cards, setCards] = useState<ApplicationVolunteerCardType[]>(mockApplicationStatusCards);
+  const [cancelTarget, setCancelTarget] = useState<ApplicationVolunteerCardType | null>(null);
+  const [cancelCompleteTarget, setCancelCompleteTarget] =
+    useState<ApplicationVolunteerCardType | null>(null);
+
+  const appliedCards = useMemo(() => cards.filter((card) => card.applied), [cards]);
+  const favoriteCards = useMemo(
+    () => cards.filter((card) => card.liked && !card.applied),
+    [cards],
+  );
+
+  const handleToggleLike = (id: number) => {
+    setCards((currentCards) =>
+      currentCards.map((card) => (card.id === id ? { ...card, liked: !card.liked } : card)),
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <Pressable accessibilityRole="button" onPress={() => router.back()}>
-          <Text style={styles.back}>‹</Text>
-        </Pressable>
-        <Text style={styles.title}>지원 현황</Text>
-        <View style={styles.spacer} />
-      </View>
-      <View style={styles.content}>
-        <Text style={styles.description}>지원 현황 화면을 준비하고 있어요.</Text>
+      <View style={[styles.screen, { width: contentWidth }]}>
+        <TopBar
+          title="지원 현황"
+          onBackPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+              return;
+            }
+
+            router.replace('/explore');
+          }}
+        />
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          <StatusSection
+            count={appliedCards.length}
+            items={appliedCards}
+            title="지원"
+            onCancelPress={setCancelTarget}
+            onToggleLike={handleToggleLike}
+          />
+
+          <AllLine style={styles.sectionDivider} />
+
+          <StatusSection
+            count={favoriteCards.length}
+            items={favoriteCards}
+            title="찜"
+            onCancelPress={setCancelTarget}
+            onToggleLike={handleToggleLike}
+          />
+        </ScrollView>
+
+        <UserGnb activeKey="participation" />
+
+        <CancelApplicationSheet
+          visible={cancelTarget !== null}
+          onClose={() => {
+            setCancelTarget(null);
+          }}
+          onConfirm={() => {
+            if (!cancelTarget) {
+              return;
+            }
+
+            setCancelCompleteTarget(cancelTarget);
+            setCancelTarget(null);
+          }}
+        />
+
+        <CancelCompleteModal
+          visible={cancelCompleteTarget !== null}
+          onClose={() => {
+            setCancelCompleteTarget(null);
+          }}
+          onConfirm={() => {
+            if (cancelCompleteTarget) {
+              setCards((currentCards) =>
+                currentCards.map((card) =>
+                  card.id === cancelCompleteTarget.id
+                    ? { ...card, applied: false, progressStep: undefined }
+                    : card,
+                ),
+              );
+            }
+
+            setCancelCompleteTarget(null);
+          }}
+        />
       </View>
     </SafeAreaView>
+  );
+}
+
+function StatusSection({
+  count,
+  items,
+  title,
+  onCancelPress,
+  onToggleLike,
+}: {
+  count: number;
+  items: ApplicationVolunteerCardType[];
+  title: string;
+  onCancelPress: (item: ApplicationVolunteerCardType) => void;
+  onToggleLike: (id: number) => void;
+}) {
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionTitleRow}>
+        <View style={styles.sectionDot} />
+        <Text style={styles.sectionTitle}>
+          {title} {count}
+        </Text>
+      </View>
+
+      {items.length > 0 ? (
+        <View style={styles.cardList}>
+          {items.map((item) => (
+            <ApplicationVolunteerCard
+              key={item.id}
+              item={item}
+              onCancelPress={onCancelPress}
+              onToggleLike={onToggleLike}
+            />
+          ))}
+        </View>
+      ) : (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>{title}한 봉사 공고가 없어요.</Text>
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    alignItems: 'center',
     backgroundColor: '#F9F9FB',
   },
-  header: {
-    height: 56,
+  screen: {
+    flex: 1,
+    backgroundColor: '#F9F9FB',
+  },
+  scrollContent: {
+    paddingTop: 26,
+    paddingBottom: 90,
+  },
+  section: {
+    alignItems: 'center',
+  },
+  sectionTitleRow: {
+    width: 316,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    gap: 7,
+    marginBottom: 13,
+    paddingLeft: 25,
   },
-  back: {
-    width: 32,
-    color: '#111111',
-    fontSize: 36,
-    lineHeight: 40,
+  sectionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#111111',
   },
-  title: {
+  sectionTitle: {
     color: '#111111',
-    fontSize: 18,
+    fontFamily: 'Pretendard',
+    fontSize: 13,
     fontWeight: '700',
   },
-  spacer: {
-    width: 32,
+  cardList: {
+    gap: 22,
   },
-  content: {
-    flex: 1,
+  sectionDivider: {
+    marginTop: 10,
+    marginBottom: 27,
+  },
+  emptyState: {
+    width: 316,
+    minHeight: 120,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 25,
+    backgroundColor: '#FFFFFF',
   },
-  description: {
+  emptyText: {
     color: '#818181',
-    fontSize: 14,
+    fontFamily: 'Pretendard',
+    fontSize: 13,
+    fontWeight: '500',
   },
 });
-

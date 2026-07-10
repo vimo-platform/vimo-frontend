@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { BackIcon } from './icons';
 
@@ -11,7 +11,16 @@ type TopBarProps = {
 export function TopBar({ title = '지원공고', onBackPress, style }: TopBarProps) {
   return (
     <View style={[styles.container, style]}>
-      <Pressable accessibilityRole="button" hitSlop={12} style={styles.backButton} onPress={onBackPress}>
+      <Pressable
+        accessibilityLabel="이전 화면으로 이동"
+        accessibilityRole="button"
+        hitSlop={8}
+        style={({ pressed }) => [
+          styles.backButton,
+          Platform.OS === 'web' && styles.webBackButton,
+          pressed && styles.pressed,
+        ]}
+        onPress={onBackPress}>
         <BackIcon width={9} height={18} />
       </Pressable>
       <Text style={styles.title}>{title}</Text>
@@ -28,12 +37,20 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    left: 20,
-    top: 13,
-    width: 18,
-    height: 24,
-    alignItems: 'flex-start',
+    left: 0,
+    top: 0,
+    zIndex: 10,
+    width: 56,
+    height: 50,
+    alignItems: 'center',
     justifyContent: 'center',
+    elevation: 10,
+  },
+  webBackButton: {
+    cursor: 'pointer',
+  },
+  pressed: {
+    opacity: 0.7,
   },
   title: {
     color: '#111111',
