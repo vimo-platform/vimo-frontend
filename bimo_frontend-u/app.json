@@ -30,6 +30,12 @@
         {
           "backgroundColor": "#FCFCFC"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "시간표 이미지를 업로드하기 위해 사진 접근 권한이 필요합니다."
+        }
       ]
     ],
     "experiments": {

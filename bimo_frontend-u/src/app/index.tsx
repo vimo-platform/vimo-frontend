@@ -3,13 +3,15 @@ import { router } from 'expo-router';
 
 import { login } from '@/api/auth';
 import {
-  getSavedLoginId,
+  getSavedStudentId,
   getUserOnboardingCompleted,
   markUserAuthenticated,
-  removeSavedLoginId,
+  removeSavedStudentId,
+  setAccessToken,
   setCurrentUser,
-  setSavedLoginId,
+  setSavedStudentId,
 } from '@/storage/auth-storage';
+import { getPendingApprovalConfirmationId } from '@/features/exploration/volunteer-interaction-store';
 import EntryFlowScreen from '@shared/screens/EntryFlowScreen';
 import type { SchoolLoginSubmitValues } from '@shared/screens/SchoolLoginScreen';
 
@@ -21,9 +23,9 @@ export default function EntryScreen() {
   useEffect(() => {
     let mounted = true;
 
-    getSavedLoginId().then((savedLoginId) => {
-      if (mounted && savedLoginId) {
-        setInitialStudentId(savedLoginId);
+    getSavedStudentId().then((savedStudentId) => {
+      if (mounted && savedStudentId) {
+        setInitialStudentId(savedStudentId);
       }
     });
 
@@ -38,14 +40,14 @@ export default function EntryScreen() {
 
     try {
       const response = await login({
-        loginId: studentId,
+        studentId,
         password,
       });
 
       if (saveId) {
-        await setSavedLoginId(studentId);
+        await setSavedStudentId(studentId);
       } else {
-        await removeSavedLoginId();
+        await removeSavedStudentId();
       }
 
       if (response.user?.role === 'ADMIN') {
@@ -53,15 +55,27 @@ export default function EntryScreen() {
         return;
       }
 
+      await setAccessToken(response.accessToken);
+
       if (response.user) {
         await setCurrentUser(response.user);
       }
 
       markUserAuthenticated();
       const onboardingCompleted = await getUserOnboardingCompleted();
-      router.replace(onboardingCompleted ? '/explore' : '/onboarding');
+      if (!onboardingCompleted) {
+        router.replace('/onboarding');
+        return;
+      }
+
+      const pendingApprovalId = getPendingApprovalConfirmationId();
+      router.replace(
+        pendingApprovalId
+          ? `/volunteer-approval-confirmed?id=${pendingApprovalId}`
+          : '/explore',
+      );
     } catch {
-      setErrorMessage('입력하신 계정 정보를 다시 확인해주세요.');
+      setErrorMessage('입력하신 계정 정보를 다시 확인해 주세요.');
     } finally {
       setIsSubmitting(false);
     }

@@ -1,0 +1,6 @@
+import { mockApplicants } from "@/data/mock-applicants";
+import type { Applicant } from "@/types";
+
+export async function fetchApplicants(_postingId: string): Promise<Applicant[]> {
+  return mockApplicants;
+}
