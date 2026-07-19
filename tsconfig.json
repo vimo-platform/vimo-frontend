@@ -22,8 +22,8 @@
   ],
   "exclude": [
     "node_modules",
-    "bimo_frontend-u",
-    "bimo_frontend-m",
+    "vimo_frontend-u",
+    "vimo_frontend-m",
     "shared"
   ]
 }

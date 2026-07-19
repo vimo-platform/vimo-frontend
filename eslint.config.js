@@ -5,7 +5,7 @@ const expoConfig = require("eslint-config-expo/flat");
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ["dist/*", "bimo_frontend-u/*", "bimo_frontend-m/*", "shared/*"],
+    ignores: ["dist/*", "vimo_frontend-u/*", "vimo_frontend-m/*", "shared/*"],
   },
   {
     files: ["app/(user)/index.tsx", "app/_layout.tsx"],

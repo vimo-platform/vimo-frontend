@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "bimo_frontend-u",
-    "slug": "bimo_frontend-u",
+    "name": "vimo_frontend-u",
+    "slug": "vimo_frontend-u",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "bimofrontendu",
+    "scheme": "vimofrontendu",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"

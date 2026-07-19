@@ -1,4 +1,4 @@
-# BIMO User App
+# VIMO User App
 
 VIMO의 유저용 Expo 애플리케이션입니다. 로그인 이후의 유저 전용 화면은 이 패키지에 구현합니다.
 
