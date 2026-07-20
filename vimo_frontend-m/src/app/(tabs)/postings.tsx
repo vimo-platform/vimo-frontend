@@ -95,7 +95,11 @@ export default function PostingsScreen() {
               onPress={() =>
                 isDraft
                   ? openDraft()
-                  : router.push({ pathname: "/posting/[id]", params: { id: item.id } })
+                  : router.push({
+                      pathname:
+                        item.recruitType === "fcfs" ? "/posting/fcfs/[id]" : "/posting/[id]",
+                      params: { id: item.id },
+                    })
               }
             >
               <View style={styles.cardFooter}>

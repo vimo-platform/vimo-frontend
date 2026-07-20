@@ -2,31 +2,30 @@ import { useEffect, useState } from "react";
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
-import { fetchApplicants } from "@/api/applicants";
-import { closePosting, fetchPosting } from "@/api/postings";
-import { CancelReasonSheet } from "@/components/cancel-reason-sheet";
-import { PostingSummary } from "@/components/posting-summary";
-import { Colors } from "@/constants/theme";
-import type { Applicant, Posting } from "@/types";
+import { fetchFcfsApplicants } from "@/features/admin/api/applicants";
+import { closePosting, fetchPosting } from "@/features/admin/api/postings";
+import { PostingSummary } from "@/features/admin/components/posting-summary";
+import { Colors } from "@/features/admin/constants/theme";
+import type { Applicant, Posting } from "@/features/admin/types";
 
-export default function ApplicantsScreen() {
+export default function FcfsApplicantsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [posting, setPosting] = useState<Posting | null>(null);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
-  // 취소 사유 시트에 표시할 지원자 (null이면 닫힘)
-  const [cancelTarget, setCancelTarget] = useState<Applicant | null>(null);
 
   useEffect(() => {
-    fetchPosting(id).then((p) => setPosting(p ?? null));
-    fetchApplicants(id).then(setApplicants);
+    Promise.all([fetchPosting(id), fetchFcfsApplicants(id)]).then(([p, list]) => {
+      // 선착순: 정원이 다 차 있으면 자동으로 마감 처리
+      if (p && p.status === "open" && list.length >= p.capacity) {
+        closePosting(p.id);
+        p = { ...p, status: "closed" };
+      }
+      setPosting(p ?? null);
+      setApplicants(list);
+    });
   }, [id]);
 
-  const toggle = (applicantId: string) =>
-    setApplicants((prev) =>
-      prev.map((a) => (a.id === applicantId ? { ...a, selected: !a.selected } : a)),
-    );
-
-  const selectedCount = applicants.filter((a) => a.selected).length;
+  const closed = posting?.status === "closed";
 
   const close = async () => {
     await closePosting(id);
@@ -38,13 +37,6 @@ export default function ApplicantsScreen() {
     return null;
   }
 
-  const countColor =
-    selectedCount < posting.capacity
-      ? "#59A76A"
-      : selectedCount > posting.capacity
-        ? "#C07777"
-        : Colors.text;
-
   return (
     <View style={styles.container}>
       <PostingSummary posting={posting} />
@@ -55,47 +47,41 @@ export default function ApplicantsScreen() {
         <View style={styles.listHeader}>
           <Text style={styles.listTitle}>지원자 목록</Text>
           <Text style={styles.count}>
-            <Text style={[styles.countSelected, { color: countColor }]}>{selectedCount}</Text> /{" "}
-            {posting.capacity}
+            <Text style={{ color: closed ? Colors.text : Colors.success }}>
+              {applicants.length}
+            </Text>{" "}
+            / {posting.capacity}
           </Text>
         </View>
         <FlatList
           data={applicants}
           keyExtractor={(a) => a.id}
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <View style={styles.row}>
+              <Text style={styles.order}>{String(index + 1).padStart(2, "0")}.</Text>
               <Text style={styles.name}>{item.name}</Text>
               <Text style={styles.department}>{item.department}</Text>
-              {item.cancel ? (
-                <Pressable
-                  style={[styles.selectBtn, styles.cancelBtn]}
-                  onPress={() => setCancelTarget(item)}
-                >
-                  <Text style={styles.cancelText}>취소 사유 확인</Text>
-                </Pressable>
-              ) : (
-                <Pressable
-                  style={[styles.selectBtn, item.selected && styles.selectBtnOn]}
-                  onPress={() => toggle(item.id)}
-                >
-                  <Text style={[styles.selectText, item.selected && styles.selectTextOn]}>
-                    채택
-                  </Text>
-                </Pressable>
-              )}
+              <View style={[styles.badge, closed && styles.badgeOff]}>
+                <Text style={[styles.badgeText, closed && styles.badgeTextOff]}>
+                  참여확정
+                </Text>
+              </View>
             </View>
           )}
         />
       </View>
 
       <Pressable
-        style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.closeButton,
+          closed && styles.closeButtonOff,
+          pressed && !closed && styles.pressed,
+        ]}
         onPress={close}
+        disabled={closed}
       >
         <Text style={styles.closeButtonText}>모집 마감</Text>
       </Pressable>
-
-      <CancelReasonSheet applicant={cancelTarget} onClose={() => setCancelTarget(null)} />
     </View>
   );
 }
@@ -130,15 +116,18 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.textSecondary,
   },
-  countSelected: {
-    color: Colors.success,
-  },
   row: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 13,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+  },
+  order: {
+    width: 36,
+    fontSize: 14,
+    fontWeight: "700",
+    color: Colors.text,
   },
   name: {
     flex: 1,
@@ -152,31 +141,22 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: "center",
   },
-  selectBtn: {
+  badge: {
     borderRadius: 20,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 9,
-    backgroundColor: "#E8E8E8",
-  },
-  selectBtnOn: {
     backgroundColor: "#222222",
   },
-  selectText: {
+  badgeOff: {
+    backgroundColor: "#E8E8E8",
+  },
+  badgeText: {
     fontSize: 13,
     fontWeight: "700",
-    color: Colors.textSecondary,
-  },
-  selectTextOn: {
     color: Colors.white,
   },
-  cancelBtn: {
-    backgroundColor: "#FDE8EC",
-    paddingHorizontal: 14,
-  },
-  cancelText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#E0526E",
+  badgeTextOff: {
+    color: "#B9BEC6",
   },
   closeButton: {
     backgroundColor: "#222222",
@@ -184,6 +164,9 @@ const styles = StyleSheet.create({
     paddingVertical: 17,
     alignItems: "center",
     margin: 16,
+  },
+  closeButtonOff: {
+    backgroundColor: "#E8E8E8",
   },
   closeButtonText: {
     color: Colors.white,

@@ -13,10 +13,11 @@ const ASSETS = {
   toggleOn: [require("@/assets/admin/버튼 클릭.svg"), 46, 32],
   loading: [require("@/assets/admin/공고로딩중.svg"), 168, 160],
   bookmark: [require("@/assets/admin/임시저장 이모티콘.svg"), 35, 35],
-  syncLog: [require("@/assets/admin/Mask.svg"), 228, 152],
-  syncClock: [require("@/assets/admin/clock.svg"), 244, 163],
-  syncPeople: [require("@/assets/admin/time.svg"), 228, 152],
-  syncUpload: [require("@/assets/admin/upload.svg"), 228, 152],
+  // Figma에서 내보낸 svg는 png를 감싼 형태라 네이티브에서 안 보임 → 추출한 png 사용
+  syncLog: [require("@/assets/admin/Mask.png"), 228, 152],
+  syncClock: [require("@/assets/admin/clock.png"), 244, 163],
+  syncPeople: [require("@/assets/admin/time.png"), 228, 152],
+  syncUpload: [require("@/assets/admin/upload.png"), 228, 152],
 } as const;
 
 type Props = {

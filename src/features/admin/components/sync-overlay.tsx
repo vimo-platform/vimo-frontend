@@ -6,13 +6,13 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Figma } from "@/features/admin/components/figma";
 import { Colors } from "@/features/admin/constants/theme";
 
-type Step = { icon: ComponentProps<typeof Figma>["name"]; label: string; progress?: boolean };
+type Step = { icon: ComponentProps<typeof Figma>["name"]; label: string };
 
 const STEPS: Step[] = [
   { icon: "syncLog", label: "디지털 활동 로그 확인 완료" },
   { icon: "syncClock", label: "출석 인증 완료" },
   { icon: "syncPeople", label: "봉사 시간 계산 완료" },
-  { icon: "syncUpload", label: "학사 DB 전송 중...", progress: true },
+  { icon: "syncUpload", label: "학사 DB 전송 중..." },
 ];
 
 export function SyncOverlay({
@@ -25,17 +25,34 @@ export function SyncOverlay({
   onCancel: () => void;
 }) {
   const [step, setStep] = useState(0);
+  // 진행 바 채움 비율 (0~1). 단계가 넘어갈 때마다 900ms 동안 다음 구간까지 부드럽게 채움
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (!visible) {
       setStep(0);
+      setProgress(0);
       return;
+    }
+    let fill: ReturnType<typeof setInterval> | undefined;
+    if (step < STEPS.length) {
+      const from = step / STEPS.length;
+      const to = (step + 1) / STEPS.length;
+      const start = Date.now();
+      fill = setInterval(() => {
+        const f = Math.min(1, (Date.now() - start) / 900);
+        setProgress(from + (to - from) * f);
+        if (f >= 1) clearInterval(fill);
+      }, 50);
     }
     const t = setTimeout(() => {
       if (step >= STEPS.length) onComplete();
       else setStep(step + 1);
     }, 1000);
-    return () => clearTimeout(t);
+    return () => {
+      clearInterval(fill);
+      clearTimeout(t);
+    };
   }, [visible, step, onComplete]);
 
   const done = step >= STEPS.length;
@@ -45,7 +62,9 @@ export function SyncOverlay({
     <Modal visible={visible} animationType="fade" onRequestClose={onCancel}>
       <View style={styles.container}>
         {done ? (
-          <Text style={styles.doneText}>인증 완료!</Text>
+          <View style={styles.doneWrap}>
+            <Text style={styles.doneText}>인증 완료!</Text>
+          </View>
         ) : (
           <>
             <Pressable style={styles.close} onPress={onCancel} hitSlop={10}>
@@ -58,11 +77,9 @@ export function SyncOverlay({
             <View style={styles.center}>
               <Figma name={current.icon} scale={0.7} />
               <Text style={styles.label}>{current.label}</Text>
-              {current.progress && (
-                <View style={styles.track}>
-                  <View style={styles.bar} />
-                </View>
-              )}
+              <View style={styles.track}>
+                <View style={[styles.bar, { width: `${progress * 100}%` }]} />
+              </View>
             </View>
           </>
         )}
@@ -117,17 +134,20 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   bar: {
-    width: "60%",
     height: "100%",
     borderRadius: 3,
     backgroundColor: "#818181",
   },
-  doneText: {
+  doneWrap: {
     flex: 1,
+    alignSelf: "stretch",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  doneText: {
     fontSize: 26,
     fontWeight: "800",
     color: Colors.text,
-    textAlignVertical: "center",
     textAlign: "center",
   },
 });

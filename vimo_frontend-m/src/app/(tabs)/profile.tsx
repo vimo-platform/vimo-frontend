@@ -28,7 +28,7 @@ export default function ProfileScreen() {
       <View style={styles.profileSection}>
         <View style={styles.profileRow}>
           <Image
-            source={require("@/assets/icons/logo.png")}
+            source={require("../../../assets/icons/logo.png")}
             style={styles.avatar}
           />
           <View style={styles.profileInfo}>
