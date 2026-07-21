@@ -72,7 +72,7 @@ function CertificationDetailScreen({ variant }: { variant: CertificationDetailVa
         <VerificationStepper variant={variant} />
 
         {post ? (
-          <VerificationVolunteerCard post={post} />
+          <VerificationVolunteerCard isComplete={isComplete} post={post} />
         ) : (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>인증 봉사를 찾을 수 없어요.</Text>
@@ -89,9 +89,7 @@ function CertificationDetailScreen({ variant }: { variant: CertificationDetailVa
           </View>
         ) : null}
 
-        <View style={styles.gnbWrapper}>
-          <UserGnb activeKey="verification" />
-        </View>
+        <UserGnb activeKey="verification" />
       </View>
     </SafeAreaView>
   );
@@ -195,9 +193,15 @@ function StepMark({
   );
 }
 
-function VerificationVolunteerCard({ post }: { post: VolunteerPost }) {
+function VerificationVolunteerCard({
+  isComplete,
+  post,
+}: {
+  isComplete: boolean;
+  post: VolunteerPost;
+}) {
   return (
-    <View style={styles.volunteerCard}>
+    <View style={[styles.volunteerCard, isComplete && styles.completeVolunteerCard]}>
       <View style={styles.activityBadge}>
         <Text style={styles.activityBadgeText}>활동 완료</Text>
       </View>
@@ -332,6 +336,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   topBar: {
+    position: 'absolute',
+    top: 44,
+    right: 0,
+    left: 0,
+    zIndex: 2,
     height: 50,
     alignItems: 'center',
     justifyContent: 'center',
@@ -541,6 +550,15 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
+  completeVolunteerCard: {
+    top: 389,
+    height: 237,
+    minHeight: 237,
+    paddingTop: 33,
+    paddingRight: 31,
+    paddingBottom: 27,
+    paddingLeft: 39,
+  },
   activityBadge: {
     position: 'absolute',
     top: 22,
@@ -612,12 +630,6 @@ const styles = StyleSheet.create({
     width: 326,
     height: 60,
     borderRadius: 16,
-  },
-  gnbWrapper: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    left: 0,
   },
   confetti: {
     position: 'absolute',

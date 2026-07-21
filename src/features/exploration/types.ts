@@ -1,4 +1,12 @@
 export type VolunteerStatus = 'RECRUITING' | 'CLOSED' | 'COMPLETED';
+export type VolunteerApplicationStatus =
+  | 'NONE'
+  | 'PENDING'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'CANCELED'
+  | 'COMPLETED'
+  | string;
 
 export type VolunteerPost = {
   id: number;
@@ -20,6 +28,9 @@ export type VolunteerPost = {
   guideTitle: string;
   description: string;
   requirements: string[];
+  isFavorite?: boolean;
+  isApplied?: boolean;
+  applicationStatus?: VolunteerApplicationStatus;
 };
 
 export type VolunteerPostFilter = {

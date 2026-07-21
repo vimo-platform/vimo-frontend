@@ -9,15 +9,37 @@ type VolunteerInteractionState = {
   approvedIds: number[];
   activityCompletedIds: number[];
   certificationCompletedIds: number[];
+  certificationRejectedRecords: CertificationRejectedRecord[];
   approvalNoticeSeenIds: number[];
+};
+
+export type CertificationRejectedRecord = {
+  id: number;
+  rejectedAt: string;
+  reason: string;
+};
+
+export type CertificationStatusRecord = {
+  volunteerId: number;
+  status: string;
+  rejectedAt?: string;
+  rejectedReason?: string;
 };
 
 let state: VolunteerInteractionState = {
   favoriteIds: [101],
   appliedIds: [],
   approvedIds: [],
-  activityCompletedIds: [101],
+  activityCompletedIds: [101, 103],
   certificationCompletedIds: [102],
+  certificationRejectedRecords: [
+    {
+      id: 103,
+      rejectedAt: '2026-07-20T13:37:00+09:00',
+      reason:
+        '출퇴근 인증은 완료되었으나,\n활동 중 무단이탈로 실제 참여 시간이\n인정 기준에 미달하여 반려되었습니다.',
+    },
+  ],
   approvalNoticeSeenIds: [],
 };
 
@@ -46,11 +68,15 @@ export function getVolunteerInteractionsSnapshot() {
 }
 
 export function toggleVolunteerFavorite(id: number) {
+  setVolunteerFavorite(id, !state.favoriteIds.includes(id));
+}
+
+export function setVolunteerFavorite(id: number, isFavorite: boolean) {
   state = {
     ...state,
-    favoriteIds: state.favoriteIds.includes(id)
-      ? state.favoriteIds.filter((favoriteId) => favoriteId !== id)
-      : [...state.favoriteIds, id],
+    favoriteIds: isFavorite
+      ? unique([...state.favoriteIds, id])
+      : state.favoriteIds.filter((favoriteId) => favoriteId !== id),
   };
   notify();
 }
@@ -90,6 +116,28 @@ export function completeVolunteerActivity(id: number) {
   notify();
 }
 
+export function rejectVolunteerCertification(record: CertificationRejectedRecord) {
+  const nextRejectedRecords = state.certificationRejectedRecords.some(
+    (rejectedRecord) => rejectedRecord.id === record.id,
+  )
+    ? state.certificationRejectedRecords.map((rejectedRecord) =>
+        rejectedRecord.id === record.id ? record : rejectedRecord,
+      )
+    : [...state.certificationRejectedRecords, record];
+
+  state = {
+    ...state,
+    activityCompletedIds: state.activityCompletedIds.includes(record.id)
+      ? state.activityCompletedIds
+      : [...state.activityCompletedIds, record.id],
+    certificationCompletedIds: state.certificationCompletedIds.filter(
+      (completedId) => completedId !== record.id,
+    ),
+    certificationRejectedRecords: nextRejectedRecords,
+  };
+  notify();
+}
+
 export function completeVolunteerCertification(id: number) {
   state = {
     ...state,
@@ -99,6 +147,52 @@ export function completeVolunteerCertification(id: number) {
     certificationCompletedIds: state.certificationCompletedIds.includes(id)
       ? state.certificationCompletedIds
       : [...state.certificationCompletedIds, id],
+    certificationRejectedRecords: state.certificationRejectedRecords.filter(
+      (rejectedRecord) => rejectedRecord.id !== id,
+    ),
+  };
+  notify();
+}
+
+export function mergeCertificationStatusRecords(records: CertificationStatusRecord[]) {
+  if (records.length === 0) {
+    return;
+  }
+
+  const pendingIds = records
+    .filter((record) => record.status === 'PENDING')
+    .map((record) => record.volunteerId);
+  const completedIds = records
+    .filter((record) => record.status === 'APPROVED' || record.status === 'COMPLETED')
+    .map((record) => record.volunteerId);
+  const rejectedRecords = records
+    .filter((record) => record.status === 'REJECTED')
+    .map((record) => ({
+      id: record.volunteerId,
+      rejectedAt: record.rejectedAt ?? new Date().toISOString(),
+      reason: record.rejectedReason ?? '반려 사유를 확인해 주세요.',
+    }));
+  const rejectedIds = new Set(rejectedRecords.map((record) => record.id));
+  const nextRejectedRecords = [
+    ...state.certificationRejectedRecords.filter(
+      (record) => !rejectedIds.has(record.id),
+    ),
+    ...rejectedRecords,
+  ];
+
+  state = {
+    ...state,
+    activityCompletedIds: unique([
+      ...state.activityCompletedIds,
+      ...pendingIds,
+      ...completedIds,
+      ...rejectedRecords.map((record) => record.id),
+    ]),
+    certificationCompletedIds: unique([
+      ...state.certificationCompletedIds.filter((id) => !rejectedIds.has(id)),
+      ...completedIds,
+    ]),
+    certificationRejectedRecords: nextRejectedRecords,
   };
   notify();
 }
@@ -130,10 +224,56 @@ export function cancelVolunteerApplication(id: number) {
   notify();
 }
 
+export function mergeVolunteerInteractionsFromPosts(posts: VolunteerPost[]) {
+  const hasFavoriteFlags = posts.some((post) => typeof post.isFavorite === 'boolean');
+  const hasApplicationFlags = posts.some(
+    (post) => typeof post.isApplied === 'boolean' || typeof post.applicationStatus === 'string',
+  );
+
+  if (!hasFavoriteFlags && !hasApplicationFlags) {
+    return;
+  }
+
+  const favoriteIds = hasFavoriteFlags
+    ? posts.filter((post) => post.isFavorite).map((post) => post.id)
+    : state.favoriteIds;
+  const appliedIds = hasApplicationFlags
+    ? posts
+        .filter((post) => post.isApplied || isAppliedStatus(post.applicationStatus))
+        .map((post) => post.id)
+    : state.appliedIds;
+  const approvedIds = hasApplicationFlags
+    ? posts
+        .filter((post) => post.applicationStatus === 'APPROVED')
+        .map((post) => post.id)
+    : state.approvedIds;
+
+  state = {
+    ...state,
+    favoriteIds,
+    appliedIds,
+    approvedIds,
+  };
+  notify();
+}
+
 export function getSearchableVolunteerText(post: VolunteerPost) {
   return [post.title, post.organization, post.location, post.category].join(' ').toLowerCase();
 }
 
 function notify() {
   listeners.forEach((listener) => listener());
+}
+
+function isAppliedStatus(status: VolunteerPost['applicationStatus']) {
+  return (
+    status === 'PENDING' ||
+    status === 'APPROVED' ||
+    status === 'REJECTED' ||
+    status === 'COMPLETED'
+  );
+}
+
+function unique<T>(items: T[]) {
+  return Array.from(new Set(items));
 }

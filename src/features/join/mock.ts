@@ -4,9 +4,9 @@ export const mockVolunteerSchedules: VolunteerSchedule[] = [
   {
     id: 1,
     postId: 101,
-    startDate: '2026-03-13',
+    startDate: '2026-07-20',
     endDate: '2026-07-20',
-    repeatWeekday: 5,
+    repeatWeekday: 1,
     startTime: '14:00',
     endTime: '16:00',
     status: 'before',

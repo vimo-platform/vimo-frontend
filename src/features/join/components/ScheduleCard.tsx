@@ -22,8 +22,20 @@ export function ScheduleCard({ schedule }: { schedule: VolunteerSchedule }) {
   const openDetail = () => {
     router.push(`/volunteer-post/${postId}?mode=confirm` as Href);
   };
-  const noop = () => {};
-
+  const openStartQrScan = () => {
+    router.push(
+      `/volunteer-qr-scan?postId=${postId}&type=start&startTime=${encodeURIComponent(
+        schedule.startTime,
+      )}` as Href,
+    );
+  };
+  const openEndQrScan = () => {
+    router.push(
+      `/volunteer-qr-scan?postId=${postId}&type=end&startTime=${encodeURIComponent(
+        schedule.startTime,
+      )}&endTime=${encodeURIComponent(schedule.endTime)}` as Href,
+    );
+  };
   return (
     <View style={styles.scheduleGroup}>
       <View style={styles.scheduleHeading}>
@@ -48,8 +60,8 @@ export function ScheduleCard({ schedule }: { schedule: VolunteerSchedule }) {
         </View>
 
         <View style={styles.cardActions}>
-          <ParticipationButton style={styles.cardAction} onPress={noop} />
-          <ParticipationButton style={styles.cardAction} variant="end" onPress={noop} />
+          <ParticipationButton style={styles.cardAction} onPress={openStartQrScan} />
+          <ParticipationButton style={styles.cardAction} variant="end" onPress={openEndQrScan} />
         </View>
       </Pressable>
     </View>

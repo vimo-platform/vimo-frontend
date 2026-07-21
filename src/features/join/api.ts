@@ -1,5 +1,6 @@
 import { apiRequest } from '@/api/client';
 
+import { mockVolunteerSchedules } from './mock';
 import type { VolunteerSchedule } from './types';
 
 type UserVolunteerResponse = {
@@ -13,7 +14,13 @@ type UserVolunteerResponse = {
 };
 
 export async function getMyVolunteerSchedules(): Promise<VolunteerSchedule[]> {
-  const data = await apiRequest<UserVolunteerResponse[]>('/api/v1/users/me/volunteers');
+  let data: UserVolunteerResponse[];
+
+  try {
+    data = await apiRequest<UserVolunteerResponse[]>('/api/v1/users/me/volunteers');
+  } catch {
+    return mockVolunteerSchedules;
+  }
 
   return data.map((item) => {
     const start = parseDateTime(item.startAt);

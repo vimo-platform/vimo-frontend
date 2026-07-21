@@ -22,7 +22,7 @@ import {
 
 const BASIC_PROFILE = require('../../../assets/images/mypageimg/basicprofile.png');
 
-const INFO_ITEMS = ['이름 / 이메일', '시간표', '관심 키워드', '내 정보 설정'];
+const INFO_ITEMS = ['이름 / 학번', '시간표', '관심 키워드', '내 정보 설정'];
 const ACTIVITY_ITEMS = ['지원 내역', '확정 내역', '활동 내역', '봉사 인증서'];
 const SETTING_ITEMS = ['알림 설정', '약관 및 정책'];
 
@@ -30,7 +30,7 @@ export function MyPageScreen() {
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, 393);
   const [userName, setUserName] = useState('사용자');
-  const [userEmail, setUserEmail] = useState('');
+  const [userStudentId, setUserStudentId] = useState('');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
@@ -44,13 +44,8 @@ export function MyPageScreen() {
         setUserName(user.name.trim());
       }
 
-      if (user?.email?.trim()) {
-        setUserEmail(user.email.trim());
-        return;
-      }
-
       if (user?.studentId?.trim()) {
-        setUserEmail(`${user.studentId.trim()}@univ.ac.kr`);
+        setUserStudentId(user.studentId.trim());
       }
     });
   }, []);
@@ -71,7 +66,7 @@ export function MyPageScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={[styles.screen, { width: contentWidth }]}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>마이페이지</Text>
@@ -82,8 +77,8 @@ export function MyPageScreen() {
               <Text numberOfLines={1} style={styles.name}>
                 {userName}
               </Text>
-              <Text numberOfLines={1} style={styles.email}>
-                {userEmail}
+              <Text numberOfLines={1} style={styles.studentId}>
+                {userStudentId}
               </Text>
               <View style={styles.accountActionRow}>
                 <Pressable
@@ -169,7 +164,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9F9FB',
   },
   scrollContent: {
-    paddingBottom: 10,
+    paddingBottom: 126,
   },
   title: {
     marginTop: 39,
@@ -201,7 +196,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     lineHeight: 23,
   },
-  email: {
+  studentId: {
     marginTop: 2,
     color: '#222222',
     fontFamily: 'Pretendard',

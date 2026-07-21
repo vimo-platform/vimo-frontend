@@ -1,5 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
+import { Href, router } from 'expo-router';
 import { useState } from 'react';
 import {
   Image,
@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Button } from '@/components/common';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
@@ -61,21 +61,16 @@ export function ScheduleRegisterScreen() {
       return;
     }
 
-    router.push('/schedule-analysis');
+    router.push(`/schedule-analysis?imageUri=${encodeURIComponent(selectedImageUri)}` as Href);
+  };
+
+  const removeSelectedImage = () => {
+    setSelectedImageUri(null);
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={[styles.screen, { width: contentWidth }]}>
-        <Pressable
-          accessibilityLabel="닫기"
-          accessibilityRole="button"
-          hitSlop={12}
-          style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
-          onPress={closeScreen}>
-          <CloseIcon />
-        </Pressable>
-
         <View style={styles.content}>
           <Image resizeMode="contain" source={EXPLORATION_STAR} style={styles.star} />
           <Text style={styles.title}>
@@ -84,24 +79,62 @@ export function ScheduleRegisterScreen() {
             나에게 맞는 봉사를 추천해드려요.
           </Text>
 
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.uploadBox, pressed && styles.pressed]}
-            onPress={pickScheduleImage}>
-            {selectedImageUri ? (
-              <Image resizeMode="cover" source={{ uri: selectedImageUri }} style={styles.previewImage} />
-            ) : (
+          {selectedImageUri ? (
+            <View style={styles.selectedScheduleGroup}>
+              <View style={styles.selectedImageCard}>
+                <Image
+                  resizeMode="cover"
+                  source={{ uri: selectedImageUri }}
+                  style={styles.selectedImage}
+                />
+                <Pressable
+                  accessibilityLabel="선택한 시간표 사진 삭제"
+                  accessibilityRole="button"
+                  hitSlop={8}
+                  style={({ pressed }) => [styles.removeImageButton, pressed && styles.pressed]}
+                  onPress={removeSelectedImage}>
+                  <RemoveImageIcon />
+                </Pressable>
+              </View>
+
+              <Pressable
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.secondaryUploadBox, pressed && styles.pressed]}
+                onPress={pickScheduleImage}>
+                <Image
+                  resizeMode="contain"
+                  source={INPUT_TIMELINE_IMAGE}
+                  style={styles.secondaryUploadPlaceholder}
+                />
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.uploadBox, pressed && styles.pressed]}
+              onPress={pickScheduleImage}>
               <Image
                 resizeMode="contain"
                 source={INPUT_TIMELINE_IMAGE}
                 style={styles.uploadPlaceholderImage}
               />
-            )}
-          </Pressable>
+            </Pressable>
+          )}
         </View>
 
-        <View style={styles.bottomButtonWrap}>
-          <Button label="다음" style={styles.nextButton} onPress={goNext} />
+        <View style={styles.selectedBottomButtons}>
+          <Button
+            label="취소"
+            variant="scheduleCancel"
+            style={styles.cancelButton}
+            onPress={closeScreen}
+          />
+          <Button
+            label="이대로 등록"
+            variant="scheduleSubmit"
+            style={styles.registerButton}
+            onPress={goNext}
+          />
         </View>
 
         <UploadRequiredModal
@@ -139,15 +172,17 @@ function UploadRequiredModal({
   );
 }
 
-function CloseIcon() {
+function RemoveImageIcon() {
   return (
-    <Svg height={25} viewBox="0 0 25 25" width={25}>
+    <Svg height={24} viewBox="0 0 24 24" width={24}>
+      <Circle cx={12} cy={12} fill="#222222" r={12} />
       <Path
-        d="M5 5l15 15M20 5 5 20"
+        d="M16.5 7.5L7.5 16.5M7.5 7.5L16.5 16.5"
         fill="none"
-        stroke="#222222"
+        stroke="#FFFFFF"
         strokeLinecap="round"
-        strokeWidth={1.4}
+        strokeLinejoin="round"
+        strokeWidth={1.5}
       />
     </Svg>
   );
@@ -163,63 +198,94 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  closeButton: {
-    position: 'absolute',
-    top: 35,
-    right: 27,
-    zIndex: 2,
-    width: 38,
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   content: {
-    paddingTop: 70,
-    paddingHorizontal: 32,
+    paddingTop: 59,
+    paddingHorizontal: 29,
   },
   star: {
-    width: 45,
-    height: 45,
-    marginLeft: 4,
+    width: 48,
+    height: 48,
   },
   title: {
-    marginTop: 29,
+    marginTop: 22,
     color: '#222222',
     fontFamily: 'Pretendard',
-    fontSize: 23,
-    fontWeight: '800',
-    lineHeight: 35,
+    fontSize: 20,
+    fontWeight: '600',
+    lineHeight: 30,
   },
   uploadBox: {
-    width: '100%',
-    height: 244,
+    width: 333,
+    maxWidth: '100%',
+    height: 238,
+    alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    marginTop: 40,
-    borderWidth: 2,
+    marginTop: 76,
+    borderWidth: 1.5,
     borderColor: '#E3E3E3',
-    borderRadius: 30,
+    borderRadius: 28,
     backgroundColor: '#F9F9F9',
   },
   uploadPlaceholderImage: {
     width: 190,
     height: 144,
   },
-  previewImage: {
+  selectedScheduleGroup: {
+    width: '100%',
+    marginTop: 30,
+    gap: 26,
+  },
+  selectedImageCard: {
+    width: '100%',
+    height: 186,
+    overflow: 'hidden',
+    borderRadius: 21,
+    backgroundColor: '#F5F5F5',
+  },
+  selectedImage: {
     width: '100%',
     height: '100%',
   },
-  bottomButtonWrap: {
+  removeImageButton: {
     position: 'absolute',
-    right: 0,
-    bottom: 27,
-    left: 0,
+    top: 14,
+    right: 15,
+    width: 24,
+    height: 24,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  nextButton: {
-    width: 326,
-    height: 62,
+  secondaryUploadBox: {
+    width: '100%',
+    height: 89,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 1.4,
+    borderColor: '#E3E3E3',
+    borderRadius: 21,
+    backgroundColor: '#F9F9F9',
+  },
+  secondaryUploadPlaceholder: {
+    width: 92,
+    height: 70,
+  },
+  selectedBottomButtons: {
+    position: 'absolute',
+    right: 30,
+    bottom: 44,
+    left: 30,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  cancelButton: {
+    height: 60,
+    borderRadius: 16,
+  },
+  registerButton: {
+    height: 60,
     borderRadius: 16,
   },
   modalOverlay: {

@@ -1,9 +1,11 @@
-﻿import { LinearGradient } from 'expo-linear-gradient';
+﻿import { Asset } from 'expo-asset';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,24 +15,31 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Path, SvgUri } from 'react-native-svg';
 
 import { AllLine, HeartImage } from '@/components/common';
 import { UserGnb } from '@/components/navigation/user-gnb';
 import { isUserAuthenticatedInCurrentSession } from '@/storage/auth-storage';
 
-import { getVolunteerPosts } from './api';
+import { getVolunteerPosts, updateVolunteerFavorite } from './api';
+import {
+  getCustomizedVolunteerPosts,
+  getScheduleRecommendationSnapshot,
+  subscribeScheduleRecommendation,
+} from './customized-recommendation-store';
 import type { VolunteerPost } from './types';
 import {
   getSearchableVolunteerText,
   getVolunteerInteractionsSnapshot,
+  mergeVolunteerInteractionsFromPosts,
+  setVolunteerFavorite,
   setVolunteerPostsSnapshot,
   subscribeVolunteerInteractions,
-  toggleVolunteerFavorite,
 } from './volunteer-interaction-store';
 
 const EXPLORATION_STAR = require('../../../assets/images/explorationimg/explorationstar.png');
 const PARTICIPATION_COMPLETED_BUTTON = require('../../../assets/images/common/participationcompletedbutton.png');
+const CUSTOMIZATION_VOLUNTEER_CARD = require('../../../assets/images/explorationimg/Customizationvolunteercard.svg');
 
 export function ExplorationScreen() {
   const { width } = useWindowDimensions();
@@ -44,6 +53,11 @@ export function ExplorationScreen() {
     getVolunteerInteractionsSnapshot,
     getVolunteerInteractionsSnapshot,
   );
+  const scheduleRecommendation = useSyncExternalStore(
+    subscribeScheduleRecommendation,
+    getScheduleRecommendationSnapshot,
+    getScheduleRecommendationSnapshot,
+  );
 
   useEffect(() => {
     if (!isUserAuthenticatedInCurrentSession()) {
@@ -55,6 +69,7 @@ export function ExplorationScreen() {
       .then((nextPosts) => {
         setPosts(nextPosts);
         setVolunteerPostsSnapshot(nextPosts);
+        mergeVolunteerInteractionsFromPosts(nextPosts);
         setErrorMessage('');
       })
       .catch((error: unknown) => {
@@ -72,13 +87,27 @@ export function ExplorationScreen() {
 
     return posts.filter((post) => getSearchableVolunteerText(post).includes(normalizedQuery));
   }, [posts, query]);
+  const customizedPosts = useMemo(
+    () => getCustomizedVolunteerPosts(posts),
+    [posts, scheduleRecommendation],
+  );
 
   const openPostDetail = (postId: number) => {
     router.push(`/volunteer-post/${postId}` as Href);
   };
 
+  const handleToggleFavorite = (postId: number) => {
+    const previousFavorite = favoriteIds.includes(postId);
+    const nextFavorite = !previousFavorite;
+
+    setVolunteerFavorite(postId, nextFavorite);
+    updateVolunteerFavorite(postId, nextFavorite).catch(() => {
+      setVolunteerFavorite(postId, previousFavorite);
+    });
+  };
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={[styles.screen, { width: contentWidth }]}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -86,23 +115,15 @@ export function ExplorationScreen() {
           showsVerticalScrollIndicator={false}>
           <View style={styles.hero}>
             <SearchInput query={query} onChangeQuery={setQuery} />
-
-            <View style={styles.scheduleTitleRow}>
-              <Image resizeMode="contain" source={EXPLORATION_STAR} style={styles.star} />
-              <Text style={styles.scheduleTitle}>시간표를 아직 등록하지 않았어요.</Text>
-            </View>
-
-            <Pressable
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.scheduleRegisterBox,
-                pressed && styles.scheduleRegisterBoxPressed,
-              ]}
-              onPress={() => router.push('/schedule-register')}>
-              <Text style={styles.scheduleRegisterText}>
-                ※ 시간표를 등록하고 맞춤형 봉사 추천과 관심 분야 분석을 받아보세요.
-              </Text>
-            </Pressable>
+            {scheduleRecommendation.hasAnalyzedSchedule ? (
+              <CustomizedScheduleHero
+                customizedPosts={customizedPosts}
+                hasAvailableRecommendations={scheduleRecommendation.availableRecommendationIds.length > 0}
+                scheduleItems={scheduleRecommendation.scheduleItems}
+              />
+            ) : (
+              <UnregisteredScheduleHero />
+            )}
           </View>
 
           <AllLine style={styles.divider} />
@@ -125,7 +146,7 @@ export function ExplorationScreen() {
                     favorite={favoriteIds.includes(post.id)}
                     post={post}
                     onPress={() => openPostDetail(post.id)}
-                    onToggleFavorite={() => toggleVolunteerFavorite(post.id)}
+                    onToggleFavorite={() => handleToggleFavorite(post.id)}
                   />
                 ))}
               </View>
@@ -180,6 +201,140 @@ function SearchInput({
   );
 }
 
+function UnregisteredScheduleHero() {
+  return (
+    <>
+      <View style={styles.scheduleTitleRow}>
+        <Image resizeMode="contain" source={EXPLORATION_STAR} style={styles.star} />
+        <Text style={styles.scheduleTitle}>시간표를 아직 등록하지 않았어요.</Text>
+      </View>
+
+      <Pressable
+        accessibilityRole="button"
+        style={({ pressed }) => [
+          styles.scheduleRegisterBox,
+          pressed && styles.scheduleRegisterBoxPressed,
+        ]}
+        onPress={() => router.push('/schedule-register')}>
+        <Text style={styles.scheduleRegisterText}>
+          ※ 시간표를 등록하고 맞춤형 봉사 추천과 관심 분야 분석을 받아보세요.
+        </Text>
+      </Pressable>
+    </>
+  );
+}
+
+function CustomizedScheduleHero({
+  customizedPosts,
+  hasAvailableRecommendations,
+  scheduleItems,
+}: {
+  customizedPosts: VolunteerPost[];
+  hasAvailableRecommendations: boolean;
+  scheduleItems: { time: string; title: string }[];
+}) {
+  const hasPosts = hasAvailableRecommendations && customizedPosts.length > 0;
+
+  return (
+    <>
+      <View style={styles.customTitleRow}>
+        <Image resizeMode="contain" source={EXPLORATION_STAR} style={styles.customStar} />
+        <Text style={styles.customTitle}>
+          {hasPosts
+            ? '11:50 수업 이후, 다음 수업 전까지\n참여 가능한 교내 봉사가 있어요!'
+            : '지금 참여 가능한 맞춤 봉사가 없어요'}
+        </Text>
+      </View>
+
+      <Pressable
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.todayScheduleBox, pressed && styles.pressed]}
+        onPress={() => router.push('/schedule-register')}>
+        <View>
+          <Text style={styles.todayScheduleTitle}>오늘 시간표</Text>
+          {scheduleItems.map((item) => (
+            <Text key={`${item.time}-${item.title}`} style={styles.todayScheduleText}>
+              {item.time} {item.title}
+            </Text>
+          ))}
+        </View>
+        <View style={styles.scheduleEditGroup}>
+          <ScheduleEditIcon />
+          <Text style={styles.scheduleEditText}>시간표 수정하기</Text>
+        </View>
+      </Pressable>
+
+      {hasPosts ? (
+        <View style={styles.customMiniCardRow}>
+          {customizedPosts.slice(0, 2).map((post, index) => (
+            <CustomizedVolunteerMiniCard
+              key={post.id}
+              post={post}
+              subtitle={index === 0 ? '12:30 - 15:30' : '13:00 - 15:00'}
+            />
+          ))}
+        </View>
+      ) : (
+        <View style={styles.noCustomBox}>
+          <Text style={styles.noCustomText}>※ 지금 참여 가능한 맞춤 봉사가 없어요</Text>
+        </View>
+      )}
+    </>
+  );
+}
+
+function CustomizedVolunteerMiniCard({
+  post,
+  subtitle,
+}: {
+  post: VolunteerPost;
+  subtitle: string;
+}) {
+  const title = post.id === 101 ? '🎨 학생회 홍보물 디자인' : '🌏 유학생 캠퍼스 안내';
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.customMiniCard, pressed && styles.pressed]}
+      onPress={() => router.push(`/volunteer-post/${post.id}` as Href)}>
+      <CustomizationVolunteerCardBackground />
+      <View style={styles.customMiniContent}>
+        <Text numberOfLines={1} style={styles.customMiniTitle}>
+          {title}
+        </Text>
+        <Text style={styles.customMiniTime}>{subtitle}</Text>
+        <View style={styles.customMiniMore}>
+          <Text style={styles.customMiniMoreText}>자세히 보기</Text>
+          <TinyChevronIcon />
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function CustomizationVolunteerCardBackground() {
+  const uri = Asset.fromModule(CUSTOMIZATION_VOLUNTEER_CARD).uri;
+
+  if (Platform.OS === 'web') {
+    return (
+      <Image
+        resizeMode="stretch"
+        source={{ uri }}
+        style={styles.customMiniBackground}
+      />
+    );
+  }
+
+  return (
+    <SvgUri
+      height={61}
+      style={styles.customMiniBackground}
+      uri={uri}
+      width={152}
+    />
+  );
+}
+
 function VolunteerPostCard({
   post,
   applied,
@@ -196,72 +351,69 @@ function VolunteerPostCard({
   const isClosed = post.status !== 'RECRUITING';
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-      onPress={onPress}>
+    <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <Text numberOfLines={3} style={styles.cardTitle}>
-          {post.title}
-        </Text>
+        <Pressable
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.cardTitlePressable, pressed && styles.cardPressed]}
+          onPress={onPress}>
+          <Text numberOfLines={3} style={styles.cardTitle}>
+            {post.title}
+          </Text>
+        </Pressable>
         <Pressable
           accessibilityLabel={favorite ? '찜 해제' : '찜하기'}
           accessibilityRole="button"
           hitSlop={8}
           style={({ pressed }) => [styles.heartButton, pressed && styles.pressed]}
-          onPress={(event) => {
-            event.stopPropagation();
-            onToggleFavorite();
-          }}>
+          onPress={onToggleFavorite}>
           <HeartImage filled={favorite} style={styles.heart} />
         </Pressable>
       </View>
 
-      <Text style={styles.credit}>봉사 인정 시간 : {formatCredit(post.creditHours)} 인정</Text>
+      <Pressable
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.cardContentPressable, pressed && styles.cardPressed]}
+        onPress={onPress}>
+        <Text style={styles.credit}>봉사 인정 시간 : {formatCredit(post.creditHours)} 인정</Text>
 
-      <View style={styles.details}>
-        <DetailRow icon="location" text={post.location} />
-        <DetailRow
-          icon="calendar"
-          text={`${formatDate(post.startDate)} ~ ${formatDate(post.endDate)}${getRepeatLabel(post)}`}
-        />
-        <DetailRow icon="clock" text={`${post.startTime} ~ ${post.endTime}`} />
-      </View>
+        <View style={styles.details}>
+          <DetailRow icon="location" text={post.location} />
+          <DetailRow
+            icon="calendar"
+            text={`${formatDate(post.startDate)} ~ ${formatDate(post.endDate)}${getRepeatLabel(post)}`}
+          />
+          <DetailRow icon="clock" text={`${post.startTime} ~ ${post.endTime}`} />
+        </View>
+      </Pressable>
 
       <View style={styles.cardFooter}>
         <Text style={styles.counts}>
           모집{post.neededCount}명 / 지원{post.appliedCount}명
         </Text>
         {applied ? (
-          <Pressable
+          <View
             accessibilityLabel="지원완료"
-            accessibilityRole="button"
             accessibilityState={{ disabled: true }}
-            style={styles.completedButton}
-            onPress={(event) => {
-              event.stopPropagation();
-            }}>
+            style={styles.completedButton}>
             <Image
               resizeMode="contain"
               source={PARTICIPATION_COMPLETED_BUTTON}
               style={styles.completedButtonImage}
             />
-          </Pressable>
+          </View>
         ) : (
           <Pressable
             accessibilityRole="button"
             style={[styles.applyButton, isClosed && styles.applyButtonDisabled]}
-            onPress={(event) => {
-              event.stopPropagation();
-              onPress();
-            }}>
+            onPress={onPress}>
             <Text style={[styles.applyText, isClosed && styles.applyTextDisabled]}>
               {isClosed ? '지원마감' : '지원하기'}
             </Text>
           </Pressable>
         )}
       </View>
-    </Pressable>
+    </View>
   );
 }
 function DetailRow({ icon, text }: { icon: 'calendar' | 'clock' | 'location'; text: string }) {
@@ -285,6 +437,38 @@ function SearchIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2}
+      />
+    </Svg>
+  );
+}
+
+function ScheduleEditIcon() {
+  return (
+    <Svg height={20} viewBox="0 0 24 24" width={20}>
+      <Path
+        d="M7 3v3M17 3v3M4.5 9h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v8"
+        fill="none"
+        stroke="#818181"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.6}
+      />
+      <Circle cx={17} cy={17} fill="none" r={4} stroke="#818181" strokeWidth={1.6} />
+      <Path d="M17 14.8V17l1.6 1" fill="none" stroke="#818181" strokeLinecap="round" strokeWidth={1.4} />
+    </Svg>
+  );
+}
+
+function TinyChevronIcon() {
+  return (
+    <Svg height={6} viewBox="0 0 4 7" width={3}>
+      <Path
+        d="M0.8 1 3 3.5 0.8 6"
+        fill="none"
+        stroke="#222222"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={0.6}
       />
     </Svg>
   );
@@ -345,11 +529,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9F9FB',
   },
   scrollContent: {
-    paddingBottom: 0,
+    paddingBottom: 126,
   },
   hero: {
     paddingTop: 24,
-    paddingBottom: 21,
+    paddingBottom: 20,
   },
   searchGradient: {
     width: 315,
@@ -425,6 +609,136 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     textAlign: 'center',
   },
+  customTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 18,
+    paddingHorizontal: 32,
+  },
+  customStar: {
+    width: 43,
+    height: 43,
+    marginRight: 16,
+  },
+  customTitle: {
+    flex: 1,
+    color: '#222222',
+    fontFamily: 'Pretendard',
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 30,
+  },
+  todayScheduleBox: {
+    width: 324,
+    minHeight: 72,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#606060',
+    borderRadius: 18,
+  },
+  todayScheduleTitle: {
+    color: '#606060',
+    fontFamily: 'Pretendard',
+    fontSize: 9,
+    fontWeight: '700',
+    lineHeight: 14,
+  },
+  todayScheduleText: {
+    color: '#606060',
+    fontFamily: 'Pretendard',
+    fontSize: 9,
+    fontWeight: '500',
+    lineHeight: 14,
+  },
+  scheduleEditGroup: {
+    width: 57,
+    alignItems: 'center',
+    gap: 8,
+  },
+  scheduleEditText: {
+    color: '#818181',
+    fontFamily: 'Pretendard',
+    fontSize: 8,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  customMiniCardRow: {
+    width: 329,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 18,
+  },
+  customMiniCard: {
+    width: 152,
+    height: 61,
+  },
+  customMiniBackground: {
+    position: 'absolute',
+    width: 152,
+    height: 61,
+  },
+  customMiniContent: {
+    flex: 1,
+    paddingTop: 13,
+    paddingRight: 14,
+    paddingBottom: 9,
+    paddingLeft: 14,
+  },
+  customMiniTitle: {
+    color: '#222222',
+    fontFamily: 'Pretendard',
+    fontSize: 9,
+    fontWeight: '700',
+    lineHeight: 14,
+  },
+  customMiniTime: {
+    color: '#222222',
+    fontFamily: 'Pretendard',
+    fontSize: 9,
+    fontWeight: '500',
+    lineHeight: 14,
+  },
+  customMiniMore: {
+    position: 'absolute',
+    right: 14,
+    bottom: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  customMiniMoreText: {
+    color: '#222222',
+    fontFamily: 'Pretendard',
+    fontSize: 6,
+    fontWeight: '500',
+  },
+  noCustomBox: {
+    width: 324,
+    height: 61,
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: '#818181',
+    borderStyle: 'dashed',
+    borderRadius: 18,
+  },
+  noCustomText: {
+    color: '#818181',
+    fontFamily: 'Pretendard',
+    fontSize: 10,
+    fontWeight: '500',
+    lineHeight: 14,
+    textAlign: 'center',
+  },
   divider: {
     height: 9,
   },
@@ -463,6 +777,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
+  cardTitlePressable: {
+    flex: 1,
+  },
   cardTitle: {
     flex: 1,
     color: '#222222',
@@ -470,6 +787,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     lineHeight: 18,
+  },
+  cardContentPressable: {
+    width: '100%',
   },
   heartButton: {
     width: 24,

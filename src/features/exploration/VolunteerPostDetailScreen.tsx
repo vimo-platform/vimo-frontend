@@ -15,13 +15,13 @@ import { AllLine, Button, HeartImage } from '@/components/common';
 import { BackIcon } from '@/components/common/icons';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
 
-import { getVolunteerPostById } from './api';
+import { getVolunteerPostById, updateVolunteerFavorite } from './api';
 import type { VolunteerPost } from './types';
 import {
   getVolunteerInteractionsSnapshot,
   getVolunteerPostsSnapshot,
+  setVolunteerFavorite,
   subscribeVolunteerInteractions,
-  toggleVolunteerFavorite,
 } from './volunteer-interaction-store';
 
 export function VolunteerPostDetailScreen() {
@@ -90,6 +90,14 @@ export function VolunteerPostDetailScreen() {
   const isFavorite = favoriteIds.includes(post.id);
   const isClosed = post.status !== 'RECRUITING';
   const bottomButtonLabel = isClosed ? '지원 마감' : mode === 'confirm' ? '확인' : '지원하기';
+  const handleToggleFavorite = () => {
+    const nextFavorite = !isFavorite;
+
+    setVolunteerFavorite(post.id, nextFavorite);
+    updateVolunteerFavorite(post.id, nextFavorite).catch(() => {
+      setVolunteerFavorite(post.id, isFavorite);
+    });
+  };
   const handleBottomButtonPress = () => {
     if (mode === 'confirm') {
       router.replace('/explore');
@@ -125,7 +133,7 @@ export function VolunteerPostDetailScreen() {
                 accessibilityRole="button"
                 hitSlop={10}
                 style={({ pressed }) => [styles.heartButton, pressed && styles.pressed]}
-                onPress={() => toggleVolunteerFavorite(post.id)}>
+                onPress={handleToggleFavorite}>
                 <HeartImage filled={isFavorite} style={styles.heart} />
               </Pressable>
             </View>

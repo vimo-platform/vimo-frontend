@@ -21,13 +21,16 @@ export async function apiRequest<TResponse>(
   accessToken?: string,
 ): Promise<TResponse> {
   const storedAccessToken = accessToken ?? (await getAccessToken());
+  const isFormDataBody =
+    typeof FormData !== 'undefined' && init?.body instanceof FormData;
+  const headers = {
+    ...(isFormDataBody ? {} : { 'Content-Type': 'application/json' }),
+    ...(storedAccessToken ? { Authorization: `Bearer ${storedAccessToken}` } : {}),
+    ...init?.headers,
+  };
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(storedAccessToken ? { Authorization: `Bearer ${storedAccessToken}` } : {}),
-      ...init?.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {

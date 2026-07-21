@@ -14,7 +14,7 @@ function GnbTabBar({ state, navigation }: GnbProps) {
       <View style={styles.inner}>
         <Figma
           name="gnb"
-          style={{ width: "100%", height: undefined, aspectRatio: 453 / 162 }}
+          style={styles.gnbAsset}
         />
         <View style={styles.touchRow}>
           {state.routes.map((route) => (
@@ -48,10 +48,27 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   bar: {
     alignItems: "center",
+    justifyContent: "flex-end",
+    height: 102,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: -3,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 15,
+    elevation: 8,
   },
   inner: {
     width: "100%",
     maxWidth: 453,
+    height: 102,
+    overflow: "hidden",
+  },
+  gnbAsset: {
+    width: "100%",
+    height: 102,
   },
   touchRow: {
     position: "absolute",

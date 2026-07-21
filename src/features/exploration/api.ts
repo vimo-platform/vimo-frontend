@@ -1,27 +1,16 @@
-import { apiRequest } from '@/api/client';
+import {
+  applyVolunteer,
+  cancelVolunteerApplication,
+  favoriteVolunteer,
+  fetchMyCertifications,
+  fetchVolunteerDetail,
+  fetchVolunteers,
+  submitVolunteerCertification,
+  unfavoriteVolunteer,
+} from '@/api/volunteers';
 
 import { mockVolunteerPosts } from './mock';
-import type { VolunteerPost, VolunteerStatus } from './types';
-
-type VolunteerSummaryResponse = {
-  id: number;
-  title: string;
-  category: string;
-  location: string;
-  startAt: string;
-  endAt: string;
-  status: VolunteerStatus;
-};
-
-type VolunteerDetailResponse = VolunteerSummaryResponse & {
-  description: string;
-  capacity: number;
-};
-
-type ApplicationResponse = {
-  volunteerId: number;
-  status: 'PENDING' | string;
-};
+import type { VolunteerPost } from './types';
 
 const USE_MOCK_VOLUNTEERS = process.env.EXPO_PUBLIC_USE_MOCK_VOLUNTEERS !== 'false';
 
@@ -31,9 +20,7 @@ export async function getVolunteerPosts(): Promise<VolunteerPost[]> {
   }
 
   try {
-    const data = await apiRequest<VolunteerSummaryResponse[]>('/api/v1/volunteers');
-
-    return data.map(normalizePost);
+    return await fetchVolunteers();
   } catch {
     return delay(mockVolunteerPosts);
   }
@@ -45,9 +32,7 @@ export async function getVolunteerPostById(id: number): Promise<VolunteerPost | 
   }
 
   try {
-    const data = await apiRequest<VolunteerDetailResponse>(`/api/v1/volunteers/${id}`);
-
-    return normalizePost(data);
+    return await fetchVolunteerDetail(id);
   } catch (error) {
     if (error instanceof Error && error.message.includes('공고를 찾을 수 없습니다')) {
       return null;
@@ -62,67 +47,53 @@ export function createVolunteerApplication(volunteerId: number) {
     return delay({ volunteerId, status: 'PENDING' });
   }
 
-  return apiRequest<ApplicationResponse>(`/api/v1/volunteers/${volunteerId}/application`, {
-    method: 'POST',
-  }).catch(() => ({ volunteerId, status: 'PENDING' }));
+  return applyVolunteer(volunteerId).catch(() => ({ volunteerId, status: 'PENDING' }));
 }
 
-export function deleteVolunteerApplication(volunteerId: number) {
+export function deleteVolunteerApplication(
+  volunteerId: number,
+  payload?: { cancelReason?: string },
+) {
   if (USE_MOCK_VOLUNTEERS) {
     return delay(undefined);
   }
 
-  return apiRequest<void>(`/api/v1/volunteers/${volunteerId}/application`, {
-    method: 'DELETE',
-  }).catch(() => undefined);
+  return cancelVolunteerApplication(volunteerId, payload).catch(() => undefined);
 }
 
-function normalizePost(post: VolunteerSummaryResponse | VolunteerDetailResponse): VolunteerPost {
-  const start = parseDateTime(post.startAt);
-  const end = parseDateTime(post.endAt);
-  const capacity = 'capacity' in post ? post.capacity : 0;
-
-  return {
-    id: post.id,
-    title: post.title,
-    organization: post.category,
-    location: post.location,
-    category: post.category,
-    startDate: start.date,
-    endDate: end.date,
-    startTime: start.time,
-    endTime: end.time,
-    recruitmentEndDate: start.date,
-    neededCount: capacity,
-    appliedCount: 0,
-    creditHours: getCreditHours(post.startAt, post.endAt),
-    status: post.status,
-    participationCondition: '정기 참여 가능자 우대',
-    cancelPolicy: '취소 불가',
-    guideTitle: '모집 안내',
-    description: 'description' in post ? post.description : '',
-    requirements: [],
-  };
-}
-
-function parseDateTime(value: string) {
-  const [date = '', time = ''] = value.split('T');
-
-  return {
-    date,
-    time: time.slice(0, 5),
-  };
-}
-
-function getCreditHours(startAt: string, endAt: string) {
-  const start = new Date(startAt).getTime();
-  const end = new Date(endAt).getTime();
-
-  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
-    return 0;
+export function updateVolunteerFavorite(volunteerId: number, isFavorite: boolean) {
+  if (USE_MOCK_VOLUNTEERS) {
+    return delay(undefined);
   }
 
-  return Math.round((end - start) / (1000 * 60 * 60));
+  const request = isFavorite ? favoriteVolunteer(volunteerId) : unfavoriteVolunteer(volunteerId);
+
+  return request.catch(() => undefined);
+}
+
+export function submitVolunteerActivityCertification(volunteerId: number) {
+  if (USE_MOCK_VOLUNTEERS) {
+    return delay(undefined);
+  }
+
+  return submitVolunteerCertification(volunteerId).catch(() => undefined);
+}
+
+export async function getMyCertificationStatusRecords() {
+  if (USE_MOCK_VOLUNTEERS) {
+    return delay([]);
+  }
+
+  return fetchMyCertifications()
+    .then((records) =>
+      records.map((record) => ({
+        volunteerId: record.volunteerId,
+        status: record.status,
+        rejectedAt: record.rejectedAt,
+        rejectedReason: record.rejectedReason,
+      })),
+    )
+    .catch(() => []);
 }
 
 function delay<T>(value: T) {

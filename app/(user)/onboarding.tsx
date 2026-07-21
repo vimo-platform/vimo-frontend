@@ -13,7 +13,6 @@ import {
   View,
   type ImageSourcePropType,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, {
   Circle,
   Path,
@@ -109,7 +108,7 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar style="dark" />
       <LinearGradient colors={['#F8F8FA', '#FFFFFF', '#F5F5F7']} style={styles.screen}>
         <View style={styles.content}>
@@ -155,7 +154,7 @@ export default function OnboardingScreen() {
           </Pressable>
         </View>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
   );
 }
 

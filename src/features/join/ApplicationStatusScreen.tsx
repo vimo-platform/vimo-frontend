@@ -7,13 +7,13 @@ import { AllLine, TopBar } from '@/components/common';
 import { UserGnb } from '@/components/navigation/user-gnb';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
 
-import { deleteVolunteerApplication } from '@/features/exploration/api';
+import { deleteVolunteerApplication, updateVolunteerFavorite } from '@/features/exploration/api';
 import {
   cancelVolunteerApplication,
   getVolunteerInteractionsSnapshot,
   getVolunteerPostsSnapshot,
+  setVolunteerFavorite,
   subscribeVolunteerInteractions,
-  toggleVolunteerFavorite,
 } from '@/features/exploration/volunteer-interaction-store';
 import type { VolunteerPost } from '@/features/exploration/types';
 
@@ -39,6 +39,7 @@ export function ApplicationStatusScreen() {
   const [cancelTarget, setCancelTarget] = useState<ApplicationVolunteerCardType | null>(null);
   const [cancelCompleteTarget, setCancelCompleteTarget] =
     useState<ApplicationVolunteerCardType | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   const appliedCards = useMemo(() => cards.filter((card) => card.applied), [cards]);
   const favoriteCards = useMemo(
@@ -47,7 +48,13 @@ export function ApplicationStatusScreen() {
   );
 
   const handleToggleLike = (id: number) => {
-    toggleVolunteerFavorite(id);
+    const previousFavorite = favoriteIds.includes(id);
+    const nextFavorite = !previousFavorite;
+
+    setVolunteerFavorite(id, nextFavorite);
+    updateVolunteerFavorite(id, nextFavorite).catch(() => {
+      setVolunteerFavorite(id, previousFavorite);
+    });
   };
 
   const openVolunteerPost = (item: ApplicationVolunteerCardType) => {
@@ -55,7 +62,7 @@ export function ApplicationStatusScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={[styles.screen, { width: contentWidth }]}>
         <TopBar
           title="지원 현황"
@@ -99,11 +106,12 @@ export function ApplicationStatusScreen() {
           onClose={() => {
             setCancelTarget(null);
           }}
-          onConfirm={() => {
+          onConfirm={(reason) => {
             if (!cancelTarget) {
               return;
             }
 
+            setCancelReason(reason);
             setCancelCompleteTarget(cancelTarget);
             setCancelTarget(null);
           }}
@@ -117,7 +125,9 @@ export function ApplicationStatusScreen() {
           onConfirm={async () => {
             if (cancelCompleteTarget) {
               try {
-                await deleteVolunteerApplication(cancelCompleteTarget.id);
+                await deleteVolunteerApplication(cancelCompleteTarget.id, {
+                  cancelReason,
+                });
               } catch {
                 return;
               }
@@ -125,6 +135,7 @@ export function ApplicationStatusScreen() {
               cancelVolunteerApplication(cancelCompleteTarget.id);
             }
 
+            setCancelReason('');
             setCancelCompleteTarget(null);
           }}
         />
@@ -229,7 +240,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 26,
-    paddingBottom: 90,
+    paddingBottom: 126,
   },
   section: {
     alignItems: 'center',

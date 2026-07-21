@@ -15,7 +15,7 @@ export function TabPlaceholderScreen({
   useUserSessionGuard();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={styles.content}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.description}>화면을 준비하고 있어요.</Text>
