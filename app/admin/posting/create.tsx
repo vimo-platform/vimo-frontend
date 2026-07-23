@@ -1,7 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -29,6 +28,17 @@ const RECRUIT_METHODS: { value: RecruitType; label: string }[] = [
   { value: "fcfs", label: "선착순 모집" },
 ];
 
+const REQUIRED_MESSAGE = "필수 작성 문항란 입니다";
+
+// 비어 있으면 다음 단계로 넘어갈 수 없는 항목들
+function RequiredMessage({ visible }: { visible: boolean }) {
+  if (!visible) {
+    return null;
+  }
+
+  return <Text style={styles.requiredMessage}>{REQUIRED_MESSAGE}</Text>;
+}
+
 export default function CreatePostingScreen() {
   const [memo, setMemo] = useState("");
   const [location, setLocation] = useState("");
@@ -40,10 +50,21 @@ export default function CreatePostingScreen() {
   const [startTime, setStartTime] = useState("11:30");
   const [endTime, setEndTime] = useState("16:30");
   const [submitting, setSubmitting] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
+
+  const missing = {
+    memo: !memo.trim(),
+    location: !location.trim(),
+    dateFrom: !dateFrom.trim(),
+    dateTo: !dateTo.trim(),
+    startTime: !startTime.trim(),
+    endTime: !endTime.trim(),
+  };
+  const hasMissing = Object.values(missing).some(Boolean);
 
   const submit = async () => {
-    if (!memo.trim()) {
-      Alert.alert("공고 작성", "봉사 모집 내용을 입력해주세요.");
+    if (hasMissing) {
+      setShowErrors(true);
       return;
     }
     setSubmitting(true);
@@ -53,10 +74,10 @@ export default function CreatePostingScreen() {
         id: newPostingId(),
         title: draft.title,
         description: draft.description,
-        location: location.trim() || "장소 미정",
-        period: dateFrom && dateTo ? `${dateFrom} ~ ${dateTo}` : "기간 미정",
-        startTime,
-        endTime,
+        location: location.trim(),
+        period: `${dateFrom.trim()} ~ ${dateTo.trim()}`,
+        startTime: startTime.trim(),
+        endTime: endTime.trim(),
         capacity: count,
         applicants: 0,
         hoursPerSession: 3,
@@ -86,7 +107,13 @@ export default function CreatePostingScreen() {
           공고 내용을 입력해 주세요{"\n"}깔끔하게 정리해드릴게요
         </Text>
 
-        <View style={[styles.memoBox, memo ? styles.filled : null]}>
+        <View
+          style={[
+            styles.memoBox,
+            memo ? styles.filled : null,
+            showErrors && missing.memo ? styles.fieldError : null,
+          ]}
+        >
           <TextInput
             style={[styles.memoInput, memo ? styles.textWhite : null]}
             placeholder={
@@ -99,15 +126,21 @@ export default function CreatePostingScreen() {
           />
           <Ionicons name="pencil" size={16} color={memo ? Colors.white : Colors.textSecondary} />
         </View>
+        <RequiredMessage visible={showErrors && missing.memo} />
 
         <Text style={styles.label}>장소</Text>
         <TextInput
-          style={[styles.input, location ? styles.filled : null]}
+          style={[
+            styles.input,
+            location ? styles.filled : null,
+            showErrors && missing.location ? styles.fieldError : null,
+          ]}
           placeholder="활동 장소를 입력해 주세요"
           placeholderTextColor={Colors.textSecondary}
           value={location}
           onChangeText={setLocation}
         />
+        <RequiredMessage visible={showErrors && missing.location} />
         <Pressable style={styles.locationButton}>
           <Ionicons name="locate-outline" size={15} color={Colors.text} />
           <Text style={styles.locationButtonText}>현재 위치로 찾기</Text>
@@ -154,21 +187,37 @@ export default function CreatePostingScreen() {
 
         <Text style={styles.label}>날짜</Text>
         <View style={styles.rangeRow}>
-          <TextInput
-            style={[styles.input, styles.rangeInput, dateFrom ? styles.filled : null]}
-            placeholder="YYYY / MM / DD"
-            placeholderTextColor={Colors.textSecondary}
-            value={dateFrom}
-            onChangeText={setDateFrom}
-          />
-          <Text style={styles.rangeSep}>~</Text>
-          <TextInput
-            style={[styles.input, styles.rangeInput, dateTo ? styles.filled : null]}
-            placeholder="YYYY / MM / DD"
-            placeholderTextColor={Colors.textSecondary}
-            value={dateTo}
-            onChangeText={setDateTo}
-          />
+          <View style={styles.rangeCol}>
+            <TextInput
+              style={[
+                styles.input,
+                styles.rangeInput,
+                dateFrom ? styles.filled : null,
+                showErrors && missing.dateFrom ? styles.fieldError : null,
+              ]}
+              placeholder="YYYY / MM / DD"
+              placeholderTextColor={Colors.textSecondary}
+              value={dateFrom}
+              onChangeText={setDateFrom}
+            />
+            <RequiredMessage visible={showErrors && missing.dateFrom} />
+          </View>
+          <Text style={[styles.rangeSep, styles.rangeSepDate]}>~</Text>
+          <View style={styles.rangeCol}>
+            <TextInput
+              style={[
+                styles.input,
+                styles.rangeInput,
+                dateTo ? styles.filled : null,
+                showErrors && missing.dateTo ? styles.fieldError : null,
+              ]}
+              placeholder="YYYY / MM / DD"
+              placeholderTextColor={Colors.textSecondary}
+              value={dateTo}
+              onChangeText={setDateTo}
+            />
+            <RequiredMessage visible={showErrors && missing.dateTo} />
+          </View>
         </View>
 
         <Text style={styles.label}>시간</Text>
@@ -176,24 +225,50 @@ export default function CreatePostingScreen() {
           <View style={styles.timeCol}>
             <Text style={styles.timeLabel}>시작</Text>
             <TextInput
-              style={[styles.input, styles.timeInput, startTime ? styles.filled : null]}
+              style={[
+                styles.input,
+                styles.timeInput,
+                startTime ? styles.filled : null,
+                showErrors && missing.startTime ? styles.fieldError : null,
+              ]}
+              placeholder="HH:MM"
+              placeholderTextColor={Colors.textSecondary}
               value={startTime}
               onChangeText={setStartTime}
             />
+            <RequiredMessage visible={showErrors && missing.startTime} />
           </View>
-          <Text style={styles.rangeSep}>→</Text>
+          <Text style={[styles.rangeSep, styles.rangeSepTime]}>→</Text>
           <View style={styles.timeCol}>
             <Text style={styles.timeLabel}>종료</Text>
             <TextInput
-              style={[styles.input, styles.timeInput, endTime ? styles.filled : null]}
+              style={[
+                styles.input,
+                styles.timeInput,
+                endTime ? styles.filled : null,
+                showErrors && missing.endTime ? styles.fieldError : null,
+              ]}
+              placeholder="HH:MM"
+              placeholderTextColor={Colors.textSecondary}
               value={endTime}
               onChangeText={setEndTime}
             />
+            <RequiredMessage visible={showErrors && missing.endTime} />
           </View>
         </View>
 
+        {showErrors && hasMissing && (
+          <Text style={styles.formErrorSummary}>
+            빨간색으로 표시된 필수 항목을 모두 작성해 주세요.
+          </Text>
+        )}
+
         <Pressable
-          style={({ pressed }) => [styles.submitButton, pressed && styles.submitButtonActive]}
+          style={({ pressed }) => [
+            styles.submitButton,
+            !hasMissing && styles.submitButtonActive,
+            pressed && styles.submitButtonActive,
+          ]}
           onPress={submit}
           disabled={submitting}
         >
@@ -254,6 +329,23 @@ const styles = StyleSheet.create({
   filled: {
     backgroundColor: "#222222",
     color: Colors.white,
+  },
+  fieldError: {
+    borderWidth: 1,
+    borderColor: Colors.danger,
+  },
+  requiredMessage: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.danger,
+    marginTop: 6,
+  },
+  formErrorSummary: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: Colors.danger,
+    textAlign: "center",
+    marginTop: 24,
   },
   textWhite: {
     color: Colors.white,
@@ -319,16 +411,24 @@ const styles = StyleSheet.create({
   },
   rangeRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 10,
   },
-  rangeInput: {
+  rangeCol: {
     flex: 1,
+  },
+  rangeInput: {
     textAlign: "center",
   },
   rangeSep: {
     fontSize: 15,
     color: Colors.textSecondary,
+  },
+  rangeSepDate: {
+    marginTop: 14,
+  },
+  rangeSepTime: {
+    marginTop: 39,
   },
   timeCol: {
     flex: 1,
