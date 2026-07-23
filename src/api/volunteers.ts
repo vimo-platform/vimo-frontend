@@ -31,6 +31,8 @@ export type ApiVolunteer = {
   guideTitle?: string;
   description?: string;
   requirements?: string[];
+  keywords?: string[];
+  createdAt?: string;
   isFavorite?: boolean;
   isApplied?: boolean;
   applicationStatus?: VolunteerApplicationStatus;
@@ -215,6 +217,8 @@ export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
     guideTitle: data.guideTitle ?? '모집 안내',
     description: data.description ?? '',
     requirements: data.requirements ?? [],
+    keywords: data.keywords ?? [],
+    createdAt: data.createdAt,
     isFavorite: data.isFavorite,
     isApplied: data.isApplied,
     applicationStatus: data.applicationStatus,

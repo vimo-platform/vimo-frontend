@@ -10,14 +10,12 @@ export type ScheduleRecommendationState = {
     time: string;
     title: string;
   }[];
-  availableRecommendationIds: number[];
 };
 
 let state: ScheduleRecommendationState = {
   hasAnalyzedSchedule: false,
   selectedKeywords: [],
   scheduleItems: [],
-  availableRecommendationIds: [],
 };
 
 const listeners = new Set<Listener>();
@@ -41,11 +39,9 @@ export function setCustomizedScheduleRecommendation(selectedKeywords: string[]) 
 }
 
 export function setScheduleRecommendationFromAnalysis({
-  availableRecommendationIds,
   scheduleItems,
   selectedKeywords,
 }: {
-  availableRecommendationIds?: number[];
   scheduleItems?: ScheduleRecommendationState['scheduleItems'];
   selectedKeywords: string[];
 }) {
@@ -58,19 +54,68 @@ export function setScheduleRecommendationFromAnalysis({
       { time: '09:00 - 11:50', title: '국제비즈니스영어' },
       { time: '15:30 - 16:30', title: '인성과 학문 III' },
     ],
-    availableRecommendationIds:
-      availableRecommendationIds ?? (normalizedKeywords.length > 0 ? [101, 102] : []),
   };
   notify();
 }
 
 export function getCustomizedVolunteerPosts(posts: VolunteerPost[]) {
   const sourcePosts = posts.length > 0 ? posts : mockVolunteerPosts;
-  const ids = new Set(state.availableRecommendationIds);
+  const selectedKeywordSet = new Set(state.selectedKeywords);
 
-  return sourcePosts.filter((post) => ids.has(post.id));
+  if (selectedKeywordSet.size === 0) {
+    return [];
+  }
+
+  return sourcePosts
+    .map((post, index) => ({
+      index,
+      matchedKeywordCount: getMatchedKeywordCount(post, selectedKeywordSet),
+      post,
+    }))
+    .filter(
+      (item) =>
+        item.post.status === 'RECRUITING' &&
+        isVolunteerPostAvailableToday(item.post) &&
+        item.matchedKeywordCount > 0,
+    )
+    .sort((a, b) => {
+      if (b.matchedKeywordCount !== a.matchedKeywordCount) {
+        return b.matchedKeywordCount - a.matchedKeywordCount;
+      }
+
+      return getPostCreatedAt(a.post, a.index) - getPostCreatedAt(b.post, b.index);
+    })
+    .slice(0, 2)
+    .map((item) => item.post);
 }
 
 function notify() {
   listeners.forEach((listener) => listener());
+}
+
+function getMatchedKeywordCount(post: VolunteerPost, selectedKeywordSet: Set<string>) {
+  const postKeywords = post.keywords ?? [];
+
+  return postKeywords.filter((keyword) => selectedKeywordSet.has(keyword)).length;
+}
+
+function isVolunteerPostAvailableToday(post: VolunteerPost) {
+  const todayKey = getTodayDateKey();
+
+  return post.startDate <= todayKey && todayKey <= post.endDate;
+}
+
+function getTodayDateKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function getPostCreatedAt(post: VolunteerPost, fallbackIndex: number) {
+  const createdAt = post.createdAt ? new Date(post.createdAt).getTime() : Number.NaN;
+
+  return Number.isFinite(createdAt) ? createdAt : fallbackIndex;
 }

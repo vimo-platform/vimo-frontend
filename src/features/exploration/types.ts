@@ -28,6 +28,8 @@ export type VolunteerPost = {
   guideTitle: string;
   description: string;
   requirements: string[];
+  keywords?: string[];
+  createdAt?: string;
   isFavorite?: boolean;
   isApplied?: boolean;
   applicationStatus?: VolunteerApplicationStatus;

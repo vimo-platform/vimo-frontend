@@ -118,7 +118,6 @@ export function ExplorationScreen() {
             {scheduleRecommendation.hasAnalyzedSchedule ? (
               <CustomizedScheduleHero
                 customizedPosts={customizedPosts}
-                hasAvailableRecommendations={scheduleRecommendation.availableRecommendationIds.length > 0}
                 scheduleItems={scheduleRecommendation.scheduleItems}
               />
             ) : (
@@ -226,14 +225,12 @@ function UnregisteredScheduleHero() {
 
 function CustomizedScheduleHero({
   customizedPosts,
-  hasAvailableRecommendations,
   scheduleItems,
 }: {
   customizedPosts: VolunteerPost[];
-  hasAvailableRecommendations: boolean;
   scheduleItems: { time: string; title: string }[];
 }) {
-  const hasPosts = hasAvailableRecommendations && customizedPosts.length > 0;
+  const hasPosts = customizedPosts.length > 0;
 
   return (
     <>
@@ -270,7 +267,7 @@ function CustomizedScheduleHero({
             <CustomizedVolunteerMiniCard
               key={post.id}
               post={post}
-              subtitle={index === 0 ? '12:30 - 15:30' : '13:00 - 15:00'}
+              subtitle={`${post.startTime} - ${post.endTime}`}
             />
           ))}
         </View>
@@ -290,7 +287,7 @@ function CustomizedVolunteerMiniCard({
   post: VolunteerPost;
   subtitle: string;
 }) {
-  const title = post.id === 101 ? '🎨 학생회 홍보물 디자인' : '🌏 유학생 캠퍼스 안내';
+  const title = `${getCustomizedPostEmoji(post)} ${post.title}`;
 
   return (
     <Pressable
@@ -516,6 +513,18 @@ function formatDate(date: string) {
 
 function getRepeatLabel(post: VolunteerPost) {
   return post.id === 101 ? ' (매주 금요일)' : '';
+}
+
+function getCustomizedPostEmoji(post: VolunteerPost) {
+  if (post.keywords?.includes('미디어') || post.keywords?.includes('디자인')) {
+    return '🎨';
+  }
+
+  if (post.keywords?.includes('환경보호')) {
+    return '🌏';
+  }
+
+  return '✨';
 }
 
 const styles = StyleSheet.create({

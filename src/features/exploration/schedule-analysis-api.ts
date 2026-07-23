@@ -8,7 +8,6 @@ export type ScheduleAnalysisResult = {
   interestKeywords: string[];
   recommendedKeywords: string[];
   selectedRecommendationKeywords: string[];
-  availableRecommendationIds?: number[];
 };
 
 const USE_MOCK_SCHEDULE_ANALYSIS =
@@ -32,7 +31,6 @@ export async function analyzeScheduleImage(imageUri?: string): Promise<ScheduleA
         interestKeywords: data.interestKeywords,
         recommendedKeywords: data.recommendedKeywords,
         selectedRecommendationKeywords: data.selectedRecommendationKeywords ?? [],
-        availableRecommendationIds: data.availableRecommendationIds,
       };
     } catch {
       return getMockScheduleAnalysisResult();
@@ -65,19 +63,18 @@ async function getMockScheduleAnalysisResult() {
       { time: '09:00 - 11:50', title: '국제비즈니스영어' },
       { time: '15:30 - 16:30', title: '인성과 학문 III' },
     ],
-    interestKeywords: ['디자인', '실무 영어', '스포츠', '콘텐츠 제작'],
+    interestKeywords: ['행정지원', '멘토링', '미디어'],
     recommendedKeywords: [
+      '행사운영',
+      '현장 관리',
+      '행정지원',
       '디자인',
-      '영어멘토링',
-      '행사 운영',
-      '커뮤니케이션',
-      '글로벌 교류',
-      '포스터 디자인',
-      '국제행사 운영',
-      '스포츠 행사 스태프',
-      '현장 운영 지원',
+      '멘토링',
+      '환경보호',
+      '미디어',
+      'IT',
+      '수업 보조',
     ],
-    selectedRecommendationKeywords: [],
-    availableRecommendationIds: [101, 102],
+    selectedRecommendationKeywords: ['행정지원', '멘토링', '미디어'],
   };
 }

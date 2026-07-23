@@ -1,12 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Image,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -37,8 +36,6 @@ export function ScheduleAnalysisScreen() {
   const [progress, setProgress] = useState(0);
   const [analysis, setAnalysis] = useState<ScheduleAnalysisResult | null>(null);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
-  const [customKeyword, setCustomKeyword] = useState('');
-  const [customInputVisible, setCustomInputVisible] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -49,7 +46,7 @@ export function ScheduleAnalysisScreen() {
       }
 
       setAnalysis(result);
-      setSelectedKeywords([]);
+      setSelectedKeywords(getInitialSelectedKeywords(result));
     });
 
     return () => {
@@ -80,12 +77,8 @@ export function ScheduleAnalysisScreen() {
     };
   }, [analysis, phase]);
 
-  const recommendedKeywords = useMemo(
+  const keywordOptions = useMemo(
     () => analysis?.recommendedKeywords ?? [],
-    [analysis],
-  );
-  const interestKeywords = useMemo(
-    () => analysis?.interestKeywords ?? [],
     [analysis],
   );
 
@@ -95,30 +88,6 @@ export function ScheduleAnalysisScreen() {
         ? current.filter((item) => item !== keyword)
         : [...current, keyword],
     );
-  };
-
-  const addCustomKeyword = () => {
-    const normalized = customKeyword.trim();
-    if (!normalized) {
-      return;
-    }
-
-    if (!recommendedKeywords.includes(normalized)) {
-      setAnalysis((current) =>
-        current
-          ? {
-              ...current,
-              recommendedKeywords: [...current.recommendedKeywords, normalized],
-            }
-          : current,
-      );
-    }
-
-    setSelectedKeywords((current) =>
-      current.includes(normalized) ? current : [...current, normalized],
-    );
-    setCustomKeyword('');
-    setCustomInputVisible(false);
   };
 
   if (phase === 'loading') {
@@ -167,52 +136,20 @@ export function ScheduleAnalysisScreen() {
             description="관심 있는 키워드를 골라주세요"
             title="이런 분야에 관심 있어 보여요"
           />
-          <View style={styles.interestKeywordRow}>
-            {interestKeywords.map((keyword) => (
-              <Tag key={keyword} disabled label={keyword} />
-            ))}
-          </View>
-
-          <SectionTitle
-            description="참여해보고 싶은 활동을 골라주세요"
-            style={styles.recommendTitle}
-            title="관심 키워드 기반 추천 활동이에요"
-          />
-          <View style={styles.keywordWrap}>
-            {recommendedKeywords.map((keyword) => (
-              <Tag
-                key={keyword}
-                label={keyword}
-                selected={selectedKeywords.includes(keyword)}
-                onPress={() => toggleKeyword(keyword)}
-              />
-            ))}
-            {customInputVisible ? (
-              <View style={styles.customInputWrap}>
-                <TextInput
-                  autoFocus
-                  placeholder="키워드 입력"
-                  placeholderTextColor="#818181"
-                  returnKeyType="done"
-                  style={styles.customInput}
-                  value={customKeyword}
-                  onChangeText={setCustomKeyword}
-                  onSubmitEditing={addCustomKeyword}
-                />
-                <Pressable
-                  accessibilityRole="button"
-                  style={({ pressed }) => [styles.addCustomButton, pressed && styles.pressed]}
-                  onPress={addCustomKeyword}>
-                  <Text style={styles.addCustomText}>추가</Text>
-                </Pressable>
+          <View style={styles.keywordGrid}>
+            {chunkKeywords(keywordOptions, 3).map((row, rowIndex) => (
+              <View key={`keyword-row-${rowIndex}`} style={styles.keywordGridRow}>
+                {row.map((keyword) => (
+                  <Tag
+                    key={keyword}
+                    label={keyword}
+                    selected={selectedKeywords.includes(keyword)}
+                    size="compact"
+                    onPress={() => toggleKeyword(keyword)}
+                  />
+                ))}
               </View>
-            ) : (
-              <Tag
-                label="직접 작성"
-                variant="editable"
-                onPress={() => setCustomInputVisible(true)}
-              />
-            )}
+            ))}
           </View>
         </ScrollView>
 
@@ -221,9 +158,13 @@ export function ScheduleAnalysisScreen() {
             label="다음"
             style={styles.nextButton}
             onPress={async () => {
+              if (selectedKeywords.length === 0) {
+                Alert.alert('관심 키워드를 1개 이상 선택해주세요.');
+                return;
+              }
+
               await saveScheduleAnalysisSelection(analysis, selectedKeywords);
               setScheduleRecommendationFromAnalysis({
-                availableRecommendationIds: analysis?.availableRecommendationIds,
                 scheduleItems: analysis?.scheduleItems,
                 selectedKeywords,
               });
@@ -235,6 +176,26 @@ export function ScheduleAnalysisScreen() {
       </View>
     </SafeAreaView>
   );
+}
+
+function getInitialSelectedKeywords(result: ScheduleAnalysisResult) {
+  const optionSet = new Set(result.recommendedKeywords);
+  const sourceKeywords =
+    result.selectedRecommendationKeywords.length > 0
+      ? result.selectedRecommendationKeywords
+      : result.interestKeywords;
+
+  return sourceKeywords.filter((keyword) => optionSet.has(keyword));
+}
+
+function chunkKeywords(keywords: string[], size: number) {
+  const rows: string[][] = [];
+
+  for (let index = 0; index < keywords.length; index += size) {
+    rows.push(keywords.slice(index, index + size));
+  }
+
+  return rows;
 }
 
 function SectionTitle({
@@ -492,58 +453,15 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     textAlign: 'center',
   },
-  interestKeywordRow: {
-    width: 333,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 19,
+  keywordGrid: {
+    alignItems: 'center',
+    gap: 10,
     marginTop: 31,
-    flexWrap: 'wrap',
   },
-  recommendTitle: {
-    marginTop: 55,
-  },
-  keywordWrap: {
-    width: 333,
+  keywordGridRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 7,
-    rowGap: 13,
-    marginTop: 31,
-  },
-  customInputWrap: {
-    minHeight: 32,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  customInput: {
-    width: 105,
-    height: 32,
-    paddingHorizontal: 11,
-    paddingVertical: 0,
-    borderWidth: 1,
-    borderColor: '#767676',
-    borderRadius: 12,
-    color: '#222222',
-    fontFamily: 'Pretendard',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  addCustomButton: {
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 11,
-    borderRadius: 12,
-    backgroundColor: '#222222',
-  },
-  addCustomText: {
-    color: '#F5F5F5',
-    fontFamily: 'Pretendard',
-    fontSize: 14,
-    fontWeight: '600',
   },
   bottomButtonWrap: {
     position: 'absolute',

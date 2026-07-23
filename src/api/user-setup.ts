@@ -10,7 +10,6 @@ export type TimetableAnalysisResponse = {
   interestKeywords: string[];
   recommendedKeywords: string[];
   selectedRecommendationKeywords?: string[];
-  availableRecommendationIds?: number[];
 };
 
 export type UserSetupPayload = {
