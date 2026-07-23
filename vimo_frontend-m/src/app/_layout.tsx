@@ -5,10 +5,15 @@ import { AuthProvider } from "@/hooks/use-auth";
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <Stack>
+      {/* headerBackButtonDisplayMode: 뒤로가기 버튼에 이전 화면 이름("(tabs)" 등)이 붙지 않게 화살표만 표시 */}
+      <Stack screenOptions={{ headerBackButtonDisplayMode: "minimal" }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="posting/[id]"
+          options={{ title: "지원자 목록", headerTitleAlign: "center" }}
+        />
+        <Stack.Screen
+          name="posting/fcfs/[id]"
           options={{ title: "지원자 목록", headerTitleAlign: "center" }}
         />
         <Stack.Screen

@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { Tabs } from "expo-router";
 
 import { Figma } from "@/features/admin/components/figma";
+import { Colors } from "@/features/admin/constants/theme";
 
 type GnbProps = {
   state: { routes: { key: string; name: string }[] };
@@ -40,7 +41,15 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: "현장 QR", headerShown: false }} />
       <Tabs.Screen name="postings" options={{ title: "공고" }} />
       <Tabs.Screen name="approvals" options={{ title: "승인" }} />
-      <Tabs.Screen name="profile" options={{ title: "마이페이지" }} />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "마이페이지",
+          headerTitleAlign: "center",
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: Colors.white },
+        }}
+      />
     </Tabs>
   );
 }

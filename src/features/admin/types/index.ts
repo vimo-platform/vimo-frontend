@@ -7,6 +7,9 @@ export type User = {
 
 export type PostingStatus = "open" | "closed" | "draft";
 
+// selection: 관리자가 채택, fcfs: 선착순 (정원이 차면 자동 마감)
+export type RecruitType = "selection" | "fcfs";
+
 export type Gender = "전체" | "남성" | "여성";
 
 export type Posting = {
@@ -21,6 +24,7 @@ export type Posting = {
   applicants: number;
   hoursPerSession: number;
   status: PostingStatus;
+  recruitType?: RecruitType;
   tags: string[];
   gender?: Gender;
   createdAt: string;
@@ -54,6 +58,8 @@ export type Applicant = {
   name: string;
   department: string;
   selected: boolean;
+  // 지원 취소한 학생만 값이 있음
+  cancel?: { at: string; reason: string };
 };
 
 export type ApprovalStatus = "pending" | "approved" | "rejected";

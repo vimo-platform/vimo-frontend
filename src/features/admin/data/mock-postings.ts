@@ -2,6 +2,22 @@ import type { Posting } from "@/features/admin/types";
 
 export const initialPostings: Posting[] = [
   {
+    id: "p5",
+    title: "학술제 안내요원 모집",
+    description: "학술제 행사장 안내 및 보조 업무를 담당할 봉사자를 선착순으로 모집합니다.",
+    location: "샬롬관 807호",
+    period: "2026.03.13 ~ 2026.06.19 (매주 금요일)",
+    startTime: "11:30",
+    endTime: "16:30",
+    capacity: 7,
+    applicants: 5,
+    hoursPerSession: 3,
+    status: "open",
+    recruitType: "fcfs",
+    tags: ["학술제 안내 및 보조"],
+    createdAt: "2026-07-07",
+  },
+  {
     id: "p1",
     title: "학술제 안내요원 모집",
     description: "학술제 행사장 안내 및 보조 업무를 담당할 봉사자를 모집합니다.",

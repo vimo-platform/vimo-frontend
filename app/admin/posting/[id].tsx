@@ -4,6 +4,8 @@ import { router, useLocalSearchParams } from "expo-router";
 
 import { fetchApplicants } from "@/features/admin/api/applicants";
 import { closePosting, fetchPosting } from "@/features/admin/api/postings";
+import { CancelReasonSheet } from "@/features/admin/components/cancel-reason-sheet";
+import { PostingSummary } from "@/features/admin/components/posting-summary";
 import { Colors } from "@/features/admin/constants/theme";
 import type { Applicant, Posting } from "@/features/admin/types";
 
@@ -11,6 +13,8 @@ export default function ApplicantsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [posting, setPosting] = useState<Posting | null>(null);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
+  // 취소 사유 시트에 표시할 지원자 (null이면 닫힘)
+  const [cancelTarget, setCancelTarget] = useState<Applicant | null>(null);
 
   useEffect(() => {
     fetchPosting(id).then((p) => setPosting(p ?? null));
@@ -43,20 +47,7 @@ export default function ApplicantsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{posting.title}</Text>
-        <Text style={styles.hours}>
-          봉사 인정 시간 : 회차당 {posting.hoursPerSession}시간 인정
-        </Text>
-        <View style={styles.tags}>
-          {posting.tags.map((tag) => (
-            <Text key={tag} style={styles.tag}>
-              {tag}
-            </Text>
-          ))}
-          <Text style={[styles.tag, styles.tagWarn]}>취소 불가</Text>
-        </View>
-      </View>
+      <PostingSummary posting={posting} />
 
       <View style={styles.divider} />
 
@@ -75,14 +66,23 @@ export default function ApplicantsScreen() {
             <View style={styles.row}>
               <Text style={styles.name}>{item.name}</Text>
               <Text style={styles.department}>{item.department}</Text>
-              <Pressable
-                style={[styles.selectBtn, item.selected && styles.selectBtnOn]}
-                onPress={() => toggle(item.id)}
-              >
-                <Text style={[styles.selectText, item.selected && styles.selectTextOn]}>
-                  채택
-                </Text>
-              </Pressable>
+              {item.cancel ? (
+                <Pressable
+                  style={[styles.selectBtn, styles.cancelBtn]}
+                  onPress={() => setCancelTarget(item)}
+                >
+                  <Text style={styles.cancelText}>취소 사유 확인</Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={[styles.selectBtn, item.selected && styles.selectBtnOn]}
+                  onPress={() => toggle(item.id)}
+                >
+                  <Text style={[styles.selectText, item.selected && styles.selectTextOn]}>
+                    채택
+                  </Text>
+                </Pressable>
+              )}
             </View>
           )}
         />
@@ -94,6 +94,8 @@ export default function ApplicantsScreen() {
       >
         <Text style={styles.closeButtonText}>모집 마감</Text>
       </Pressable>
+
+      <CancelReasonSheet applicant={cancelTarget} onClose={() => setCancelTarget(null)} />
     </View>
   );
 }
@@ -102,37 +104,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.card,
-  },
-  header: {
-    padding: 20,
-    gap: 6,
-  },
-  title: {
-    fontSize: 19,
-    fontWeight: "800",
-    color: Colors.text,
-  },
-  hours: {
-    fontSize: 13,
-    color: Colors.text,
-  },
-  tags: {
-    flexDirection: "row",
-    gap: 6,
-    marginTop: 6,
-  },
-  tag: {
-    backgroundColor: "#F1F1F1",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    fontSize: 11,
-    fontWeight: "600",
-    color: Colors.textSecondary,
-  },
-  tagWarn: {
-    backgroundColor: "#FDE8EC",
-    color: "#E0526E",
   },
   divider: {
     height: 6,
@@ -197,6 +168,15 @@ const styles = StyleSheet.create({
   },
   selectTextOn: {
     color: Colors.white,
+  },
+  cancelBtn: {
+    backgroundColor: "#FDE8EC",
+    paddingHorizontal: 14,
+  },
+  cancelText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#E0526E",
   },
   closeButton: {
     backgroundColor: "#222222",
