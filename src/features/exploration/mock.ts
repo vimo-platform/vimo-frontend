@@ -23,6 +23,7 @@ export const mockVolunteerPosts: VolunteerPost[] = [
       '장애학우의 안정적인 수업 참여를 지원하기 위한 수업 도우미를 모집합니다.\n\n도우미는 수업 중 이동 및 간단한 행동 보조 역할을 담당하며, 장애학우가 원활하게 강의를 수강할 수 있도록 지원하게 됩니다.\n전문적인 활동 경험이 없어도 참여 가능하며, 책임감 있게 활동 가능한 재학생의 많은 지원 바랍니다.',
     requirements: ['매주 금요일 참여 가능자', '시간 엄수'],
     keywords: ['수업 보조', '멘토링', '행정지원'],
+    recruitType: 'selection',
     createdAt: '2026-03-01T09:00:00+09:00',
   },
   {
@@ -47,6 +48,7 @@ export const mockVolunteerPosts: VolunteerPost[] = [
       '목양축전 현장의 안전한 운영을 위해 동선 안내와 안전 통제를 담당할 스태프를 모집합니다.\n\n현장 배치 전 간단한 안내가 진행되며, 담당 구역에서 방문객 이동을 돕고 혼잡 상황을 예방하는 역할을 맡게 됩니다.',
     requirements: ['야외 활동 가능자', '스태프 사전 교육 참석'],
     keywords: ['행사운영', '현장 관리', '환경보호'],
+    recruitType: 'selection',
     createdAt: '2026-05-01T09:00:00+09:00',
   },
   {
@@ -71,6 +73,7 @@ export const mockVolunteerPosts: VolunteerPost[] = [
       '방문객 안내와 분실물 접수, 행사장 위치 안내를 담당하는 안내 부스 스태프를 모집합니다.\n\n행사장 전반의 위치를 숙지하고 방문객이 필요한 정보를 빠르게 확인할 수 있도록 돕는 활동입니다.',
     requirements: ['친절한 응대가 가능한 학생', '양일 중 하루 이상 참여'],
     keywords: ['행사운영', '현장 관리', '미디어'],
+    recruitType: 'fcfs',
     createdAt: '2026-05-02T09:00:00+09:00',
   },
   {
@@ -95,6 +98,7 @@ export const mockVolunteerPosts: VolunteerPost[] = [
       '학생회 행사 홍보물 제작을 함께할 봉사자를 모집합니다.\n\n간단한 문구 정리와 이미지 배치, 홍보 자료 검수를 중심으로 활동합니다.',
     requirements: ['홍보물 제작 관심자', '시간 엄수'],
     keywords: ['미디어', 'IT', '행정지원'],
+    recruitType: 'selection',
     createdAt: '2026-07-20T09:00:00+09:00',
   },
   {
@@ -119,6 +123,7 @@ export const mockVolunteerPosts: VolunteerPost[] = [
       '신규 유학생의 캠퍼스 적응을 돕는 안내 봉사자를 모집합니다.\n\n시설 위치 안내와 기본 학교 생활 안내를 담당합니다.',
     requirements: ['친절한 응대 가능자', '캠퍼스 지리 숙지'],
     keywords: ['행정지원', '환경보호'],
+    recruitType: 'fcfs',
     createdAt: '2026-07-21T09:00:00+09:00',
   },
 ];

@@ -15,9 +15,10 @@ import { AllLine, Button, HeartImage } from '@/components/common';
 import { BackIcon } from '@/components/common/icons';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
 
-import { getVolunteerPostById, updateVolunteerFavorite } from './api';
+import { createVolunteerApplication, getVolunteerPostById, updateVolunteerFavorite } from './api';
 import type { VolunteerPost } from './types';
 import {
+  approveVolunteerApplication,
   getVolunteerInteractionsSnapshot,
   getVolunteerPostsSnapshot,
   setVolunteerFavorite,
@@ -98,9 +99,16 @@ export function VolunteerPostDetailScreen() {
       setVolunteerFavorite(post.id, isFavorite);
     });
   };
-  const handleBottomButtonPress = () => {
+  const handleBottomButtonPress = async () => {
     if (mode === 'confirm') {
       router.replace('/explore');
+      return;
+    }
+
+    if (post.recruitType === 'fcfs') {
+      await createVolunteerApplication(post.id);
+      approveVolunteerApplication(post.id);
+      router.push(`/volunteer-approval-confirmed?id=${post.id}` as Href);
       return;
     }
 

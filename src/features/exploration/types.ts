@@ -1,4 +1,5 @@
 export type VolunteerStatus = 'RECRUITING' | 'CLOSED' | 'COMPLETED';
+export type VolunteerRecruitType = 'selection' | 'fcfs';
 export type VolunteerApplicationStatus =
   | 'NONE'
   | 'PENDING'
@@ -28,6 +29,7 @@ export type VolunteerPost = {
   guideTitle: string;
   description: string;
   requirements: string[];
+  recruitType?: VolunteerRecruitType;
   keywords?: string[];
   createdAt?: string;
   isFavorite?: boolean;

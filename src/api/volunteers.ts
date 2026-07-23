@@ -31,6 +31,9 @@ export type ApiVolunteer = {
   guideTitle?: string;
   description?: string;
   requirements?: string[];
+  recruitType?: 'selection' | 'fcfs' | string;
+  recruitmentType?: 'selection' | 'fcfs' | string;
+  applicationType?: 'selection' | 'fcfs' | string;
   keywords?: string[];
   createdAt?: string;
   isFavorite?: boolean;
@@ -217,12 +220,23 @@ export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
     guideTitle: data.guideTitle ?? '모집 안내',
     description: data.description ?? '',
     requirements: data.requirements ?? [],
+    recruitType: normalizeRecruitType(
+      data.recruitType ?? data.recruitmentType ?? data.applicationType,
+    ),
     keywords: data.keywords ?? [],
     createdAt: data.createdAt,
     isFavorite: data.isFavorite,
     isApplied: data.isApplied,
     applicationStatus: data.applicationStatus,
   };
+}
+
+function normalizeRecruitType(type: ApiVolunteer['recruitType']) {
+  if (type === 'fcfs' || type === 'FCFS' || type === 'FIRST_COME') {
+    return 'fcfs';
+  }
+
+  return 'selection';
 }
 
 function normalizeVolunteerStatus(status: ApiVolunteer['status']): VolunteerStatus {
