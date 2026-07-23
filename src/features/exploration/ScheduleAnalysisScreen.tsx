@@ -1,7 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -36,6 +35,7 @@ export function ScheduleAnalysisScreen() {
   const [progress, setProgress] = useState(0);
   const [analysis, setAnalysis] = useState<ScheduleAnalysisResult | null>(null);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
+  const [showKeywordError, setShowKeywordError] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -83,6 +83,7 @@ export function ScheduleAnalysisScreen() {
   );
 
   const toggleKeyword = (keyword: string) => {
+    setShowKeywordError(false);
     setSelectedKeywords((current) =>
       current.includes(keyword)
         ? current.filter((item) => item !== keyword)
@@ -154,12 +155,15 @@ export function ScheduleAnalysisScreen() {
         </ScrollView>
 
         <View style={styles.bottomButtonWrap}>
+          {showKeywordError ? (
+            <Text style={styles.keywordErrorText}>1개 이상의 키워드를 선택하세요</Text>
+          ) : null}
           <Button
             label="다음"
             style={styles.nextButton}
             onPress={async () => {
               if (selectedKeywords.length === 0) {
-                Alert.alert('관심 키워드를 1개 이상 선택해주세요.');
+                setShowKeywordError(true);
                 return;
               }
 
@@ -469,6 +473,14 @@ const styles = StyleSheet.create({
     bottom: 44,
     left: 0,
     alignItems: 'center',
+  },
+  keywordErrorText: {
+    marginBottom: 10,
+    color: '#DC2626',
+    fontFamily: 'Pretendard',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   nextButton: {
     width: 326,
