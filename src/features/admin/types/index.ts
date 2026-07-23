@@ -26,6 +26,7 @@ export type Posting = {
   status: PostingStatus;
   recruitType?: RecruitType;
   tags: string[];
+  noCancel?: boolean;
   gender?: Gender;
   createdAt: string;
 };

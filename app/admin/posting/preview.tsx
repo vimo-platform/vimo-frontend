@@ -74,7 +74,9 @@ export default function PostingPreviewScreen() {
               {tag}
             </Text>
           ))}
-          <Text style={[styles.tag, styles.tagWarn]}>취소 불가</Text>
+          {posting.noCancel !== false && (
+            <Text style={[styles.tag, styles.tagWarn]}>취소 불가</Text>
+          )}
         </View>
 
         <View style={styles.thickDivider} />

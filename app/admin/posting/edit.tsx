@@ -32,6 +32,8 @@ export default function PostingEditScreen() {
   const [capacity, setCapacity] = useState(base?.capacity ?? 1);
   const [gender, setGender] = useState<Gender>(base?.gender ?? "전체");
   const [description, setDescription] = useState(base?.description ?? "");
+  const [tags, setTags] = useState<string[]>(base?.tags ?? []);
+  const [noCancel, setNoCancel] = useState(base?.noCancel !== false);
 
   if (!base) {
     return null;
@@ -51,6 +53,8 @@ export default function PostingEditScreen() {
       capacity,
       gender,
       description: description.trim(),
+      tags,
+      noCancel,
     });
     router.back();
   };
@@ -67,12 +71,16 @@ export default function PostingEditScreen() {
 
         <Label text="키워드" />
         <View style={styles.tags}>
-          {base.tags.map((tag) => (
-            <Text key={tag} style={styles.tag}>
-              {tag}
-            </Text>
+          {tags.map((tag) => (
+            <KeywordChip
+              key={tag}
+              label={tag}
+              onRemove={() => setTags((prev) => prev.filter((t) => t !== tag))}
+            />
           ))}
-          <Text style={[styles.tag, styles.tagWarn]}>취소 불가</Text>
+          {noCancel && (
+            <KeywordChip label="취소 불가" warn onRemove={() => setNoCancel(false)} />
+          )}
         </View>
 
         <Label text="세부 내용" />
@@ -134,6 +142,30 @@ function Label({ text }: { text: string }) {
       {text}
       <Text style={styles.required}> *</Text>
     </Text>
+  );
+}
+
+function KeywordChip({
+  label,
+  warn,
+  onRemove,
+}: {
+  label: string;
+  warn?: boolean;
+  onRemove: () => void;
+}) {
+  return (
+    <View style={[styles.tag, warn && styles.tagWarn]}>
+      <Text style={[styles.tagText, warn && styles.tagWarnText]}>{label}</Text>
+      <Pressable
+        onPress={onRemove}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel={`${label} 키워드 삭제`}
+      >
+        <Ionicons name="close" size={15} color={warn ? "#E0526E" : Colors.textSecondary} />
+      </Pressable>
+    </View>
   );
 }
 
@@ -238,19 +270,26 @@ const styles = StyleSheet.create({
   tags: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: 8,
   },
   tag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
     backgroundColor: "#F1F1F1",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    fontSize: 11,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  tagText: {
+    fontSize: 13,
     fontWeight: "600",
     color: Colors.textSecondary,
   },
   tagWarn: {
     backgroundColor: "#FDE8EC",
+  },
+  tagWarnText: {
     color: "#E0526E",
   },
   detailCard: {
