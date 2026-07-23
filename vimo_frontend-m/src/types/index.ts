@@ -26,6 +26,8 @@ export type Posting = {
   status: PostingStatus;
   recruitType?: RecruitType;
   tags: string[];
+  // 지원 취소 불가 공고 (미지정이면 취소 불가로 취급)
+  noCancel?: boolean;
   gender?: Gender;
   createdAt: string;
 };
