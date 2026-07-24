@@ -21,6 +21,8 @@ import { LoadingOverlay } from "@/features/admin/components/loading-overlay";
 import { Colors } from "@/features/admin/constants/theme";
 import type { RecruitType } from "@/features/admin/types";
 
+import { DateField, TimeField } from "./date-time-fields";
+
 const GENDERS = ["전체", "남성", "여성"] as const;
 
 const RECRUIT_METHODS: { value: RecruitType; label: string }[] = [
@@ -29,6 +31,9 @@ const RECRUIT_METHODS: { value: RecruitType; label: string }[] = [
 ];
 
 const REQUIRED_MESSAGE = "필수 작성 문항란 입니다";
+
+// 웹 전용: 입력칸을 클릭/포커스할 때 브라우저가 그리는 테두리(outline) 제거. 네이티브는 무시.
+const webNoOutline = { outlineWidth: 0, outlineStyle: "none" } as object;
 
 // 비어 있으면 다음 단계로 넘어갈 수 없는 항목들
 function RequiredMessage({ visible }: { visible: boolean }) {
@@ -115,7 +120,7 @@ export default function CreatePostingScreen() {
           ]}
         >
           <TextInput
-            style={[styles.memoInput, memo ? styles.textWhite : null]}
+            style={[styles.memoInput, memo ? styles.textWhite : null, webNoOutline]}
             placeholder={
               "봉사 모집 내용을 간단히 작성해주세요.\n(예시: 장애학우 도우미 모집합니다. 수업 보조)"
             }
@@ -134,6 +139,7 @@ export default function CreatePostingScreen() {
             styles.input,
             location ? styles.filled : null,
             showErrors && missing.location ? styles.fieldError : null,
+            webNoOutline,
           ]}
           placeholder="활동 장소를 입력해 주세요"
           placeholderTextColor={Colors.textSecondary}
@@ -188,34 +194,12 @@ export default function CreatePostingScreen() {
         <Text style={styles.label}>날짜</Text>
         <View style={styles.rangeRow}>
           <View style={styles.rangeCol}>
-            <TextInput
-              style={[
-                styles.input,
-                styles.rangeInput,
-                dateFrom ? styles.filled : null,
-                showErrors && missing.dateFrom ? styles.fieldError : null,
-              ]}
-              placeholder="YYYY / MM / DD"
-              placeholderTextColor={Colors.textSecondary}
-              value={dateFrom}
-              onChangeText={setDateFrom}
-            />
+            <DateField value={dateFrom} onChange={setDateFrom} invalid={showErrors && missing.dateFrom} />
             <RequiredMessage visible={showErrors && missing.dateFrom} />
           </View>
           <Text style={[styles.rangeSep, styles.rangeSepDate]}>~</Text>
           <View style={styles.rangeCol}>
-            <TextInput
-              style={[
-                styles.input,
-                styles.rangeInput,
-                dateTo ? styles.filled : null,
-                showErrors && missing.dateTo ? styles.fieldError : null,
-              ]}
-              placeholder="YYYY / MM / DD"
-              placeholderTextColor={Colors.textSecondary}
-              value={dateTo}
-              onChangeText={setDateTo}
-            />
+            <DateField value={dateTo} onChange={setDateTo} invalid={showErrors && missing.dateTo} />
             <RequiredMessage visible={showErrors && missing.dateTo} />
           </View>
         </View>
@@ -224,35 +208,13 @@ export default function CreatePostingScreen() {
         <View style={styles.rangeRow}>
           <View style={styles.timeCol}>
             <Text style={styles.timeLabel}>시작</Text>
-            <TextInput
-              style={[
-                styles.input,
-                styles.timeInput,
-                startTime ? styles.filled : null,
-                showErrors && missing.startTime ? styles.fieldError : null,
-              ]}
-              placeholder="HH:MM"
-              placeholderTextColor={Colors.textSecondary}
-              value={startTime}
-              onChangeText={setStartTime}
-            />
+            <TimeField value={startTime} onChange={setStartTime} invalid={showErrors && missing.startTime} />
             <RequiredMessage visible={showErrors && missing.startTime} />
           </View>
           <Text style={[styles.rangeSep, styles.rangeSepTime]}>→</Text>
           <View style={styles.timeCol}>
             <Text style={styles.timeLabel}>종료</Text>
-            <TextInput
-              style={[
-                styles.input,
-                styles.timeInput,
-                endTime ? styles.filled : null,
-                showErrors && missing.endTime ? styles.fieldError : null,
-              ]}
-              placeholder="HH:MM"
-              placeholderTextColor={Colors.textSecondary}
-              value={endTime}
-              onChangeText={setEndTime}
-            />
+            <TimeField value={endTime} onChange={setEndTime} invalid={showErrors && missing.endTime} />
             <RequiredMessage visible={showErrors && missing.endTime} />
           </View>
         </View>
