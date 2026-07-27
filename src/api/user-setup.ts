@@ -5,17 +5,38 @@ export type TimetableScheduleItem = {
   title: string;
 };
 
+export type ApiLocalTime =
+  | string
+  | {
+      hour?: number;
+      minute?: number;
+      second?: number;
+      nano?: number;
+    };
+
+export type FreeTimeSlot = {
+  dayOfWeek: string;
+  startTime: ApiLocalTime;
+  endTime: ApiLocalTime;
+};
+
+export type ClassSlot = FreeTimeSlot & {
+  subjectName: string;
+};
+
 export type TimetableAnalysisResponse = {
+  freeTimeSlots?: FreeTimeSlot[];
+  classes?: ClassSlot[];
+  keywords?: string[];
   scheduleItems?: TimetableScheduleItem[];
-  interestKeywords: string[];
-  recommendedKeywords: string[];
+  interestKeywords?: string[];
+  recommendedKeywords?: string[];
   selectedRecommendationKeywords?: string[];
 };
 
 export type UserSetupPayload = {
-  scheduleItems: TimetableScheduleItem[];
-  interestKeywords: string[];
-  selectedRecommendationKeywords: string[];
+  freeTimeSlots: FreeTimeSlot[];
+  keywords: string[];
 };
 
 export function analyzeTimetableOcr(formData: FormData) {
@@ -26,7 +47,7 @@ export function analyzeTimetableOcr(formData: FormData) {
 }
 
 export function fetchRecommendedKeywords() {
-  return apiRequest<{ keywords: string[] }>('/api/v1/keyword/recommended');
+  return apiRequest<{ keywords: string[] }>('/api/v1/keyword/recommend');
 }
 
 export function saveUserSetup(payload: UserSetupPayload) {

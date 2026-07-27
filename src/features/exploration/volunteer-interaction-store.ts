@@ -1,4 +1,3 @@
-import { mockVolunteerPosts } from './mock';
 import type { VolunteerPost } from './types';
 
 type Listener = () => void;
@@ -27,24 +26,17 @@ export type CertificationStatusRecord = {
 };
 
 let state: VolunteerInteractionState = {
-  favoriteIds: [101],
+  favoriteIds: [],
   appliedIds: [],
   approvedIds: [],
-  activityCompletedIds: [101, 103],
-  certificationCompletedIds: [102],
-  certificationRejectedRecords: [
-    {
-      id: 103,
-      rejectedAt: '2026-07-20T13:37:00+09:00',
-      reason:
-        '출퇴근 인증은 완료되었으나,\n활동 중 무단이탈로 실제 참여 시간이\n인정 기준에 미달하여 반려되었습니다.',
-    },
-  ],
+  activityCompletedIds: [],
+  certificationCompletedIds: [],
+  certificationRejectedRecords: [],
   approvalNoticeSeenIds: [],
 };
 
 const listeners = new Set<Listener>();
-let volunteerPostsSnapshot = mockVolunteerPosts;
+let volunteerPostsSnapshot: VolunteerPost[] = [];
 
 export function subscribeVolunteerInteractions(listener: Listener) {
   listeners.add(listener);
@@ -160,13 +152,18 @@ export function mergeCertificationStatusRecords(records: CertificationStatusReco
   }
 
   const pendingIds = records
-    .filter((record) => record.status === 'PENDING')
+    .filter((record) => record.status === 'ATTENDED' || record.status === 'COMPLETED')
     .map((record) => record.volunteerId);
   const completedIds = records
-    .filter((record) => record.status === 'APPROVED' || record.status === 'COMPLETED')
+    .filter((record) => record.status === 'APPROVED' || record.status === 'CERTIFIED')
     .map((record) => record.volunteerId);
   const rejectedRecords = records
-    .filter((record) => record.status === 'REJECTED')
+    .filter(
+      (record) =>
+        record.status === 'REJECTED' ||
+        record.status === 'CERTIFICATION_REJECTED' ||
+        record.status === 'ABSENT',
+    )
     .map((record) => ({
       id: record.volunteerId,
       rejectedAt: record.rejectedAt ?? new Date().toISOString(),
@@ -270,7 +267,11 @@ function isAppliedStatus(status: VolunteerPost['applicationStatus']) {
     status === 'PENDING' ||
     status === 'APPROVED' ||
     status === 'REJECTED' ||
-    status === 'COMPLETED'
+    status === 'ATTENDED' ||
+    status === 'COMPLETED' ||
+    status === 'CERTIFIED' ||
+    status === 'CERTIFICATION_REJECTED' ||
+    status === 'ABSENT'
   );
 }
 

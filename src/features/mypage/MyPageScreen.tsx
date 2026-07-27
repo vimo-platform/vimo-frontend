@@ -59,6 +59,8 @@ export function MyPageScreen() {
 
     try {
       await requestLogout();
+    } catch {
+      // Even if the server logout request fails, clear the local session.
     } finally {
       clearUserSession();
       router.replace('/');

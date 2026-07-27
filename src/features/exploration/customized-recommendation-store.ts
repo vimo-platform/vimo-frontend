@@ -1,4 +1,3 @@
-import { mockVolunteerPosts } from './mock';
 import type { VolunteerPost } from './types';
 
 type Listener = () => void;
@@ -59,7 +58,7 @@ export function setScheduleRecommendationFromAnalysis({
 }
 
 export function getCustomizedVolunteerPosts(posts: VolunteerPost[]) {
-  const sourcePosts = posts.length > 0 ? posts : mockVolunteerPosts;
+  const sourcePosts = posts;
   const selectedKeywordSet = new Set(state.selectedKeywords);
 
   if (selectedKeywordSet.size === 0) {

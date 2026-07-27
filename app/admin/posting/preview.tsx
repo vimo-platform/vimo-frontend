@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Stack, router, useFocusEffect } from "expo-router";
 
 import { getWorkingPosting, setWorkingPosting, upsertPosting } from "@/features/admin/api/postings";
@@ -12,6 +12,7 @@ export default function PostingPreviewScreen() {
   const [posting, setPosting] = useState<Posting | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [done, setDone] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -27,14 +28,38 @@ export default function PostingPreviewScreen() {
     router.replace({ pathname: "/admin/postings", params: { filter } });
 
   const saveDraft = async () => {
-    await upsertPosting({ ...posting, status: "draft" });
-    goList("draft");
+    if (isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      await upsertPosting({ ...posting, status: "draft" });
+      goList("draft");
+    } catch {
+      Alert.alert("저장 실패", "공고 임시저장에 실패했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const register = async () => {
-    await upsertPosting({ ...posting, status: "open" });
-    setConfirming(false);
-    setDone(true);
+    if (isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      await upsertPosting({ ...posting, status: "open" });
+      setConfirming(false);
+      setDone(true);
+    } catch {
+      Alert.alert("등록 실패", "공고 등록에 실패했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const finishDone = () => {
@@ -49,7 +74,7 @@ export default function PostingPreviewScreen() {
           title: "공고 작성",
           headerTitleAlign: "center",
           headerRight: () => (
-            <Pressable onPress={saveDraft} hitSlop={10}>
+            <Pressable disabled={isSaving} onPress={saveDraft} hitSlop={10}>
               <Figma name="bookmark" />
             </Pressable>
           ),
@@ -104,9 +129,10 @@ export default function PostingPreviewScreen() {
         >
           <Text style={styles.editButtonText}>수정</Text>
         </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.registerButton, pressed && styles.pressed]}
-          onPress={() => setConfirming(true)}
+          <Pressable
+            disabled={isSaving}
+            style={({ pressed }) => [styles.registerButton, pressed && styles.pressed]}
+            onPress={() => setConfirming(true)}
         >
           <Text style={styles.registerButtonText}>이대로 공고 등록</Text>
         </Pressable>
@@ -130,6 +156,7 @@ export default function PostingPreviewScreen() {
                 <Text style={styles.dialogCloseText}>닫기</Text>
               </Pressable>
               <Pressable
+                disabled={isSaving}
                 style={({ pressed }) => [styles.dialogConfirm, pressed && styles.pressed]}
                 onPress={register}
               >

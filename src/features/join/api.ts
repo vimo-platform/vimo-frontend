@@ -13,13 +13,19 @@ type UserVolunteerResponse = {
   applicationStatus: 'APPROVED' | 'COMPLETED' | string;
 };
 
+const USE_MOCK_SCHEDULES = process.env.EXPO_PUBLIC_USE_MOCK_SCHEDULES === 'true';
+
 export async function getMyVolunteerSchedules(): Promise<VolunteerSchedule[]> {
+  if (USE_MOCK_SCHEDULES) {
+    return mockVolunteerSchedules;
+  }
+
   let data: UserVolunteerResponse[];
 
   try {
     data = await apiRequest<UserVolunteerResponse[]>('/api/v1/users/me/volunteers');
   } catch {
-    return mockVolunteerSchedules;
+    return [];
   }
 
   return data.map((item) => {

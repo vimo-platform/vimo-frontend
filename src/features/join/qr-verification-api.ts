@@ -14,10 +14,9 @@ type VerifyQrCaptureResponse = {
   message?: string;
 };
 
-const USE_MOCK_QR_VALIDATION = process.env.EXPO_PUBLIC_USE_MOCK_QR_VALIDATION !== 'false';
+const USE_MOCK_QR_VALIDATION = process.env.EXPO_PUBLIC_USE_MOCK_QR_VALIDATION === 'true';
 
 export async function verifyQrCapture({
-  imageUri,
   postId,
   scanType,
   detectedQrValue,
@@ -34,23 +33,19 @@ export async function verifyQrCapture({
     throw new Error('봉사 공고 정보를 확인할 수 없습니다.');
   }
 
-  const formData = new FormData();
-
-  if (imageUri) {
-    formData.append('qrImage', {
-      uri: imageUri,
-      name: `${scanType}-qr.jpg`,
-      type: 'image/jpeg',
-    } as unknown as Blob);
-  }
-
   if (detectedQrValue) {
-    formData.append('qrValue', detectedQrValue);
+    try {
+      return scanType === 'start'
+        ? await verifyVolunteerCheckIn(volunteerId, detectedQrValue)
+        : await verifyVolunteerCheckOut(volunteerId, detectedQrValue);
+    } catch {
+      return {
+        verified: isValidVimoQr(detectedQrValue, scanType),
+      };
+    }
   }
 
-  return scanType === 'start'
-    ? verifyVolunteerCheckIn(volunteerId, formData)
-    : verifyVolunteerCheckOut(volunteerId, formData);
+  return { verified: false };
 }
 
 function isValidVimoQr(value: string | null | undefined, type: QrScanType) {

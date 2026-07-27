@@ -9,22 +9,29 @@ import type {
 export type ApiVolunteer = {
   id?: number;
   volunteerId?: number;
+  studentId?: string;
+  departmentName?: string;
   title?: string;
   organization?: string;
   category?: string;
+  content?: string;
+  summaryTags?: string[];
   location?: string;
   startAt?: string;
   endAt?: string;
+  volunteerDate?: string;
   startDate?: string;
   endDate?: string;
-  startTime?: string;
-  endTime?: string;
+  startTime?: ApiLocalTime;
+  endTime?: ApiLocalTime;
   recruitmentEndDate?: string;
   capacity?: number;
+  maxParticipants?: number;
   neededCount?: number;
   appliedCount?: number;
   applicantCount?: number;
   creditHours?: number;
+  rewardHours?: number;
   status?: VolunteerStatus | string;
   participationCondition?: string;
   cancelPolicy?: string;
@@ -43,13 +50,31 @@ export type ApiVolunteer = {
 
 export type ApiApplication = {
   id?: number;
+  applicationId?: number;
   volunteerId: number;
   status: VolunteerApplicationStatus;
+  applicationStatus?: VolunteerApplicationStatus;
   cancelReason?: string;
   rejectedReason?: string;
+  rejectReason?: string;
+  certificationRejectReason?: string;
   rejectedAt?: string;
   volunteer?: ApiVolunteer;
+  title?: string;
+  category?: string;
+  location?: string;
+  startAt?: string;
+  endAt?: string;
 };
+
+type ApiLocalTime =
+  | string
+  | {
+      hour?: number;
+      minute?: number;
+      second?: number;
+      nano?: number;
+    };
 
 export type ApiCertificationStatus =
   | 'PENDING'
@@ -61,9 +86,12 @@ export type ApiCertificationStatus =
 export type ApiCertification = {
   volunteerId: number;
   status: ApiCertificationStatus;
+  applicationStatus?: ApiCertificationStatus;
   submittedAt?: string;
   rejectedAt?: string;
   rejectedReason?: string;
+  rejectReason?: string;
+  certificationRejectReason?: string;
   volunteer?: ApiVolunteer;
 };
 
@@ -84,12 +112,28 @@ export type VolunteerQrVerifyPayload = {
 
 export async function fetchVolunteers() {
   const data = await apiRequest<ApiVolunteer[]>('/api/v1/volunteers');
+  const detailedData = await Promise.all(
+    data.map(async (item) => {
+      const id = item.id ?? item.volunteerId;
 
-  return data.map(normalizeVolunteerPost);
+      if (typeof id !== 'number') {
+        return item;
+      }
+
+      try {
+        const detail = await apiRequest<ApiVolunteer>(`/api/v1/volunteers/${id}`);
+        return { ...item, ...detail };
+      } catch {
+        return item;
+      }
+    }),
+  );
+
+  return detailedData.map(normalizeVolunteerPost);
 }
 
 export async function searchVolunteers(query: string) {
-  const params = new URLSearchParams({ query });
+  const params = new URLSearchParams({ keyword: query });
   const data = await apiRequest<ApiVolunteer[]>(`/api/v1/volunteers/search?${params.toString()}`);
 
   return data.map(normalizeVolunteerPost);
@@ -141,7 +185,7 @@ export function cancelVolunteerApplication(
 ) {
   return apiRequest<void>(`/api/v1/volunteers/${volunteerId}/application`, {
     method: 'DELETE',
-    body: payload?.cancelReason ? JSON.stringify(payload) : undefined,
+    body: payload?.cancelReason ? JSON.stringify({ reason: payload.cancelReason }) : undefined,
   });
 }
 
@@ -165,7 +209,7 @@ export function submitVolunteerCertification(
 ) {
   return apiRequest<ApiCertification>(`/api/v1/volunteers/${volunteerId}/certification`, {
     method: 'POST',
-    body: JSON.stringify(payload ?? {}),
+    body: JSON.stringify({ qrToken: payload?.checkOutQrValue ?? payload?.checkInQrValue ?? '' }),
   });
 }
 
@@ -173,39 +217,46 @@ export function fetchVolunteerCertification(volunteerId: number) {
   return apiRequest<ApiCertification>(`/api/v1/volunteers/${volunteerId}/certification`);
 }
 
-export function verifyVolunteerCheckIn(volunteerId: number, formData: FormData) {
-  return apiRequest<{ verified: boolean; message?: string }>(
-    `/api/v1/volunteers/${volunteerId}/checkin`,
-    {
-      method: 'POST',
-      body: formData,
-    },
-  );
+export async function verifyVolunteerCheckIn(volunteerId: number, qrToken: string) {
+  const result = await apiRequest<ApiApplication>(`/api/v1/volunteers/${volunteerId}/checkin`, {
+    method: 'POST',
+    body: JSON.stringify({ qrToken }),
+  });
+
+  return {
+    verified: isSuccessfulQrStatus(result.status ?? result.applicationStatus),
+    message: result.status ?? result.applicationStatus,
+  };
 }
 
-export function verifyVolunteerCheckOut(volunteerId: number, formData: FormData) {
-  return apiRequest<{ verified: boolean; message?: string }>(
-    `/api/v1/volunteers/${volunteerId}/checkout`,
-    {
-      method: 'POST',
-      body: formData,
-    },
-  );
+export async function verifyVolunteerCheckOut(volunteerId: number, qrToken: string) {
+  const result = await apiRequest<ApiApplication>(`/api/v1/volunteers/${volunteerId}/checkout`, {
+    method: 'POST',
+    body: JSON.stringify({ qrToken }),
+  });
+
+  return {
+    verified: isSuccessfulQrStatus(result.status ?? result.applicationStatus),
+    message: result.status ?? result.applicationStatus,
+  };
 }
 
 export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
   const id = data.id ?? data.volunteerId ?? 0;
-  const start = getDateTimeParts(data.startAt, data.startDate, data.startTime);
-  const end = getDateTimeParts(data.endAt, data.endDate, data.endTime);
-  const creditHours = data.creditHours ?? getCreditHours(data.startAt, data.endAt);
-  const capacity = data.neededCount ?? data.capacity ?? 0;
+  const start = getDateTimeParts(data.startAt, data.volunteerDate ?? data.startDate, data.startTime);
+  const end = getDateTimeParts(data.endAt, data.volunteerDate ?? data.endDate, data.endTime);
+  const creditHours =
+    data.creditHours ??
+    data.rewardHours ??
+    getCreditHoursFromParts(start.date, start.time, end.date, end.time);
+  const capacity = data.neededCount ?? data.capacity ?? data.maxParticipants ?? 0;
 
   return {
     id,
     title: data.title ?? '',
-    organization: data.organization ?? data.category ?? '',
+    organization: data.organization ?? data.departmentName ?? data.category ?? '',
     location: data.location ?? '',
-    category: data.category ?? data.organization ?? '',
+    category: data.category ?? data.organization ?? data.departmentName ?? '',
     startDate: start.date,
     endDate: end.date,
     startTime: start.time,
@@ -218,12 +269,12 @@ export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
     participationCondition: data.participationCondition ?? '정기 참여 가능자 우대',
     cancelPolicy: data.cancelPolicy ?? '취소 불가',
     guideTitle: data.guideTitle ?? '모집 안내',
-    description: data.description ?? '',
-    requirements: data.requirements ?? [],
+    description: data.description ?? data.content ?? '',
+    requirements: data.requirements ?? data.summaryTags ?? [],
     recruitType: normalizeRecruitType(
       data.recruitType ?? data.recruitmentType ?? data.applicationType,
     ),
-    keywords: data.keywords ?? [],
+    keywords: data.keywords ?? data.summaryTags ?? (data.category ? [data.category] : []),
     createdAt: data.createdAt,
     isFavorite: data.isFavorite,
     isApplied: data.isApplied,
@@ -232,7 +283,12 @@ export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
 }
 
 function normalizeRecruitType(type: ApiVolunteer['recruitType']) {
-  if (type === 'fcfs' || type === 'FCFS' || type === 'FIRST_COME') {
+  if (
+    type === 'fcfs' ||
+    type === 'FCFS' ||
+    type === 'FIRST_COME' ||
+    type === 'FIRST_COME_FIRST_SERVED'
+  ) {
     return 'fcfs';
   }
 
@@ -247,7 +303,7 @@ function normalizeVolunteerStatus(status: ApiVolunteer['status']): VolunteerStat
   return 'RECRUITING';
 }
 
-function getDateTimeParts(dateTime?: string, date?: string, time?: string) {
+function getDateTimeParts(dateTime?: string, date?: string, time?: ApiLocalTime) {
   if (dateTime) {
     const [datePart = '', timePart = ''] = dateTime.split('T');
 
@@ -259,21 +315,45 @@ function getDateTimeParts(dateTime?: string, date?: string, time?: string) {
 
   return {
     date: date ?? '',
-    time: time ?? '',
+    time: formatLocalTime(time),
   };
 }
 
-function getCreditHours(startAt?: string, endAt?: string) {
-  if (!startAt || !endAt) {
+function formatLocalTime(time?: ApiLocalTime) {
+  if (!time) {
+    return '';
+  }
+
+  if (typeof time === 'string') {
+    return time.slice(0, 5);
+  }
+
+  const hour = String(time.hour ?? 0).padStart(2, '0');
+  const minute = String(time.minute ?? 0).padStart(2, '0');
+
+  return `${hour}:${minute}`;
+}
+
+function getCreditHoursFromParts(
+  startDate?: string,
+  startTime?: string,
+  endDate?: string,
+  endTime?: string,
+) {
+  if (!startDate || !startTime || !endDate || !endTime) {
     return 0;
   }
 
-  const start = new Date(startAt).getTime();
-  const end = new Date(endAt).getTime();
+  const start = new Date(`${startDate}T${startTime}:00`).getTime();
+  const end = new Date(`${endDate}T${endTime}:00`).getTime();
 
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
     return 0;
   }
 
   return Math.round((end - start) / (1000 * 60 * 60));
+}
+
+function isSuccessfulQrStatus(status?: string) {
+  return status === 'ATTENDED' || status === 'COMPLETED' || status === 'CERTIFIED';
 }

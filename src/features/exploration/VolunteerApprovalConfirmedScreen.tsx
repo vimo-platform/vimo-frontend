@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 
+import { markNewApprovedApplicationsRead } from '@/api/volunteers';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
 
 import { VolunteerResultScreen } from './components/VolunteerResultScreen';
@@ -12,13 +13,14 @@ export function VolunteerApprovalConfirmedScreen() {
 
   const { id } = useLocalSearchParams<{ id?: string }>();
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     const postId = Number(id);
 
     if (Number.isFinite(postId)) {
       markApprovalConfirmationSeen(postId);
     }
 
+    await markNewApprovedApplicationsRead().catch(() => undefined);
     router.replace('/explore');
   };
 

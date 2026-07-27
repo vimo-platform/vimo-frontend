@@ -12,7 +12,7 @@ import {
 import { mockVolunteerPosts } from './mock';
 import type { VolunteerPost } from './types';
 
-const USE_MOCK_VOLUNTEERS = process.env.EXPO_PUBLIC_USE_MOCK_VOLUNTEERS !== 'false';
+const USE_MOCK_VOLUNTEERS = process.env.EXPO_PUBLIC_USE_MOCK_VOLUNTEERS === 'true';
 
 export async function getVolunteerPosts(): Promise<VolunteerPost[]> {
   if (USE_MOCK_VOLUNTEERS) {
@@ -22,7 +22,7 @@ export async function getVolunteerPosts(): Promise<VolunteerPost[]> {
   try {
     return await fetchVolunteers();
   } catch {
-    return delay(mockVolunteerPosts);
+    return [];
   }
 }
 
@@ -33,12 +33,8 @@ export async function getVolunteerPostById(id: number): Promise<VolunteerPost | 
 
   try {
     return await fetchVolunteerDetail(id);
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('공고를 찾을 수 없습니다')) {
-      return null;
-    }
-
-    return mockVolunteerPosts.find((post) => post.id === id) ?? null;
+  } catch {
+    return null;
   }
 }
 
@@ -47,7 +43,7 @@ export function createVolunteerApplication(volunteerId: number) {
     return delay({ volunteerId, status: 'PENDING' });
   }
 
-  return applyVolunteer(volunteerId).catch(() => ({ volunteerId, status: 'PENDING' }));
+  return applyVolunteer(volunteerId);
 }
 
 export function deleteVolunteerApplication(
@@ -58,7 +54,7 @@ export function deleteVolunteerApplication(
     return delay(undefined);
   }
 
-  return cancelVolunteerApplication(volunteerId, payload).catch(() => undefined);
+  return cancelVolunteerApplication(volunteerId, payload);
 }
 
 export function updateVolunteerFavorite(volunteerId: number, isFavorite: boolean) {
@@ -66,9 +62,7 @@ export function updateVolunteerFavorite(volunteerId: number, isFavorite: boolean
     return delay(undefined);
   }
 
-  const request = isFavorite ? favoriteVolunteer(volunteerId) : unfavoriteVolunteer(volunteerId);
-
-  return request.catch(() => undefined);
+  return isFavorite ? favoriteVolunteer(volunteerId) : unfavoriteVolunteer(volunteerId);
 }
 
 export function submitVolunteerActivityCertification(volunteerId: number) {
@@ -76,7 +70,7 @@ export function submitVolunteerActivityCertification(volunteerId: number) {
     return delay(undefined);
   }
 
-  return submitVolunteerCertification(volunteerId).catch(() => undefined);
+  return submitVolunteerCertification(volunteerId);
 }
 
 export async function getMyCertificationStatusRecords() {
@@ -88,9 +82,10 @@ export async function getMyCertificationStatusRecords() {
     .then((records) =>
       records.map((record) => ({
         volunteerId: record.volunteerId,
-        status: record.status,
+        status: record.status ?? record.applicationStatus,
         rejectedAt: record.rejectedAt,
-        rejectedReason: record.rejectedReason,
+        rejectedReason:
+          record.certificationRejectReason ?? record.rejectedReason ?? record.rejectReason,
       })),
     )
     .catch(() => []);

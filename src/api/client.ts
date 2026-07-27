@@ -3,7 +3,7 @@ import { getAccessToken, removeAccessToken } from '@/storage/auth-storage';
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ??
   process.env.EXPO_PUBLIC_API_BASE_URL ??
-  'http://localhost:8080';
+  'https://api2.hwangs.site';
 
 export async function readErrorMessage(response: Response) {
   const message = await response.text();
@@ -45,5 +45,11 @@ export async function apiRequest<TResponse>(
     return undefined as TResponse;
   }
 
-  return (await response.json()) as TResponse;
+  const text = await response.text();
+
+  if (text.trim().length === 0) {
+    return undefined as TResponse;
+  }
+
+  return JSON.parse(text) as TResponse;
 }

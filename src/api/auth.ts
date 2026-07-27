@@ -18,6 +18,39 @@ type UserProfileResponse = {
   name: string;
 };
 
+type JwtPayload = {
+  sub?: string;
+  role?: string;
+};
+
+const FALLBACK_USER_NAMES: Record<string, string> = {
+  '20231234': '홍길동',
+  admin01: '관리자',
+};
+
+function decodeJwtPayload(token: string): JwtPayload | null {
+  try {
+    const [, payload] = token.split('.');
+
+    if (!payload || typeof globalThis.atob !== 'function') {
+      return null;
+    }
+
+    const paddedPayload = payload.replace(/-/g, '+').replace(/_/g, '/').padEnd(
+      Math.ceil(payload.length / 4) * 4,
+      '=',
+    );
+
+    return JSON.parse(globalThis.atob(paddedPayload)) as JwtPayload;
+  } catch {
+    return null;
+  }
+}
+
+function getFallbackUserName(studentId: string) {
+  return FALLBACK_USER_NAMES[studentId];
+}
+
 export function login(requestBody: LoginRequest) {
   if (USE_MOCK_AUTH) {
     if (
@@ -61,7 +94,10 @@ export function login(requestBody: LoginRequest) {
       studentId: requestBody.studentId,
       password: requestBody.password,
     }),
-  }).then(async (loginResponse) => {
+  }, '').then(async (loginResponse) => {
+    const tokenPayload = decodeJwtPayload(loginResponse.accessToken);
+    const tokenRole = tokenPayload?.role;
+
     try {
       const profile = await apiRequest<UserProfileResponse>(
         '/api/v1/users/me/profile',
@@ -75,7 +111,7 @@ export function login(requestBody: LoginRequest) {
           id: 0,
           studentId: profile.studentId,
           name: profile.name,
-          role: 'STUDENT',
+          role: tokenRole ?? 'STUDENT',
         },
       };
     } catch {
@@ -83,8 +119,9 @@ export function login(requestBody: LoginRequest) {
         ...loginResponse,
         user: {
           id: 0,
-          studentId: requestBody.studentId,
-          role: 'ADMIN',
+          studentId: tokenPayload?.sub ?? requestBody.studentId,
+          name: getFallbackUserName(tokenPayload?.sub ?? requestBody.studentId),
+          role: tokenRole ?? 'USER',
         },
       };
     }

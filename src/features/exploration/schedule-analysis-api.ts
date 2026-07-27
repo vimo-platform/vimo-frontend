@@ -1,43 +1,66 @@
-import { analyzeTimetableOcr, saveUserSetup } from '@/api/user-setup';
+import {
+  analyzeTimetableOcr,
+  fetchRecommendedKeywords,
+  saveUserSetup,
+  type ApiLocalTime,
+  type ClassSlot,
+  type FreeTimeSlot,
+  type TimetableAnalysisResponse,
+} from '@/api/user-setup';
 
 export type ScheduleAnalysisResult = {
   scheduleItems?: {
     time: string;
     title: string;
   }[];
+  freeTimeSlots: FreeTimeSlot[];
   interestKeywords: string[];
   recommendedKeywords: string[];
   selectedRecommendationKeywords: string[];
 };
 
 const USE_MOCK_SCHEDULE_ANALYSIS =
-  process.env.EXPO_PUBLIC_USE_MOCK_SCHEDULE_ANALYSIS !== 'false';
+  process.env.EXPO_PUBLIC_USE_MOCK_SCHEDULE_ANALYSIS === 'true';
+
+const DEFAULT_RECOMMENDED_KEYWORDS = [
+  '행사운영',
+  '현장 관리',
+  '행정지원',
+  '디자인',
+  '멘토링',
+  '환경보호',
+  '미디어',
+  'IT',
+  '수업 보조',
+];
 
 export async function analyzeScheduleImage(imageUri?: string): Promise<ScheduleAnalysisResult> {
-  if (!USE_MOCK_SCHEDULE_ANALYSIS && imageUri) {
-    try {
-      const formData = new FormData();
-
-      formData.append('timetableImage', {
-        uri: imageUri,
-        name: 'timetable.jpg',
-        type: 'image/jpeg',
-      } as unknown as Blob);
-
-      const data = await analyzeTimetableOcr(formData);
-
-      return {
-        scheduleItems: data.scheduleItems,
-        interestKeywords: data.interestKeywords,
-        recommendedKeywords: data.recommendedKeywords,
-        selectedRecommendationKeywords: data.selectedRecommendationKeywords ?? [],
-      };
-    } catch {
-      return getMockScheduleAnalysisResult();
-    }
+  if (USE_MOCK_SCHEDULE_ANALYSIS) {
+    return getMockScheduleAnalysisResult();
   }
 
-  return getMockScheduleAnalysisResult();
+  if (!imageUri) {
+    return getEmptyScheduleAnalysisResult();
+  }
+
+  try {
+    const formData = new FormData();
+
+    formData.append('file', {
+      uri: imageUri,
+      name: 'timetable.jpg',
+      type: 'image/jpeg',
+    } as unknown as Blob);
+
+    const [analysis, keywordData] = await Promise.all([
+      analyzeTimetableOcr(formData),
+      fetchRecommendedKeywords().catch(() => ({ keywords: DEFAULT_RECOMMENDED_KEYWORDS })),
+    ]);
+
+    return normalizeScheduleAnalysisResult(analysis, keywordData.keywords);
+  } catch {
+    return getEmptyScheduleAnalysisResult();
+  }
 }
 
 export async function saveScheduleAnalysisSelection(
@@ -49,13 +72,51 @@ export async function saveScheduleAnalysisSelection(
   }
 
   await saveUserSetup({
-    scheduleItems: analysis.scheduleItems ?? [],
-    interestKeywords: analysis.interestKeywords,
-    selectedRecommendationKeywords: selectedKeywords,
+    freeTimeSlots: analysis.freeTimeSlots,
+    keywords: selectedKeywords,
   }).catch(() => undefined);
 }
 
-async function getMockScheduleAnalysisResult() {
+function normalizeScheduleAnalysisResult(
+  analysis: TimetableAnalysisResponse,
+  recommendedKeywords: string[],
+): ScheduleAnalysisResult {
+  const normalizedRecommendedKeywords =
+    recommendedKeywords.length > 0 ? recommendedKeywords : DEFAULT_RECOMMENDED_KEYWORDS;
+  const ocrKeywords = analysis.keywords ?? analysis.interestKeywords ?? [];
+  const selectedKeywords = ocrKeywords.filter((keyword) =>
+    normalizedRecommendedKeywords.includes(keyword),
+  );
+
+  return {
+    scheduleItems: analysis.scheduleItems ?? mapClassesToScheduleItems(analysis.classes ?? []),
+    freeTimeSlots: analysis.freeTimeSlots ?? [],
+    interestKeywords: selectedKeywords,
+    recommendedKeywords: normalizedRecommendedKeywords,
+    selectedRecommendationKeywords:
+      analysis.selectedRecommendationKeywords ?? selectedKeywords,
+  };
+}
+
+function mapClassesToScheduleItems(classes: ClassSlot[]) {
+  return classes.map((item) => ({
+    time: `${formatApiTime(item.startTime)} - ${formatApiTime(item.endTime)}`,
+    title: item.subjectName,
+  }));
+}
+
+function formatApiTime(time: ApiLocalTime) {
+  if (typeof time === 'string') {
+    return time.slice(0, 5);
+  }
+
+  const hour = String(time.hour ?? 0).padStart(2, '0');
+  const minute = String(time.minute ?? 0).padStart(2, '0');
+
+  return `${hour}:${minute}`;
+}
+
+async function getMockScheduleAnalysisResult(): Promise<ScheduleAnalysisResult> {
   await new Promise((resolve) => setTimeout(resolve, 2200));
 
   return {
@@ -63,18 +124,21 @@ async function getMockScheduleAnalysisResult() {
       { time: '09:00 - 11:50', title: '국제비즈니스영어' },
       { time: '15:30 - 16:30', title: '인성과 학문 III' },
     ],
-    interestKeywords: ['행정지원', '멘토링', '미디어'],
-    recommendedKeywords: [
-      '행사운영',
-      '현장 관리',
-      '행정지원',
-      '디자인',
-      '멘토링',
-      '환경보호',
-      '미디어',
-      'IT',
-      '수업 보조',
+    freeTimeSlots: [
+      { dayOfWeek: 'MONDAY', startTime: '11:50:00', endTime: '15:30:00' },
     ],
+    interestKeywords: ['행정지원', '멘토링', '미디어'],
+    recommendedKeywords: DEFAULT_RECOMMENDED_KEYWORDS,
     selectedRecommendationKeywords: ['행정지원', '멘토링', '미디어'],
+  };
+}
+
+function getEmptyScheduleAnalysisResult(): ScheduleAnalysisResult {
+  return {
+    scheduleItems: [],
+    freeTimeSlots: [],
+    interestKeywords: [],
+    recommendedKeywords: DEFAULT_RECOMMENDED_KEYWORDS,
+    selectedRecommendationKeywords: [],
   };
 }
