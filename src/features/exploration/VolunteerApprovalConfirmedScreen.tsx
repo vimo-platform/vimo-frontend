@@ -28,7 +28,7 @@ export function VolunteerApprovalConfirmedScreen() {
     <VolunteerResultScreen
       characterSource={CONFIRMED_CHARACTER}
       characterStyle={styles.confirmedCharacter}
-      description="봉사 참여가 최종 확정되었습니다!\n봉사 일정 및 안내사항을 확인해 주세요."
+      description={'봉사 참여가 최종 확정되었습니다!\n봉사 일정 및 안내사항을 확인해 주세요.'}
       title="지원 확정"
       tone="dark"
       onConfirm={handleConfirm}

@@ -13,6 +13,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CheckIcon, LockIcon, LoginArrowIcon, SchoolIcon, WarningIcon } from '../components/LoginIcons';
 
+// 웹에서 TextInput 포커스 시 나타나는 브라우저 기본 아웃라인 제거
+const webOutlineReset: any =
+  Platform.OS === 'web' ? { outlineWidth: 0, outlineStyle: 'none' } : null;
+
 export type SchoolLoginSubmitValues = {
   studentId: string;
   password: string;
@@ -112,7 +116,7 @@ export default function SchoolLoginScreen({
                 placeholder="학번을 입력하세요"
                 placeholderTextColor="#818181"
                 returnKeyType="next"
-                style={styles.input}
+                style={[styles.input, webOutlineReset]}
                 value={studentId}
               />
             </View>
@@ -127,7 +131,7 @@ export default function SchoolLoginScreen({
                 placeholderTextColor="#818181"
                 returnKeyType="done"
                 secureTextEntry
-                style={styles.input}
+                style={[styles.input, webOutlineReset]}
                 value={password}
               />
             </View>

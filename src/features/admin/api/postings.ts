@@ -1,7 +1,7 @@
 import { apiRequest } from '@/api/client';
 import { getCurrentUser } from '@/storage/auth-storage';
 import { initialPostings } from '@/features/admin/data/mock-postings';
-import type { Posting, PostingStatus } from '@/features/admin/types';
+import type { Posting, PostingStatus, RecruitType } from '@/features/admin/types';
 
 type ApiLocalTime =
   | string
@@ -207,13 +207,35 @@ async function toApiVolunteerPayload(posting: Posting) {
     title: posting.title,
     content: posting.description,
     category,
+    summaryTags: posting.tags,
     volunteerDate: parsePostingDate(posting.period),
+    endDate: parsePostingEndDate(posting.period),
     startTime: normalizeTime(posting.startTime),
     endTime: normalizeTime(posting.endTime),
     location: posting.location,
     maxParticipants: posting.capacity,
     rewardHours: posting.hoursPerSession,
+    recruitType: toApiRecruitType(posting.recruitType),
+    targetGender: toApiGender(posting.gender),
   };
+}
+
+// 앱 값 -> 백엔드 enum (백엔드는 SELECTION / FIRST_COME 만 허용)
+function toApiRecruitType(type?: RecruitType) {
+  return type === 'fcfs' ? 'FIRST_COME' : 'SELECTION';
+}
+
+// 앱 값 -> 백엔드 enum (ALL / MALE / FEMALE)
+function toApiGender(gender?: string) {
+  if (gender === '남성') {
+    return 'MALE';
+  }
+
+  if (gender === '여성') {
+    return 'FEMALE';
+  }
+
+  return 'ALL';
 }
 
 function normalizePosting(data: ApiAdminVolunteer): Posting {
@@ -290,6 +312,18 @@ function normalizeGender(gender?: string) {
 
 function parsePostingDate(period: string) {
   const rawDate = period.split('~')[0]?.trim() ?? period.trim();
+
+  return toIsoDate(rawDate);
+}
+
+function parsePostingEndDate(period: string) {
+  const parts = period.split('~');
+  const rawDate = (parts[1] ?? parts[0])?.trim() ?? period.trim();
+
+  return toIsoDate(rawDate);
+}
+
+function toIsoDate(rawDate: string) {
   const [year, month, day] = rawDate.match(/\d+/g) ?? [];
 
   if (!year || !month || !day) {
@@ -335,8 +369,9 @@ function getCreditHoursFromParts(
     return 0;
   }
 
+  // 회차(하루) 기준 인정 시간: 여러 날에 걸친 공고여도 시작일의 시작~종료 시간으로 계산
   const start = new Date(`${startDate}T${startTime}:00`).getTime();
-  const end = new Date(`${endDate}T${endTime}:00`).getTime();
+  const end = new Date(`${startDate}T${endTime}:00`).getTime();
 
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
     return 0;

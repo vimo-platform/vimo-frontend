@@ -51,6 +51,29 @@ export async function fetchFcfsApplicants(postingId: string): Promise<Applicant[
   return [];
 }
 
+// 신청 채택(선발): PENDING -> APPROVED
+export async function approveApplicant(applicationId: string): Promise<void> {
+  if (USE_MOCK_ADMIN_API || !isNumericId(applicationId)) {
+    return;
+  }
+
+  await apiRequest<void>(`/api/v1/admin/volunteers/applications/${applicationId}/approve`, {
+    method: 'PATCH',
+  });
+}
+
+// 신청 반려: PENDING -> REJECTED
+export async function rejectApplicant(applicationId: string, reason = '관리자 반려'): Promise<void> {
+  if (USE_MOCK_ADMIN_API || !isNumericId(applicationId)) {
+    return;
+  }
+
+  await apiRequest<void>(`/api/v1/admin/volunteers/applications/${applicationId}/reject`, {
+    method: 'PATCH',
+    body: JSON.stringify({ reason }),
+  });
+}
+
 function normalizeApplicant(data: ApiApplicant): Applicant {
   return {
     id: String(data.applicationId ?? data.studentId ?? ''),

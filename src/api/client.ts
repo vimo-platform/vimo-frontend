@@ -5,6 +5,20 @@ export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL ??
   'https://api2.hwangs.site';
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
+export function isAuthError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
+}
+
 export async function readErrorMessage(response: Response) {
   const message = await response.text();
 
@@ -38,7 +52,7 @@ export async function apiRequest<TResponse>(
       await removeAccessToken();
     }
 
-    throw new Error(await readErrorMessage(response));
+    throw new ApiError(response.status, await readErrorMessage(response));
   }
 
   if (response.status === 204) {

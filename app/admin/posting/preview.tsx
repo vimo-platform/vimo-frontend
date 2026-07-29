@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Stack, router, useFocusEffect } from "expo-router";
 
+import { isAuthError } from "@/api/client";
 import { getWorkingPosting, setWorkingPosting, upsertPosting } from "@/features/admin/api/postings";
 import { Figma } from "@/features/admin/components/figma";
 import { Colors } from "@/features/admin/constants/theme";
@@ -37,7 +38,12 @@ export default function PostingPreviewScreen() {
     try {
       await upsertPosting({ ...posting, status: "draft" });
       goList("draft");
-    } catch {
+    } catch (error) {
+      if (isAuthError(error)) {
+        Alert.alert("로그인 만료", "로그인이 만료되었어요. 다시 로그인해 주세요.");
+        router.replace("/");
+        return;
+      }
       Alert.alert("저장 실패", "공고 임시저장에 실패했습니다.");
     } finally {
       setIsSaving(false);
@@ -55,7 +61,12 @@ export default function PostingPreviewScreen() {
       await upsertPosting({ ...posting, status: "open" });
       setConfirming(false);
       setDone(true);
-    } catch {
+    } catch (error) {
+      if (isAuthError(error)) {
+        Alert.alert("로그인 만료", "로그인이 만료되었어요. 다시 로그인해 주세요.");
+        router.replace("/");
+        return;
+      }
       Alert.alert("등록 실패", "공고 등록에 실패했습니다.");
     } finally {
       setIsSaving(false);

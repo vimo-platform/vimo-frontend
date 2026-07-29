@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 
+import { isAuthError } from '@/api/client';
 import {
   generatePostingDraft,
   newPostingId,
@@ -52,6 +53,10 @@ const VOLUNTEER_LOCATIONS = [
 
 const REQUIRED_MESSAGE = '필수 작성 문항입니다.';
 
+// 웹에서 TextInput 포커스 시 나타나는 브라우저 기본 아웃라인 제거
+const webOutlineReset: any =
+  Platform.OS === 'web' ? { outlineWidth: 0, outlineStyle: 'none' } : null;
+
 function RequiredMessage({ visible }: { visible: boolean }) {
   if (!visible) {
     return null;
@@ -76,6 +81,7 @@ export default function CreatePostingScreen() {
   const [timePickerTarget, setTimePickerTarget] = useState<'start' | 'end' | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const missing = {
     memo: !memo.trim(),
@@ -96,6 +102,7 @@ export default function CreatePostingScreen() {
     }
 
     setSubmitting(true);
+    setSubmitError(null);
 
     try {
       const normalizedCreditHours = Math.max(1, creditHours);
@@ -118,6 +125,14 @@ export default function CreatePostingScreen() {
         createdAt: new Date().toISOString().slice(0, 10),
       });
       router.replace('/admin/posting/preview');
+    } catch (error) {
+      if (isAuthError(error)) {
+        setSubmitError('로그인이 만료되었어요. 다시 로그인해 주세요.');
+        router.replace('/');
+        return;
+      }
+
+      setSubmitError('공고 생성에 실패했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
       setSubmitting(false);
     }
@@ -148,7 +163,7 @@ export default function CreatePostingScreen() {
             multiline
             placeholder={'봉사 모집 내용을 간단히 작성해주세요.\n예: 장애학우 수업 도우미 모집'}
             placeholderTextColor={Colors.textSecondary}
-            style={[styles.memoInput, memo ? styles.textWhite : null]}
+            style={[styles.memoInput, memo ? styles.textWhite : null, webOutlineReset]}
             value={memo}
             onChangeText={setMemo}
           />
@@ -212,7 +227,7 @@ export default function CreatePostingScreen() {
           <TextInput
             keyboardType="number-pad"
             placeholderTextColor={Colors.textSecondary}
-            style={styles.creditInput}
+            style={[styles.creditInput, webOutlineReset]}
             value={creditHours ? String(creditHours) : ''}
             onChangeText={(value) => {
               const numericValue = Number(value.replace(/\D/g, ''));
@@ -279,6 +294,10 @@ export default function CreatePostingScreen() {
           <Text style={styles.formErrorSummary}>
             필수 항목을 모두 작성해 주세요.
           </Text>
+        )}
+
+        {submitError && (
+          <Text style={styles.formErrorSummary}>{submitError}</Text>
         )}
 
         <Pressable
@@ -453,6 +472,7 @@ function DateSelectModal({
   );
   const days = getCalendarDays(visibleMonth);
   const selectedDateKey = selectedDate ? formatDateKey(initialDate) : '';
+  const todayKey = formatDateKey(new Date());
 
   const moveMonth = (offset: number) => {
     setVisibleMonth((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
@@ -486,18 +506,24 @@ function DateSelectModal({
             {days.map((date, index) => {
               const dateKey = date ? formatDateKey(date) : '';
               const isSelected = dateKey === selectedDateKey;
+              const isToday = dateKey === todayKey;
 
               return (
                 <View key={`${dateKey}-${index}`} style={styles.calendarCell}>
                   {date ? (
                     <Pressable
                       accessibilityRole="button"
-                      style={[styles.calendarDay, isSelected && styles.calendarDaySelected]}
+                      style={[
+                        styles.calendarDay,
+                        isToday && !isSelected && styles.calendarDayToday,
+                        isSelected && styles.calendarDaySelected,
+                      ]}
                       onPress={() => onSelect(dateKey)}
                     >
                       <Text
                         style={[
                           styles.calendarDayText,
+                          isToday && !isSelected && styles.calendarDayTextToday,
                           isSelected && styles.calendarDayTextSelected,
                         ]}
                       >
@@ -928,6 +954,10 @@ const styles = StyleSheet.create({
   calendarDaySelected: {
     backgroundColor: '#222222',
   },
+  calendarDayToday: {
+    borderWidth: 1.5,
+    borderColor: Colors.danger,
+  },
   calendarDayText: {
     color: Colors.text,
     fontSize: 14,
@@ -935,6 +965,10 @@ const styles = StyleSheet.create({
   },
   calendarDayTextSelected: {
     color: Colors.white,
+  },
+  calendarDayTextToday: {
+    color: Colors.danger,
+    fontWeight: '700',
   },
   selectorCancelButton: {
     alignItems: 'center',

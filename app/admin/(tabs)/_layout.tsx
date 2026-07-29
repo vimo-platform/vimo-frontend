@@ -1,5 +1,5 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Asset } from "expo-asset";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Tabs } from "expo-router";
 
 import { Colors } from "@/features/admin/constants/theme";
@@ -11,22 +11,22 @@ type GnbProps = {
 
 const adminTabMeta: Record<
   string,
-  { icon: keyof typeof Ionicons.glyphMap; label: string }
+  { icon: number; label: string }
 > = {
   index: {
-    icon: "qr-code-outline",
+    icon: require("../../../assets/admin/gnb/field-qr.svg"),
     label: "현장 QR",
   },
   postings: {
-    icon: "document-text-outline",
+    icon: require("../../../assets/admin/gnb/postings.svg"),
     label: "공고",
   },
   approvals: {
-    icon: "checkmark-circle-outline",
+    icon: require("../../../assets/admin/gnb/approvals.svg"),
     label: "승인",
   },
   profile: {
-    icon: "person-circle-outline",
+    icon: require("../../../assets/admin/gnb/mypage.svg"),
     label: "마이페이지",
   },
 };
@@ -51,15 +51,16 @@ function GnbTabBar({ state, navigation }: GnbProps) {
               style={styles.tab}
               onPress={() => navigation.navigate(route.name)}
             >
-              <Ionicons
-                name={tab.icon}
-                size={24}
-                color={isActive ? "#1F2733" : "#A2A7AE"}
-                style={styles.icon}
-              />
-              <Text style={[styles.label, isActive && styles.activeLabel]}>
-                {tab.label}
-              </Text>
+              <View style={[styles.tabInner, isActive && styles.tabInnerActive]}>
+                <Image
+                  source={{ uri: Asset.fromModule(tab.icon).uri }}
+                  resizeMode="contain"
+                  style={[styles.icon, !isActive && styles.iconInactive]}
+                />
+                <Text style={[styles.label, isActive && styles.activeLabel]}>
+                  {tab.label}
+                </Text>
+              </View>
             </Pressable>
           );
         })}
@@ -119,10 +120,24 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 68,
     alignItems: "center",
-    paddingTop: 16,
+    justifyContent: "center",
+  },
+  tabInner: {
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+  },
+  tabInnerActive: {
+    backgroundColor: "#EEF0F3",
   },
   icon: {
+    width: 24,
+    height: 24,
     marginBottom: 3,
+  },
+  iconInactive: {
+    opacity: 0.45,
   },
   label: {
     color: "#000000",

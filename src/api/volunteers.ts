@@ -344,8 +344,9 @@ function getCreditHoursFromParts(
     return 0;
   }
 
+  // 회차(하루) 기준 인정 시간: 여러 날에 걸친 공고여도 시작일의 시작~종료 시간으로 계산
   const start = new Date(`${startDate}T${startTime}:00`).getTime();
-  const end = new Date(`${endDate}T${endTime}:00`).getTime();
+  const end = new Date(`${startDate}T${endTime}:00`).getTime();
 
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
     return 0;
