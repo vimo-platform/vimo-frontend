@@ -30,6 +30,9 @@ export type ApiVolunteer = {
   neededCount?: number;
   appliedCount?: number;
   applicantCount?: number;
+  applicationCount?: number;
+  currentApplicants?: number;
+  currentParticipants?: number;
   creditHours?: number;
   rewardHours?: number;
   status?: VolunteerStatus | string;
@@ -244,7 +247,7 @@ export async function verifyVolunteerCheckOut(volunteerId: number, qrToken: stri
 export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
   const id = data.id ?? data.volunteerId ?? 0;
   const start = getDateTimeParts(data.startAt, data.volunteerDate ?? data.startDate, data.startTime);
-  const end = getDateTimeParts(data.endAt, data.volunteerDate ?? data.endDate, data.endTime);
+  const end = getDateTimeParts(data.endAt, data.endDate ?? data.volunteerDate, data.endTime);
   const creditHours =
     data.creditHours ??
     data.rewardHours ??
@@ -263,7 +266,13 @@ export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
     endTime: end.time,
     recruitmentEndDate: data.recruitmentEndDate ?? start.date,
     neededCount: capacity,
-    appliedCount: data.appliedCount ?? data.applicantCount ?? 0,
+    appliedCount:
+      data.appliedCount ??
+      data.applicantCount ??
+      data.applicationCount ??
+      data.currentApplicants ??
+      data.currentParticipants ??
+      0,
     creditHours,
     status: normalizeVolunteerStatus(data.status),
     participationCondition: data.participationCondition ?? '정기 참여 가능자 우대',

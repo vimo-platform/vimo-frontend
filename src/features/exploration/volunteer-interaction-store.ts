@@ -1,6 +1,7 @@
 import type { VolunteerPost } from './types';
 
 type Listener = () => void;
+const APPROVAL_NOTICE_SEEN_IDS_KEY = 'vimo.approvalNoticeSeenIds';
 
 type VolunteerInteractionState = {
   favoriteIds: number[];
@@ -32,7 +33,7 @@ let state: VolunteerInteractionState = {
   activityCompletedIds: [],
   certificationCompletedIds: [],
   certificationRejectedRecords: [],
-  approvalNoticeSeenIds: [],
+  approvalNoticeSeenIds: readStoredApprovalNoticeSeenIds(),
 };
 
 const listeners = new Set<Listener>();
@@ -206,10 +207,13 @@ export function markApprovalConfirmationSeen(id: number) {
     return;
   }
 
+  const approvalNoticeSeenIds = [...state.approvalNoticeSeenIds, id];
+
   state = {
     ...state,
-    approvalNoticeSeenIds: [...state.approvalNoticeSeenIds, id],
+    approvalNoticeSeenIds,
   };
+  writeStoredApprovalNoticeSeenIds(approvalNoticeSeenIds);
   notify();
 }
 
@@ -277,4 +281,40 @@ function isAppliedStatus(status: VolunteerPost['applicationStatus']) {
 
 function unique<T>(items: T[]) {
   return Array.from(new Set(items));
+}
+
+function readStoredApprovalNoticeSeenIds() {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(APPROVAL_NOTICE_SEEN_IDS_KEY);
+
+    if (!rawValue) {
+      return [];
+    }
+
+    const parsedValue = JSON.parse(rawValue);
+
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    return parsedValue.filter((id): id is number => typeof id === 'number');
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredApprovalNoticeSeenIds(ids: number[]) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(APPROVAL_NOTICE_SEEN_IDS_KEY, JSON.stringify(unique(ids)));
+  } catch {
+    // Persistence is best-effort; in-memory state still prevents repeat within the session.
+  }
 }

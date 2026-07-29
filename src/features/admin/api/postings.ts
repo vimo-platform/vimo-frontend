@@ -159,6 +159,20 @@ export async function generatePostingDraft(
 }
 
 async function savePostingToApi(posting: Posting) {
+  if (shouldPublishExistingDraft(posting)) {
+    await apiRequest<ApiAdminVolunteer>(`/api/v1/admin/volunteers/${posting.id}/draft`, {
+      method: 'PATCH',
+      body: JSON.stringify(await toApiVolunteerPayload({ ...posting, status: 'draft' })),
+    });
+
+    const published = await apiRequest<ApiAdminVolunteer>(
+      `/api/v1/admin/volunteers/${posting.id}/publish`,
+      { method: 'PATCH' },
+    );
+
+    return normalizePosting(published);
+  }
+
   const path = getSavePath(posting);
   const method = getSaveMethod(posting);
   const data = await apiRequest<ApiAdminVolunteer>(path, {
@@ -176,6 +190,16 @@ async function savePostingToApi(posting: Posting) {
   }
 
   return normalizePosting(data);
+}
+
+function shouldPublishExistingDraft(posting: Posting) {
+  if (!isNumericId(posting.id) || posting.status !== 'open') {
+    return false;
+  }
+
+  return (
+    workingPosting?.id === posting.id && workingPosting.status === 'draft'
+  ) || postings.some((item) => item.id === posting.id && item.status === 'draft');
 }
 
 function getSavePath(posting: Posting) {
@@ -217,6 +241,7 @@ async function toApiVolunteerPayload(posting: Posting) {
     rewardHours: posting.hoursPerSession,
     recruitType: toApiRecruitType(posting.recruitType),
     targetGender: toApiGender(posting.gender),
+    timeOrderValid: isTimeOrderValid(posting.startTime, posting.endTime),
   };
 }
 
@@ -341,6 +366,27 @@ function normalizeTime(time: string) {
   }
 
   return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:${(second ?? '00').padStart(2, '0')}`;
+}
+
+function isTimeOrderValid(startTime: string, endTime: string) {
+  const startMinutes = getMinutes(startTime);
+  const endMinutes = getMinutes(endTime);
+
+  if (startMinutes === null || endMinutes === null) {
+    return false;
+  }
+
+  return startMinutes < endMinutes;
+}
+
+function getMinutes(time: string) {
+  const [hour, minute] = time.match(/\d+/g) ?? [];
+
+  if (!hour || !minute) {
+    return null;
+  }
+
+  return Number(hour) * 60 + Number(minute);
 }
 
 function getDateTimeParts(dateTime?: string, date?: string, time?: ApiLocalTime) {

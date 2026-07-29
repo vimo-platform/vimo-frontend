@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 
 import { login } from '@/api/auth';
 import { fetchNewApprovedApplications } from '@/api/volunteers';
+import { getVolunteerPostById } from '@/features/exploration/api';
 import {
   clearUserSession,
   getSavedStudentId,
@@ -76,9 +77,18 @@ export default function EntryScreen() {
 
       try {
         const newApprovedApplications = await fetchNewApprovedApplications();
+        const selectionApprovedApplications = await Promise.all(
+          newApprovedApplications.map(async (application) => {
+            const post = await getVolunteerPostById(application.volunteerId);
 
-        newApprovedApplications.forEach((application) => {
-          approveVolunteerApplication(application.volunteerId);
+            return post?.recruitType === 'selection' ? application : null;
+          }),
+        );
+
+        selectionApprovedApplications.forEach((application) => {
+          if (application) {
+            approveVolunteerApplication(application.volunteerId);
+          }
         });
       } catch {
         // Approval notifications are non-blocking; keep login flow available offline.

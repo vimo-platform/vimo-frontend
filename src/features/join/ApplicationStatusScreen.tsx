@@ -1,5 +1,5 @@
-import { Href, router } from 'expo-router';
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { Href, router, useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,11 +7,17 @@ import { AllLine, TopBar } from '@/components/common';
 import { UserGnb } from '@/components/navigation/user-gnb';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
 
-import { deleteVolunteerApplication, updateVolunteerFavorite } from '@/features/exploration/api';
+import {
+  deleteVolunteerApplication,
+  getVolunteerPosts,
+  updateVolunteerFavorite,
+} from '@/features/exploration/api';
 import {
   cancelVolunteerApplication,
   getVolunteerInteractionsSnapshot,
   getVolunteerPostsSnapshot,
+  mergeVolunteerInteractionsFromPosts,
+  setVolunteerPostsSnapshot,
   setVolunteerFavorite,
   subscribeVolunteerInteractions,
 } from '@/features/exploration/volunteer-interaction-store';
@@ -32,14 +38,35 @@ export function ApplicationStatusScreen() {
     getVolunteerInteractionsSnapshot,
     getVolunteerInteractionsSnapshot,
   );
+  const [posts, setPosts] = useState(() => getVolunteerPostsSnapshot());
   const cards = useMemo(
-    () => buildApplicationStatusCards(getVolunteerPostsSnapshot(), favoriteIds, appliedIds),
-    [appliedIds, favoriteIds],
+    () => buildApplicationStatusCards(posts, favoriteIds, appliedIds),
+    [appliedIds, favoriteIds, posts],
   );
   const [cancelTarget, setCancelTarget] = useState<ApplicationVolunteerCardType | null>(null);
   const [cancelCompleteTarget, setCancelCompleteTarget] =
     useState<ApplicationVolunteerCardType | null>(null);
   const [cancelReason, setCancelReason] = useState('');
+
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+
+      getVolunteerPosts().then((nextPosts) => {
+        if (!mounted) {
+          return;
+        }
+
+        setPosts(nextPosts);
+        setVolunteerPostsSnapshot(nextPosts);
+        mergeVolunteerInteractionsFromPosts(nextPosts);
+      });
+
+      return () => {
+        mounted = false;
+      };
+    }, []),
+  );
 
   const appliedCards = useMemo(() => cards.filter((card) => card.applied), [cards]);
   const favoriteCards = useMemo(
@@ -152,7 +179,7 @@ function buildApplicationStatusCards(
   return posts
     .filter((post) => favoriteIds.includes(post.id) || appliedIds.includes(post.id))
     .map((post) => {
-      const applied = appliedIds.includes(post.id);
+      const applied = isPendingSelectionApplication(post, appliedIds);
 
       return {
         id: post.id,
@@ -172,6 +199,18 @@ function buildApplicationStatusCards(
         progressStep: applied ? 2 : undefined,
       };
     });
+}
+
+function isPendingSelectionApplication(post: VolunteerPost, appliedIds: number[]) {
+  if (!appliedIds.includes(post.id) || post.recruitType === 'fcfs') {
+    return false;
+  }
+
+  return (
+    !post.applicationStatus ||
+    post.applicationStatus === 'NONE' ||
+    post.applicationStatus === 'PENDING'
+  );
 }
 
 function formatCredit(hours: number) {

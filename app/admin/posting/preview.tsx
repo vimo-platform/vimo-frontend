@@ -55,6 +55,12 @@ export default function PostingPreviewScreen() {
       return;
     }
 
+    if (!isTimeOrderValid(posting.startTime, posting.endTime)) {
+      setConfirming(false);
+      Alert.alert("시간 확인", "종료 시간은 시작 시간보다 늦어야 합니다.");
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -62,12 +68,17 @@ export default function PostingPreviewScreen() {
       setConfirming(false);
       setDone(true);
     } catch (error) {
+      setConfirming(false);
+
       if (isAuthError(error)) {
         Alert.alert("로그인 만료", "로그인이 만료되었어요. 다시 로그인해 주세요.");
         router.replace("/");
         return;
       }
-      Alert.alert("등록 실패", "공고 등록에 실패했습니다.");
+      Alert.alert(
+        "등록 실패",
+        error instanceof Error ? error.message : "공고 등록에 실패했습니다.",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -202,6 +213,27 @@ export default function PostingPreviewScreen() {
       </Modal>
     </View>
   );
+}
+
+function isTimeOrderValid(startTime: string, endTime: string) {
+  const startMinutes = getMinutes(startTime);
+  const endMinutes = getMinutes(endTime);
+
+  if (startMinutes === null || endMinutes === null) {
+    return false;
+  }
+
+  return startMinutes < endMinutes;
+}
+
+function getMinutes(time: string) {
+  const [hour, minute] = time.match(/\d+/g) ?? [];
+
+  if (!hour || !minute) {
+    return null;
+  }
+
+  return Number(hour) * 60 + Number(minute);
 }
 
 function InfoRow({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {

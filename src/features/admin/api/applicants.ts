@@ -4,9 +4,25 @@ import type { Applicant } from '@/features/admin/types';
 
 type ApiApplicant = {
   applicationId?: number;
+  volunteerId?: number;
   studentId?: string;
+  department?: string;
+  departmentName?: string;
+  major?: string;
+  majorName?: string;
+  studentDepartment?: string;
+  studentDepartmentName?: string;
+  studentMajor?: string;
+  studentMajorName?: string;
+  introduction?: string;
   status?: string;
   appliedAt?: string;
+};
+
+type ApiCancellationNotice = {
+  studentId?: string;
+  reason?: string;
+  canceledAt?: string;
 };
 
 const USE_MOCK_ADMIN_API = process.env.EXPO_PUBLIC_USE_MOCK_ADMIN_API === 'true';
@@ -21,8 +37,10 @@ export async function fetchApplicants(postingId: string): Promise<Applicant[]> {
       const data = await apiRequest<ApiApplicant[]>(
         `/api/v1/admin/volunteers/${postingId}/application`,
       );
+      const detailedData = await fetchApplicantDetails(data);
+      const cancellations = await fetchCancellationNotices(postingId);
 
-      return data.map(normalizeApplicant);
+      return mergeApplicantsWithCancellations(detailedData, cancellations);
     } catch {
       return [];
     }
@@ -41,8 +59,9 @@ export async function fetchFcfsApplicants(postingId: string): Promise<Applicant[
       const data = await apiRequest<ApiApplicant[]>(
         `/api/v1/admin/volunteers/${postingId}/application`,
       );
+      const detailedData = await fetchApplicantDetails(data);
 
-      return data.map(normalizeApplicant);
+      return detailedData.map((applicant) => normalizeApplicant(applicant));
     } catch {
       return [];
     }
@@ -74,13 +93,120 @@ export async function rejectApplicant(applicationId: string, reason = '관리자
   });
 }
 
-function normalizeApplicant(data: ApiApplicant): Applicant {
+async function fetchApplicantDetails(applicants: ApiApplicant[]) {
+  return Promise.all(
+    applicants.map(async (applicant) => {
+      if (typeof applicant.applicationId !== 'number') {
+        return applicant;
+      }
+
+      try {
+        const detail = await apiRequest<ApiApplicant>(
+          `/api/v1/admin/volunteers/applications/${applicant.applicationId}`,
+        );
+
+        return { ...applicant, ...detail };
+      } catch {
+        return applicant;
+      }
+    }),
+  );
+}
+
+async function fetchCancellationNotices(postingId: string) {
+  try {
+    return await apiRequest<ApiCancellationNotice[]>(
+      `/api/v1/admin/volunteers/${postingId}/cancellations`,
+    );
+  } catch {
+    return [];
+  }
+}
+
+function mergeApplicantsWithCancellations(
+  applicants: ApiApplicant[],
+  cancellations: ApiCancellationNotice[],
+) {
+  const cancellationByStudentId = new Map(
+    cancellations
+      .filter((cancellation) => cancellation.studentId)
+      .map((cancellation) => [cancellation.studentId, cancellation]),
+  );
+  const normalizedApplicants = applicants.map((applicant) => {
+    const cancellation = applicant.studentId
+      ? cancellationByStudentId.get(applicant.studentId)
+      : undefined;
+
+    if (cancellation?.studentId) {
+      cancellationByStudentId.delete(cancellation.studentId);
+    }
+
+    return normalizeApplicant(applicant, cancellation);
+  });
+  const canceledOnlyApplicants = Array.from(cancellationByStudentId.values()).map(
+    normalizeCanceledApplicant,
+  );
+
+  return [...normalizedApplicants, ...canceledOnlyApplicants];
+}
+
+function normalizeApplicant(data: ApiApplicant, cancellation?: ApiCancellationNotice): Applicant {
   return {
     id: String(data.applicationId ?? data.studentId ?? ''),
     name: data.studentId ?? '',
-    department: data.status ?? '',
+    department: getApplicantDepartment(data),
     selected: data.status === 'APPROVED' || data.status === 'ATTENDED' || data.status === 'COMPLETED',
+    cancel: cancellation ? normalizeCancellation(cancellation) : undefined,
   };
+}
+
+function normalizeCanceledApplicant(cancellation: ApiCancellationNotice): Applicant {
+  return {
+    id: `canceled-${cancellation.studentId ?? cancellation.canceledAt ?? ''}`,
+    name: cancellation.studentId ?? '',
+    department: '',
+    selected: false,
+    cancel: normalizeCancellation(cancellation),
+  };
+}
+
+function normalizeCancellation(cancellation: ApiCancellationNotice) {
+  return {
+    at: formatCanceledAt(cancellation.canceledAt),
+    reason: cancellation.reason?.trim() || '취소 사유가 없습니다.',
+  };
+}
+
+function getApplicantDepartment(data: ApiApplicant) {
+  return (
+    data.departmentName ??
+    data.department ??
+    data.majorName ??
+    data.major ??
+    data.studentDepartmentName ??
+    data.studentDepartment ??
+    data.studentMajorName ??
+    data.studentMajor ??
+    ''
+  );
+}
+
+function formatCanceledAt(value?: string) {
+  if (!value) {
+    return '';
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value.replace('T', ' ').slice(0, 16);
+  }
+
+  return `${date.getFullYear()}. ${String(date.getMonth() + 1).padStart(2, '0')}. ${String(
+    date.getDate(),
+  ).padStart(2, '0')}. ${String(date.getHours()).padStart(2, '0')}:${String(
+    date.getMinutes(),
+  ).padStart(2, '0')}`;
 }
 
 function isNumericId(id: string) {
