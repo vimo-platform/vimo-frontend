@@ -60,6 +60,20 @@ export function getVolunteerInteractionsSnapshot() {
   return state;
 }
 
+export function resetVolunteerInteractions() {
+  state = {
+    favoriteIds: [],
+    appliedIds: [],
+    approvedIds: [],
+    activityCompletedIds: [],
+    certificationCompletedIds: [],
+    certificationRejectedRecords: [],
+    approvalNoticeSeenIds: readStoredApprovalNoticeSeenIds(),
+  };
+  volunteerPostsSnapshot = [];
+  notify();
+}
+
 export function toggleVolunteerFavorite(id: number) {
   setVolunteerFavorite(id, !state.favoriteIds.includes(id));
 }

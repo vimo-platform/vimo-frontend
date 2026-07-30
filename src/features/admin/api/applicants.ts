@@ -6,6 +6,8 @@ type ApiApplicant = {
   applicationId?: number;
   volunteerId?: number;
   studentId?: string;
+  studentName?: string;
+  name?: string;
   department?: string;
   departmentName?: string;
   major?: string;
@@ -21,6 +23,16 @@ type ApiApplicant = {
 
 type ApiCancellationNotice = {
   studentId?: string;
+  studentName?: string;
+  name?: string;
+  department?: string;
+  departmentName?: string;
+  major?: string;
+  majorName?: string;
+  studentDepartment?: string;
+  studentDepartmentName?: string;
+  studentMajor?: string;
+  studentMajorName?: string;
   reason?: string;
   canceledAt?: string;
 };
@@ -153,7 +165,7 @@ function mergeApplicantsWithCancellations(
 function normalizeApplicant(data: ApiApplicant, cancellation?: ApiCancellationNotice): Applicant {
   return {
     id: String(data.applicationId ?? data.studentId ?? ''),
-    name: data.studentId ?? '',
+    name: getApplicantName(data),
     department: getApplicantDepartment(data),
     selected: data.status === 'APPROVED' || data.status === 'ATTENDED' || data.status === 'COMPLETED',
     cancel: cancellation ? normalizeCancellation(cancellation) : undefined,
@@ -163,8 +175,8 @@ function normalizeApplicant(data: ApiApplicant, cancellation?: ApiCancellationNo
 function normalizeCanceledApplicant(cancellation: ApiCancellationNotice): Applicant {
   return {
     id: `canceled-${cancellation.studentId ?? cancellation.canceledAt ?? ''}`,
-    name: cancellation.studentId ?? '',
-    department: '',
+    name: getApplicantName(cancellation),
+    department: getApplicantDepartment(cancellation),
     selected: false,
     cancel: normalizeCancellation(cancellation),
   };
@@ -177,7 +189,11 @@ function normalizeCancellation(cancellation: ApiCancellationNotice) {
   };
 }
 
-function getApplicantDepartment(data: ApiApplicant) {
+function getApplicantName(data: ApiApplicant | ApiCancellationNotice) {
+  return data.studentName ?? data.name ?? data.studentId ?? '';
+}
+
+function getApplicantDepartment(data: ApiApplicant | ApiCancellationNotice) {
   return (
     data.departmentName ??
     data.department ??
@@ -187,7 +203,7 @@ function getApplicantDepartment(data: ApiApplicant) {
     data.studentDepartment ??
     data.studentMajorName ??
     data.studentMajor ??
-    ''
+    '학과 정보 없음'
   );
 }
 

@@ -14,6 +14,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import { logout as requestLogout } from '@/api/auth';
 import { UserGnb } from '@/components/navigation/user-gnb';
+import { resetVolunteerInteractions } from '@/features/exploration/volunteer-interaction-store';
 import {
   clearUserSession,
   getCurrentUser,
@@ -63,6 +64,7 @@ export function MyPageScreen() {
       // Even if the server logout request fails, clear the local session.
     } finally {
       clearUserSession();
+      resetVolunteerInteractions();
       router.replace('/');
     }
   };

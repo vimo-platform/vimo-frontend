@@ -17,6 +17,7 @@ import {
 import {
   approveVolunteerApplication,
   getPendingApprovalConfirmationId,
+  resetVolunteerInteractions,
 } from '@/features/exploration/volunteer-interaction-store';
 import EntryFlowScreen from '@/features/auth/screens/EntryFlowScreen';
 import type { SchoolLoginSubmitValues } from '@/features/auth/screens/SchoolLoginScreen';
@@ -46,6 +47,7 @@ export default function EntryScreen() {
 
     try {
       clearUserSession();
+      resetVolunteerInteractions();
 
       const response = await login({
         studentId,
@@ -78,11 +80,13 @@ export default function EntryScreen() {
       try {
         const newApprovedApplications = await fetchNewApprovedApplications();
         const selectionApprovedApplications = await Promise.all(
-          newApprovedApplications.map(async (application) => {
-            const post = await getVolunteerPostById(application.volunteerId);
+          newApprovedApplications
+            .filter((application) => isApprovedApplication(application))
+            .map(async (application) => {
+              const post = await getVolunteerPostById(application.volunteerId);
 
-            return post?.recruitType === 'selection' ? application : null;
-          }),
+              return post?.recruitType === 'selection' ? application : null;
+            }),
         );
 
         selectionApprovedApplications.forEach((application) => {
@@ -119,4 +123,8 @@ export default function EntryScreen() {
       onSubmit={handleLogin}
     />
   );
+}
+
+function isApprovedApplication(application: { status?: string; applicationStatus?: string }) {
+  return (application.applicationStatus ?? application.status) === 'APPROVED';
 }
