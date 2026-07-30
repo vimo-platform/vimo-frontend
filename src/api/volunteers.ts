@@ -227,7 +227,7 @@ export async function verifyVolunteerCheckIn(volunteerId: number, qrToken: strin
   });
 
   return {
-    verified: isSuccessfulQrStatus(result.status ?? result.applicationStatus),
+    verified: true,
     message: result.status ?? result.applicationStatus,
   };
 }
@@ -239,7 +239,7 @@ export async function verifyVolunteerCheckOut(volunteerId: number, qrToken: stri
   });
 
   return {
-    verified: isSuccessfulQrStatus(result.status ?? result.applicationStatus),
+    verified: true,
     message: result.status ?? result.applicationStatus,
   };
 }
@@ -275,7 +275,7 @@ export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
       0,
     creditHours,
     status: normalizeVolunteerStatus(data.status),
-    participationCondition: data.participationCondition ?? '정기 참여 가능자 우대',
+    participationCondition: data.participationCondition ?? '',
     cancelPolicy: data.cancelPolicy ?? '취소 불가',
     guideTitle: data.guideTitle ?? '모집 안내',
     description: data.description ?? data.content ?? '',
@@ -364,6 +364,3 @@ function getCreditHoursFromParts(
   return Math.round((end - start) / (1000 * 60 * 60));
 }
 
-function isSuccessfulQrStatus(status?: string) {
-  return status === 'ATTENDED' || status === 'COMPLETED' || status === 'CERTIFIED';
-}

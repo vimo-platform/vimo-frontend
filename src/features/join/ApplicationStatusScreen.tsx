@@ -177,9 +177,10 @@ function buildApplicationStatusCards(
   appliedIds: number[],
 ): ApplicationVolunteerCardType[] {
   return posts
-    .filter((post) => favoriteIds.includes(post.id) || appliedIds.includes(post.id))
+    .filter((post) => favoriteIds.includes(post.id) || isTrackableApplication(post, appliedIds))
     .map((post) => {
-      const applied = isPendingSelectionApplication(post, appliedIds);
+      const applied = isTrackableApplication(post, appliedIds);
+      const progressStep = getApplicationProgressStep(post);
 
       return {
         id: post.id,
@@ -195,22 +196,55 @@ function buildApplicationStatusCards(
         applied,
         actionLabel: post.status !== 'RECRUITING' ? '지원 마감' : '지원하기',
         actionDisabled: post.status !== 'RECRUITING',
-        hasPreferredCondition: true,
-        progressStep: applied ? 2 : undefined,
+        hasPreferredCondition: hasPreferredCondition(post),
+        progressStep: applied ? progressStep : undefined,
       };
     });
 }
 
-function isPendingSelectionApplication(post: VolunteerPost, appliedIds: number[]) {
-  if (!appliedIds.includes(post.id) || post.recruitType === 'fcfs') {
+function isTrackableApplication(post: VolunteerPost, appliedIds: number[]) {
+  if (!appliedIds.includes(post.id)) {
     return false;
   }
 
+  const status = post.applicationStatus;
+
   return (
-    !post.applicationStatus ||
-    post.applicationStatus === 'NONE' ||
-    post.applicationStatus === 'PENDING'
+    !status ||
+    status === 'PENDING' ||
+    status === 'APPROVED' ||
+    status === 'ATTENDED' ||
+    status === 'COMPLETED' ||
+    status === 'CERTIFIED'
   );
+}
+
+function getApplicationProgressStep(post: VolunteerPost): ApplicationVolunteerCardType['progressStep'] {
+  if (post.recruitType === 'fcfs') {
+    return 3;
+  }
+
+  if (post.applicationStatus === 'APPROVED') {
+    return 3;
+  }
+
+  if (post.applicationStatus === 'ATTENDED') {
+    return 4;
+  }
+
+  if (post.applicationStatus === 'COMPLETED' || post.applicationStatus === 'CERTIFIED') {
+    return 5;
+  }
+
+  return 2;
+}
+
+function hasPreferredCondition(post: VolunteerPost) {
+  const conditionTexts = [post.participationCondition, ...post.requirements]
+    .filter(Boolean)
+    .join(' ');
+
+  return /우대|조건|가능자/.test(conditionTexts);
 }
 
 function formatCredit(hours: number) {

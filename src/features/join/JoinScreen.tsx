@@ -17,7 +17,6 @@ import {
   getCurrentUser,
   isUserAuthenticatedInCurrentSession,
 } from '@/storage/auth-storage';
-import { submitVolunteerActivityCertification } from '@/features/exploration/api';
 import { completeVolunteerActivity } from '@/features/exploration/volunteer-interaction-store';
 
 import { CalendarCircle } from './components/CalendarCircle';
@@ -120,7 +119,6 @@ export function JoinScreen() {
     const completedPostId = Number(postId);
     if (Number.isFinite(completedPostId)) {
       completeVolunteerActivity(completedPostId);
-      submitVolunteerActivityCertification(completedPostId);
     }
 
     const notificationKey = `${postId ?? 'unknown'}:${qrActivityStartTime}:${qrSuccessTime}`;
