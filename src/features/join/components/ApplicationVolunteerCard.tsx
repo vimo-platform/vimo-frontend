@@ -1,13 +1,11 @@
-﻿import { Asset } from 'expo-asset';
-import { Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Path, SvgUri } from 'react-native-svg';
+﻿import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 import { HeartImage } from '@/components/common';
 
 import type { ApplicationVolunteerCard as ApplicationVolunteerCardType } from '../application-status-types';
 
 const GLASS_CIRCLE = require('../../../../assets/images/joinimg/joinglasscircle.png');
-const BLACK_LINE = require('../../../../assets/images/joinimg/joinblackline.svg');
 
 const PROGRESS_LABELS = ['지원 완료', '승인 대기', '승인 완료', '활동 중', '활동 완료'];
 
@@ -24,7 +22,8 @@ export function ApplicationVolunteerCard({
   onCardPress,
   onToggleLike,
 }: ApplicationVolunteerCardProps) {
-  const canCancel = item.applied && item.hasPreferredCondition && item.progressStep === 2;
+  // 승인 대기(step 2) 상태면 취소 가능. 승인 완료 이후엔 취소불가.
+  const canCancel = item.applied && item.progressStep === 2;
   const isCardPressable = Boolean(onCardPress);
   const isActionDisabled = item.actionDisabled ?? item.status !== 'RECRUITING';
   const favoriteActionLabel = item.actionLabel ?? (item.status !== 'RECRUITING' ? '지원 마감' : '지원하기');
@@ -111,7 +110,9 @@ function ProgressSteps({ currentStep }: { currentStep: number }) {
   return (
     <View style={styles.progress}>
       <View style={styles.progressLine} />
-      {activeLineWidth > 0 ? <ProgressDoneLine width={activeLineWidth} /> : null}
+      {activeLineWidth > 0 ? (
+        <View style={[styles.progressLineDone, { width: activeLineWidth }]} />
+      ) : null}
       <View style={styles.steps}>
         {PROGRESS_LABELS.map((label, index) => {
           const step = index + 1;
@@ -143,29 +144,12 @@ function ProgressSteps({ currentStep }: { currentStep: number }) {
   );
 }
 
-function ProgressDoneLine({ width }: { width: number }) {
-  const uri = Asset.fromModule(BLACK_LINE).uri;
-
-  if (Platform.OS === 'web') {
-    return (
-      <Image
-        resizeMode="stretch"
-        source={{ uri }}
-        style={[styles.progressLineDone, { width }]}
-      />
-    );
-  }
-
-  return <SvgUri height={4} style={[styles.progressLineDone, { width }]} uri={uri} width={width} />;
-}
-
 function getDoneLineWidth(currentStep: number) {
-  const firstCircleCenterX = 25;
   const stepGap = 60;
-  const circleRadius = 14;
-  const currentLeftEdgeX = firstCircleCenterX + stepGap * (currentStep - 1) - circleRadius;
+  // 현재 단계 원의 중심까지 검은색으로 채운다 (완료·진행 구간 표시)
+  const filled = stepGap * (currentStep - 1);
 
-  return Math.max(0, Math.min(240, currentLeftEdgeX - firstCircleCenterX));
+  return Math.max(0, Math.min(240, filled));
 }
 
 function DetailRow({
@@ -373,6 +357,8 @@ const styles = StyleSheet.create({
     top: 20,
     left: 25,
     height: 4,
+    borderRadius: 2,
+    backgroundColor: '#222222',
   },
   steps: {
     flexDirection: 'row',
