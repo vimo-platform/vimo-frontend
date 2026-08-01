@@ -166,11 +166,14 @@ export function mergeCertificationStatusRecords(records: CertificationStatusReco
     return;
   }
 
+  // 승인 대기(활동 완료 후 인증 대기): 체크인(ATTENDED)/체크아웃(COMPLETED)까지 QR 인증을 마친 건만.
   const pendingIds = records
     .filter((record) => record.status === 'ATTENDED' || record.status === 'COMPLETED')
     .map((record) => record.volunteerId);
+  // 인증(승인) 완료: 관리자가 활동 인증을 승인한 CERTIFIED만.
+  // APPROVED(신청 채택)나 기간 경과만으로는 완료로 보지 않는다. (QR 미인증 건이 완료로 잡히는 문제 방지)
   const completedIds = records
-    .filter((record) => record.status === 'APPROVED' || record.status === 'CERTIFIED')
+    .filter((record) => record.status === 'CERTIFIED')
     .map((record) => record.volunteerId);
   const rejectedRecords = records
     .filter(

@@ -194,10 +194,12 @@ function getApplicantName(data: ApiApplicant | ApiCancellationNotice) {
 }
 
 function getApplicantDepartment(data: ApiApplicant | ApiCancellationNotice) {
+  // 백엔드 지원자 목록/상세 응답의 정식 학과 필드는 majorName (예: "사회복지학과").
+  // 나머지는 하위 호환용 폴백.
   return (
+    data.majorName ??
     data.departmentName ??
     data.department ??
-    data.majorName ??
     data.major ??
     data.studentDepartmentName ??
     data.studentDepartment ??

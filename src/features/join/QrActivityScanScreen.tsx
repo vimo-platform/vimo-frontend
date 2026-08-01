@@ -41,6 +41,7 @@ export function QrActivityScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [detectedQrValue, setDetectedQrValue] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [failureMessage, setFailureMessage] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
   const scanType = type === 'end' ? 'end' : 'start';
   const activityTime =
@@ -77,6 +78,7 @@ export function QrActivityScanScreen() {
 
     if (mockResult === 'fail') {
       setIsVerifying(false);
+      setFailureMessage(null);
       setStep('failed');
       return;
     }
@@ -104,6 +106,8 @@ export function QrActivityScanScreen() {
             });
 
       if (!verification.verified) {
+        // 서버가 내려준 구체적 실패 사유(QR 만료, 타입 불일치, 미승인, 이미 체크인 등)를 노출
+        setFailureMessage(verification.message ?? null);
         setStep('failed');
         return;
       }
@@ -116,7 +120,8 @@ export function QrActivityScanScreen() {
           : ''
       }`;
       router.replace(`/explore?${query}` as Href);
-    } catch {
+    } catch (error) {
+      setFailureMessage(error instanceof Error ? error.message : null);
       setStep('failed');
     } finally {
       setIsVerifying(false);
@@ -140,10 +145,14 @@ export function QrActivityScanScreen() {
             cameraRef={cameraRef}
             cameraReady={permission?.granted === true}
             failed={step === 'failed'}
+            failureMessage={failureMessage}
             verifying={isVerifying}
             onCapture={capture}
             onClose={close}
-            onDismissFailure={() => setStep('camera')}
+            onDismissFailure={() => {
+              setFailureMessage(null);
+              setStep('camera');
+            }}
             onQrDetected={handleBarcodeScanned}
           />
         )}
@@ -172,6 +181,7 @@ function CameraQrView({
   cameraRef,
   cameraReady,
   failed,
+  failureMessage,
   verifying,
   onCapture,
   onClose,
@@ -181,6 +191,7 @@ function CameraQrView({
   cameraRef: React.RefObject<CameraView | null>;
   cameraReady: boolean;
   failed: boolean;
+  failureMessage?: string | null;
   verifying: boolean;
   onCapture: () => void;
   onClose: () => void;
@@ -204,7 +215,7 @@ function CameraQrView({
       <CloseButton onPress={onClose} />
       <ScannerFrame />
       <CaptureButton disabled={verifying} onPress={onCapture} style={styles.cameraCaptureButton} />
-      {failed ? <FailureDialog onClose={onDismissFailure} /> : null}
+      {failed ? <FailureDialog message={failureMessage} onClose={onDismissFailure} /> : null}
     </View>
   );
 }
@@ -261,7 +272,11 @@ function ScannerFrame() {
   );
 }
 
-function FailureDialog({ onClose }: { onClose: () => void }) {
+function FailureDialog({ message, onClose }: { message?: string | null; onClose: () => void }) {
+  const description = message?.trim()
+    ? message.trim()
+    : 'QR 코드를 인식할 수 없어요.\n다시 시도하거나 관리자에게 문의해주세요.';
+
   return (
     <View style={styles.failureOverlay}>
       <View style={styles.failureCard}>
@@ -274,10 +289,8 @@ function FailureDialog({ onClose }: { onClose: () => void }) {
         <View style={styles.warningCircle}>
           <Text style={styles.warningMark}>!</Text>
         </View>
-        <Text style={styles.failureTitle}>QR 코드 인식 실패</Text>
-        <Text style={styles.failureDescription}>
-          QR 코드를 인식할 수 없어요.{'\n'}다시 시도하거나 관리자에게 문의해주세요.
-        </Text>
+        <Text style={styles.failureTitle}>QR 코드 인증 실패</Text>
+        <Text style={styles.failureDescription}>{description}</Text>
         <Pressable style={({ pressed }) => [styles.failureConfirm, pressed && styles.pressed]} onPress={onClose}>
           <Text style={styles.failureConfirmText}>확인</Text>
         </Pressable>

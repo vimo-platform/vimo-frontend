@@ -41,11 +41,21 @@ const EXPLORATION_STAR = require('../../../assets/images/explorationimg/explorat
 const PARTICIPATION_COMPLETED_BUTTON = require('../../../assets/images/common/participationcompletedbutton.png');
 const CUSTOMIZATION_VOLUNTEER_CARD = require('../../../assets/images/explorationimg/Customizationvolunteercard.svg');
 
+type StatusFilter = 'all' | 'recruiting' | 'closed' | 'favorite';
+
+const STATUS_TABS: { key: StatusFilter; label: string }[] = [
+  { key: 'all', label: '전체' },
+  { key: 'recruiting', label: '모집 중' },
+  { key: 'closed', label: '모집 마감' },
+  { key: 'favorite', label: '찜' },
+];
+
 export function ExplorationScreen() {
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, 393);
   const [posts, setPosts] = useState<VolunteerPost[]>([]);
   const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const { appliedIds, favoriteIds } = useSyncExternalStore(
@@ -81,12 +91,18 @@ export function ExplorationScreen() {
   const filteredPosts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    if (!normalizedQuery) {
-      return posts;
-    }
+    return posts.filter((post) => {
+      const matchesQuery =
+        !normalizedQuery || getSearchableVolunteerText(post).includes(normalizedQuery);
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'recruiting' && post.status === 'RECRUITING') ||
+        (statusFilter === 'closed' && post.status !== 'RECRUITING') ||
+        (statusFilter === 'favorite' && favoriteIds.includes(post.id));
 
-    return posts.filter((post) => getSearchableVolunteerText(post).includes(normalizedQuery));
-  }, [posts, query]);
+      return matchesQuery && matchesStatus;
+    });
+  }, [posts, query, statusFilter, favoriteIds]);
   const customizedPosts = useMemo(
     () => getCustomizedVolunteerPosts(posts),
     [posts, scheduleRecommendation],
@@ -128,6 +144,7 @@ export function ExplorationScreen() {
           <AllLine style={styles.divider} />
 
           <View style={styles.cardSection}>
+            <StatusTabs value={statusFilter} onChange={setStatusFilter} />
             {isLoading ? (
               <View style={styles.feedback}>
                 <ActivityIndicator color="#222222" />
@@ -152,7 +169,15 @@ export function ExplorationScreen() {
             ) : (
               <View style={styles.feedback}>
                 <Text style={styles.feedbackTitle}>
-                  {query.trim() ? '검색 결과가 없어요.' : '현재 올라온 봉사 공고가 없습니다.'}
+                  {query.trim()
+                    ? '검색 결과가 없어요.'
+                    : statusFilter === 'recruiting'
+                      ? '모집 중인 봉사 공고가 없어요.'
+                      : statusFilter === 'closed'
+                        ? '모집 마감된 봉사 공고가 없어요.'
+                        : statusFilter === 'favorite'
+                          ? '찜한 봉사 공고가 없어요.'
+                          : '현재 올라온 봉사 공고가 없습니다.'}
                 </Text>
                 {query.trim() ? (
                   <Text style={styles.feedbackText}>다른 봉사명이나 장소로 다시 찾아보세요.</Text>
@@ -197,6 +222,42 @@ function SearchInput({
         </View>
       </View>
     </LinearGradient>
+  );
+}
+
+function StatusTabs({
+  value,
+  onChange,
+}: {
+  value: StatusFilter;
+  onChange: (value: StatusFilter) => void;
+}) {
+  return (
+    <View style={styles.tabBar}>
+      {STATUS_TABS.map((tab) => {
+        const active = value === tab.key;
+
+        return (
+          <Pressable
+            key={tab.key}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            style={({ pressed }) => [
+              styles.tabItem,
+              tab.key === 'favorite' && styles.tabItemIcon,
+              active && styles.tabItemActive,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => onChange(tab.key)}>
+            {tab.key === 'favorite' ? (
+              <HeartTabIcon active={active} />
+            ) : (
+              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{tab.label}</Text>
+            )}
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -421,6 +482,22 @@ function DetailRow({ icon, text }: { icon: 'calendar' | 'clock' | 'location'; te
         {text}
       </Text>
     </View>
+  );
+}
+
+function HeartTabIcon({ active }: { active: boolean }) {
+  const color = active ? '#F5F5F5' : '#818181';
+
+  return (
+    <Svg height={15} viewBox="0 0 20 18" width={17}>
+      <Path
+        d="M10 16.2C10 16.2 1.6 11.1 1.6 5.6C1.6 3.3 3.4 1.5 5.6 1.5C7.1 1.5 8.6 2.4 10 4.2C11.4 2.4 12.9 1.5 14.4 1.5C16.6 1.5 18.4 3.3 18.4 5.6C18.4 11.1 10 16.2 10 16.2Z"
+        fill={active ? color : 'none'}
+        stroke={color}
+        strokeLinejoin="round"
+        strokeWidth={1.7}
+      />
+    </Svg>
   );
 }
 
@@ -753,9 +830,43 @@ const styles = StyleSheet.create({
   },
   cardSection: {
     minHeight: 560,
-    paddingTop: 29,
+    paddingTop: 20,
     paddingBottom: 34,
     backgroundColor: '#F9F9FB',
+  },
+  tabBar: {
+    width: 316,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 20,
+  },
+  tabItem: {
+    height: 34,
+    paddingHorizontal: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: '#E4E4E8',
+    backgroundColor: '#FFFFFF',
+  },
+  tabItemIcon: {
+    width: 44,
+    paddingHorizontal: 0,
+  },
+  tabItemActive: {
+    borderColor: '#222222',
+    backgroundColor: '#222222',
+  },
+  tabLabel: {
+    color: '#818181',
+    fontFamily: 'Pretendard',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  tabLabelActive: {
+    color: '#F5F5F5',
   },
   cardList: {
     gap: 16,

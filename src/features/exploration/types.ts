@@ -6,7 +6,9 @@ export type VolunteerApplicationStatus =
   | 'APPROVED'
   | 'REJECTED'
   | 'CANCELED'
-  | 'COMPLETED'
+  | 'ATTENDED' // checkin 성공 후 상태
+  | 'COMPLETED' // checkout 성공 후 상태
+  | 'CERTIFIED'
   | string;
 
 export type VolunteerPost = {
