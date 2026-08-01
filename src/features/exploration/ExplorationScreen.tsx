@@ -40,14 +40,16 @@ import {
 const EXPLORATION_STAR = require('../../../assets/images/explorationimg/explorationstar.png');
 const PARTICIPATION_COMPLETED_BUTTON = require('../../../assets/images/common/participationcompletedbutton.png');
 const CUSTOMIZATION_VOLUNTEER_CARD = require('../../../assets/images/explorationimg/Customizationvolunteercard.svg');
+const HEART_TAB_ICON = require('../../../assets/icons/Huge-icon.svg');
+const HEART_TAB_ICON_ACTIVE = require('../../../assets/icons/Huge-icon2.svg');
 
 type StatusFilter = 'all' | 'recruiting' | 'closed' | 'favorite';
 
-const STATUS_TABS: { key: StatusFilter; label: string }[] = [
-  { key: 'all', label: '전체' },
-  { key: 'recruiting', label: '모집 중' },
-  { key: 'closed', label: '모집 마감' },
-  { key: 'favorite', label: '찜' },
+const STATUS_TABS: { key: StatusFilter; label: string; width: number }[] = [
+  { key: 'all', label: '전체', width: 46 },
+  { key: 'recruiting', label: '모집 중', width: 61 },
+  { key: 'closed', label: '모집 마감', width: 73 },
+  { key: 'favorite', label: '찜', width: 46 },
 ];
 
 export function ExplorationScreen() {
@@ -225,18 +227,11 @@ function SearchInput({
   );
 }
 
-function StatusTabs({
-  value,
-  onChange,
-}: {
-  value: StatusFilter;
-  onChange: (value: StatusFilter) => void;
-}) {
+function StatusTabs({ value, onChange }: { value: StatusFilter; onChange: (value: StatusFilter) => void }) {
   return (
     <View style={styles.tabBar}>
       {STATUS_TABS.map((tab) => {
         const active = value === tab.key;
-
         return (
           <Pressable
             key={tab.key}
@@ -244,6 +239,7 @@ function StatusTabs({
             accessibilityState={{ selected: active }}
             style={({ pressed }) => [
               styles.tabItem,
+              { width: tab.width },
               tab.key === 'favorite' && styles.tabItemIcon,
               active && styles.tabItemActive,
               pressed && styles.pressed,
@@ -486,19 +482,11 @@ function DetailRow({ icon, text }: { icon: 'calendar' | 'clock' | 'location'; te
 }
 
 function HeartTabIcon({ active }: { active: boolean }) {
-  const color = active ? '#F5F5F5' : '#818181';
-
-  return (
-    <Svg height={15} viewBox="0 0 20 18" width={17}>
-      <Path
-        d="M10 16.2C10 16.2 1.6 11.1 1.6 5.6C1.6 3.3 3.4 1.5 5.6 1.5C7.1 1.5 8.6 2.4 10 4.2C11.4 2.4 12.9 1.5 14.4 1.5C16.6 1.5 18.4 3.3 18.4 5.6C18.4 11.1 10 16.2 10 16.2Z"
-        fill={active ? color : 'none'}
-        stroke={color}
-        strokeLinejoin="round"
-        strokeWidth={1.7}
-      />
-    </Svg>
-  );
+  const uri = Asset.fromModule(active ? HEART_TAB_ICON_ACTIVE : HEART_TAB_ICON).uri;
+  if (Platform.OS === 'web') {
+    return <Image resizeMode="contain" source={{ uri }} style={styles.heartTabIcon} />;
+  }
+  return <SvgUri height={22} uri={uri} width={22} />;
 }
 
 function SearchIcon() {
@@ -834,40 +822,19 @@ const styles = StyleSheet.create({
     paddingBottom: 34,
     backgroundColor: '#F9F9FB',
   },
-  tabBar: {
-    width: 316,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 20,
-  },
+  tabBar: { width: 316, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
   tabItem: {
-    height: 34,
-    paddingHorizontal: 18,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: '#E4E4E8',
-    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    backgroundColor: '#E8E8E8',
   },
-  tabItemIcon: {
-    width: 44,
-    paddingHorizontal: 0,
-  },
-  tabItemActive: {
-    borderColor: '#222222',
-    backgroundColor: '#222222',
-  },
-  tabLabel: {
-    color: '#818181',
-    fontFamily: 'Pretendard',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  tabLabelActive: {
-    color: '#F5F5F5',
-  },
+  tabItemIcon: { height: 36, marginLeft: 'auto' },
+  tabItemActive: { backgroundColor: '#222222' },
+  tabLabel: { color: '#818181', fontFamily: 'Pretendard', fontSize: 13, fontWeight: '600' },
+  tabLabelActive: { color: '#F5F5F5' },
+  heartTabIcon: { width: 22, height: 22 },
   cardList: {
     gap: 16,
     alignItems: 'center',
