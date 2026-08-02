@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -12,12 +13,14 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
 import { isAuthError } from '@/api/client';
 import {
   generatePostingDraft,
   newPostingId,
   setWorkingPosting,
+  upsertPosting,
 } from '@/features/admin/api/postings';
 import { LoadingOverlay } from '@/features/admin/components/loading-overlay';
 import { Colors } from '@/features/admin/constants/theme';
@@ -57,6 +60,20 @@ const REQUIRED_MESSAGE = '필수 작성 문항입니다.';
 const webOutlineReset: any =
   Platform.OS === 'web' ? { outlineWidth: 0, outlineStyle: 'none' } : null;
 
+function DraftSaveIcon() {
+  return (
+    <Svg width={26} height={26} viewBox="0 0 35 35" fill="none">
+      <Path
+        d="M8.72656 9.01661C8.72656 7.38795 8.72656 6.57361 9.04357 5.95123C9.3224 5.40402 9.7673 4.95912 10.3145 4.68029C10.9369 4.36328 11.7512 4.36328 13.3799 4.36328H21.5232C23.1519 4.36328 23.9662 4.36328 24.5886 4.68029C25.1358 4.95912 25.5807 5.40402 25.8596 5.95123C26.1766 6.57361 26.1766 7.38795 26.1766 9.01661V28.3643C26.1766 29.071 26.1766 29.4244 26.0297 29.6178C25.9662 29.7019 25.8852 29.7712 25.7923 29.8209C25.6994 29.8707 25.5968 29.8996 25.4916 29.9057C25.2488 29.9203 24.9551 29.7239 24.3676 29.3328L17.4516 24.7216L10.5355 29.3313C9.94806 29.7239 9.65432 29.9203 9.41002 29.9057C9.30508 29.8994 9.20277 29.8703 9.11013 29.8206C9.0175 29.7709 8.93674 29.7017 8.87343 29.6178C8.72656 29.4244 8.72656 29.071 8.72656 28.3643V9.01661Z"
+        fill="#28303F"
+        stroke="#28303F"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 function RequiredMessage({ visible }: { visible: boolean }) {
   if (!visible) {
     return null;
@@ -80,6 +97,7 @@ export default function CreatePostingScreen() {
   const [datePickerTarget, setDatePickerTarget] = useState<'from' | 'to' | null>(null);
   const [timePickerTarget, setTimePickerTarget] = useState<'start' | 'end' | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -106,6 +124,7 @@ export default function CreatePostingScreen() {
 
     try {
       const normalizedCreditHours = Math.max(1, creditHours);
+      const normalizedCount = Math.max(1, count);
       const draft = await generatePostingDraft(memo);
       setWorkingPosting({
         id: newPostingId(),
@@ -115,7 +134,7 @@ export default function CreatePostingScreen() {
         period: `${dateFrom.trim()} ~ ${dateTo.trim()}`,
         startTime: startTime.trim(),
         endTime: endTime.trim(),
-        capacity: count,
+        capacity: normalizedCount,
         applicants: 0,
         hoursPerSession: normalizedCreditHours,
         status: 'draft',
@@ -138,6 +157,50 @@ export default function CreatePostingScreen() {
     }
   };
 
+  const saveDraft = async () => {
+    if (isSavingDraft) {
+      return;
+    }
+
+    if (!memo.trim()) {
+      Alert.alert('임시저장', '봉사 모집 내용을 입력해 주세요.');
+      return;
+    }
+
+    setIsSavingDraft(true);
+
+    try {
+      await upsertPosting({
+        id: newPostingId(),
+        title: memo.trim().split('\n')[0].slice(0, 24),
+        description: memo.trim(),
+        location: location.trim(),
+        period: dateFrom.trim() && dateTo.trim() ? `${dateFrom.trim()} ~ ${dateTo.trim()}` : '',
+        startTime: startTime.trim(),
+        endTime: endTime.trim(),
+        capacity: Math.max(1, count),
+        applicants: 0,
+        hoursPerSession: Math.max(1, creditHours),
+        status: 'draft',
+        recruitType,
+        tags: [],
+        gender,
+        createdAt: new Date().toISOString().slice(0, 10),
+      });
+      router.replace({ pathname: '/admin/postings', params: { filter: 'draft' } });
+    } catch (error) {
+      if (isAuthError(error)) {
+        Alert.alert('로그인 만료', '로그인이 만료되었어요. 다시 로그인해 주세요.');
+        router.replace('/');
+        return;
+      }
+
+      Alert.alert('저장 실패', '공고 임시저장에 실패했습니다.');
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
   if (submitting) {
     return <LoadingOverlay message="공고를 생성하고 있어요" />;
   }
@@ -147,6 +210,17 @@ export default function CreatePostingScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.container}
     >
+      <Stack.Screen
+        options={{
+          title: '공고 작성',
+          headerTitleAlign: 'center',
+          headerRight: () => (
+            <Pressable disabled={isSavingDraft} onPress={saveDraft} hitSlop={10}>
+              <DraftSaveIcon />
+            </Pressable>
+          ),
+        }}
+      />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.heading}>
           공고 내용을 입력해 주세요{'\n'}깔끔하게 정리해드릴게요
@@ -186,7 +260,16 @@ export default function CreatePostingScreen() {
           <Pressable hitSlop={8} onPress={() => setCount(Math.max(1, count - 1))}>
             <Text style={styles.stepperSign}>-</Text>
           </Pressable>
-          <Text style={styles.stepperValue}>{count}</Text>
+          <TextInput
+            keyboardType="number-pad"
+            selectTextOnFocus
+            style={[styles.stepperValue, styles.stepperInput, webOutlineReset]}
+            value={count ? String(count) : ''}
+            onChangeText={(value) => {
+              const numericValue = Number(value.replace(/\D/g, ''));
+              setCount(Number.isFinite(numericValue) ? numericValue : 0);
+            }}
+          />
           <Pressable hitSlop={8} onPress={() => setCount(count + 1)}>
             <Text style={styles.stepperSign}>+</Text>
           </Pressable>
@@ -749,6 +832,12 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: 16,
     fontWeight: '700',
+  },
+  stepperInput: {
+    minWidth: 32,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    textAlign: 'center',
   },
   helperText: {
     marginTop: 8,

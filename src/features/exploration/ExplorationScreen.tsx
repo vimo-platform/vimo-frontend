@@ -2,18 +2,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, SvgUri } from 'react-native-svg';
 
@@ -22,20 +11,9 @@ import { UserGnb } from '@/components/navigation/user-gnb';
 import { isUserAuthenticatedInCurrentSession } from '@/storage/auth-storage';
 
 import { getVolunteerPosts, updateVolunteerFavorite } from './api';
-import {
-  getCustomizedVolunteerPosts,
-  getScheduleRecommendationSnapshot,
-  subscribeScheduleRecommendation,
-} from './customized-recommendation-store';
+import { getCustomizedVolunteerPosts, getScheduleRecommendationSnapshot, subscribeScheduleRecommendation } from './customized-recommendation-store';
 import type { VolunteerPost } from './types';
-import {
-  getSearchableVolunteerText,
-  getVolunteerInteractionsSnapshot,
-  mergeVolunteerInteractionsFromPosts,
-  setVolunteerFavorite,
-  setVolunteerPostsSnapshot,
-  subscribeVolunteerInteractions,
-} from './volunteer-interaction-store';
+import { getSearchableVolunteerText, getVolunteerInteractionsSnapshot, mergeVolunteerInteractionsFromPosts, setVolunteerFavorite, setVolunteerPostsSnapshot, subscribeVolunteerInteractions } from './volunteer-interaction-store';
 
 const EXPLORATION_STAR = require('../../../assets/images/explorationimg/explorationstar.png');
 const PARTICIPATION_COMPLETED_BUTTON = require('../../../assets/images/common/participationcompletedbutton.png');
@@ -240,7 +218,6 @@ function StatusTabs({ value, onChange }: { value: StatusFilter; onChange: (value
             style={({ pressed }) => [
               styles.tabItem,
               { width: tab.width },
-              tab.key === 'favorite' && styles.tabItemIcon,
               active && styles.tabItemActive,
               pressed && styles.pressed,
             ]}
@@ -830,7 +807,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#E8E8E8',
   },
-  tabItemIcon: { height: 36, marginLeft: 'auto' },
   tabItemActive: { backgroundColor: '#222222' },
   tabLabel: { color: '#818181', fontFamily: 'Pretendard', fontSize: 13, fontWeight: '600' },
   tabLabelActive: { color: '#F5F5F5' },
