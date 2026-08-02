@@ -72,7 +72,7 @@ export default function PostingEditScreen() {
       period,
       startTime: startTime || base.startTime,
       endTime: endTime || base.endTime,
-      capacity,
+      capacity: Math.max(1, capacity),
       gender,
       description: description.trim(),
       tags,
@@ -164,7 +164,16 @@ export default function PostingEditScreen() {
             <Pressable onPress={() => setCapacity(Math.max(1, capacity - 1))} hitSlop={8}>
               <Text style={styles.stepperSign}>−</Text>
             </Pressable>
-            <Text style={styles.stepperValue}>{capacity}</Text>
+            <TextInput
+              keyboardType="number-pad"
+              selectTextOnFocus
+              style={[styles.stepperValue, styles.stepperInput]}
+              value={capacity ? String(capacity) : ""}
+              onChangeText={(value) => {
+                const numericValue = Number(value.replace(/\D/g, ""));
+                setCapacity(Number.isFinite(numericValue) ? numericValue : 0);
+              }}
+            />
             <Pressable onPress={() => setCapacity(capacity + 1)} hitSlop={8}>
               <Text style={styles.stepperSign}>＋</Text>
             </Pressable>
@@ -421,6 +430,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: Colors.text,
+  },
+  stepperInput: {
+    minWidth: 32,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    textAlign: "center",
   },
   genderChips: {
     flexDirection: "row",

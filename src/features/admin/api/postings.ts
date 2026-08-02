@@ -132,6 +132,16 @@ export async function closePosting(id: string): Promise<void> {
   postings = postings.map((p) => (p.id === id ? { ...p, status: 'closed' } : p));
 }
 
+export async function deletePosting(id: string): Promise<void> {
+  if (USE_MOCK_ADMIN_API || !isNumericId(id)) {
+    postings = postings.filter((p) => p.id !== id);
+    return;
+  }
+
+  await apiRequest<void>(`/api/v1/admin/volunteers/${id}`, { method: 'DELETE' });
+  postings = postings.filter((p) => p.id !== id);
+}
+
 export async function generatePostingDraft(
   memo: string,
 ): Promise<{ title: string; description: string; keywords: string[] }> {
