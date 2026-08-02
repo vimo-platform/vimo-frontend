@@ -46,10 +46,6 @@ export function analyzeTimetableOcr(formData: FormData) {
   });
 }
 
-export function fetchRecommendedKeywords() {
-  return apiRequest<{ keywords: string[] }>('/api/v1/keyword/recommend');
-}
-
 export function saveUserSetup(payload: UserSetupPayload) {
   return apiRequest<void>('/api/v1/users/setup', {
     method: 'POST',

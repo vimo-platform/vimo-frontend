@@ -46,7 +46,7 @@ export function ScheduleAnalysisScreen() {
       }
 
       setAnalysis(result);
-      setSelectedKeywords(getInitialSelectedKeywords(result));
+      setSelectedKeywords([]);
     });
 
     return () => {
@@ -180,16 +180,6 @@ export function ScheduleAnalysisScreen() {
       </View>
     </SafeAreaView>
   );
-}
-
-function getInitialSelectedKeywords(result: ScheduleAnalysisResult) {
-  const optionSet = new Set(result.recommendedKeywords);
-  const sourceKeywords =
-    result.selectedRecommendationKeywords.length > 0
-      ? result.selectedRecommendationKeywords
-      : result.interestKeywords;
-
-  return sourceKeywords.filter((keyword) => optionSet.has(keyword));
 }
 
 function chunkKeywords(keywords: string[], size: number) {

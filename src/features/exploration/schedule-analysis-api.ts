@@ -1,6 +1,7 @@
+import { Platform } from 'react-native';
+
 import {
   analyzeTimetableOcr,
-  fetchRecommendedKeywords,
   saveUserSetup,
   type ApiLocalTime,
   type ClassSlot,
@@ -14,15 +15,13 @@ export type ScheduleAnalysisResult = {
     title: string;
   }[];
   freeTimeSlots: FreeTimeSlot[];
-  interestKeywords: string[];
   recommendedKeywords: string[];
-  selectedRecommendationKeywords: string[];
 };
 
 const USE_MOCK_SCHEDULE_ANALYSIS =
   process.env.EXPO_PUBLIC_USE_MOCK_SCHEDULE_ANALYSIS === 'true';
 
-const DEFAULT_RECOMMENDED_KEYWORDS = [
+export const TIMETABLE_KEYWORD_OPTIONS = [
   '행사운영',
   '현장 관리',
   '행정지원',
@@ -44,20 +43,10 @@ export async function analyzeScheduleImage(imageUri?: string): Promise<ScheduleA
   }
 
   try {
-    const formData = new FormData();
+    const formData = await createTimetableFormData(imageUri);
+    const analysis = await analyzeTimetableOcr(formData);
 
-    formData.append('file', {
-      uri: imageUri,
-      name: 'timetable.jpg',
-      type: 'image/jpeg',
-    } as unknown as Blob);
-
-    const [analysis, keywordData] = await Promise.all([
-      analyzeTimetableOcr(formData),
-      fetchRecommendedKeywords().catch(() => ({ keywords: DEFAULT_RECOMMENDED_KEYWORDS })),
-    ]);
-
-    return normalizeScheduleAnalysisResult(analysis, keywordData.keywords);
+    return normalizeScheduleAnalysisResult(analysis);
   } catch {
     return getEmptyScheduleAnalysisResult();
   }
@@ -77,24 +66,33 @@ export async function saveScheduleAnalysisSelection(
   }).catch(() => undefined);
 }
 
+async function createTimetableFormData(imageUri: string) {
+  const formData = new FormData();
+
+  if (Platform.OS === 'web') {
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
+
+    formData.append('file', blob, 'timetable.jpg');
+    return formData;
+  }
+
+  formData.append('file', {
+    uri: imageUri,
+    name: 'timetable.jpg',
+    type: 'image/jpeg',
+  } as unknown as Blob);
+
+  return formData;
+}
+
 function normalizeScheduleAnalysisResult(
   analysis: TimetableAnalysisResponse,
-  recommendedKeywords: string[],
 ): ScheduleAnalysisResult {
-  const normalizedRecommendedKeywords =
-    recommendedKeywords.length > 0 ? recommendedKeywords : DEFAULT_RECOMMENDED_KEYWORDS;
-  const ocrKeywords = analysis.keywords ?? analysis.interestKeywords ?? [];
-  const selectedKeywords = ocrKeywords.filter((keyword) =>
-    normalizedRecommendedKeywords.includes(keyword),
-  );
-
   return {
     scheduleItems: analysis.scheduleItems ?? mapClassesToScheduleItems(analysis.classes ?? []),
     freeTimeSlots: analysis.freeTimeSlots ?? [],
-    interestKeywords: selectedKeywords,
-    recommendedKeywords: normalizedRecommendedKeywords,
-    selectedRecommendationKeywords:
-      analysis.selectedRecommendationKeywords ?? selectedKeywords,
+    recommendedKeywords: TIMETABLE_KEYWORD_OPTIONS,
   };
 }
 
@@ -127,9 +125,7 @@ async function getMockScheduleAnalysisResult(): Promise<ScheduleAnalysisResult> 
     freeTimeSlots: [
       { dayOfWeek: 'MONDAY', startTime: '11:50:00', endTime: '15:30:00' },
     ],
-    interestKeywords: ['행정지원', '멘토링', '미디어'],
-    recommendedKeywords: DEFAULT_RECOMMENDED_KEYWORDS,
-    selectedRecommendationKeywords: ['행정지원', '멘토링', '미디어'],
+    recommendedKeywords: TIMETABLE_KEYWORD_OPTIONS,
   };
 }
 
@@ -137,8 +133,6 @@ function getEmptyScheduleAnalysisResult(): ScheduleAnalysisResult {
   return {
     scheduleItems: [],
     freeTimeSlots: [],
-    interestKeywords: [],
-    recommendedKeywords: DEFAULT_RECOMMENDED_KEYWORDS,
-    selectedRecommendationKeywords: [],
+    recommendedKeywords: TIMETABLE_KEYWORD_OPTIONS,
   };
 }
