@@ -39,6 +39,11 @@ type ApiCancellationNotice = {
 
 const USE_MOCK_ADMIN_API = process.env.EXPO_PUBLIC_USE_MOCK_ADMIN_API === 'true';
 
+const MAJOR_LABELS: Record<string, string> = {
+  SOCIAL_WELFARE: '사회복지학과',
+  COMPUTER_SCIENCE: '컴퓨터공학과',
+};
+
 export async function fetchApplicants(postingId: string): Promise<Applicant[]> {
   if (USE_MOCK_ADMIN_API) {
     return mockApplicants;
@@ -82,7 +87,6 @@ export async function fetchFcfsApplicants(postingId: string): Promise<Applicant[
   return [];
 }
 
-// 신청 채택(선발): PENDING -> APPROVED
 export async function approveApplicant(applicationId: string): Promise<void> {
   if (USE_MOCK_ADMIN_API || !isNumericId(applicationId)) {
     return;
@@ -93,7 +97,6 @@ export async function approveApplicant(applicationId: string): Promise<void> {
   });
 }
 
-// 신청 반려: PENDING -> REJECTED
 export async function rejectApplicant(applicationId: string, reason = '관리자 반려'): Promise<void> {
   if (USE_MOCK_ADMIN_API || !isNumericId(applicationId)) {
     return;
@@ -194,19 +197,35 @@ function getApplicantName(data: ApiApplicant | ApiCancellationNotice) {
 }
 
 function getApplicantDepartment(data: ApiApplicant | ApiCancellationNotice) {
-  // 백엔드 지원자 목록/상세 응답의 정식 학과 필드는 majorName (예: "사회복지학과").
-  // 나머지는 하위 호환용 폴백.
   return (
-    data.majorName ??
-    data.departmentName ??
-    data.department ??
-    data.major ??
-    data.studentDepartmentName ??
-    data.studentDepartment ??
-    data.studentMajorName ??
-    data.studentMajor ??
-    '학과 정보 없음'
+    [
+      data.majorName,
+      data.major,
+      data.studentMajorName,
+      data.studentMajor,
+      data.departmentName,
+      data.department,
+      data.studentDepartmentName,
+      data.studentDepartment,
+    ]
+      .map(formatMajorLabel)
+      .find((department) => department !== null) ?? '학과 정보 없음'
   );
+}
+
+function formatMajorLabel(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const normalizedValue = value.trim();
+  const upperValue = normalizedValue.toUpperCase();
+
+  if (!normalizedValue || upperValue === 'NONE' || upperValue === 'NULL') {
+    return null;
+  }
+
+  return MAJOR_LABELS[upperValue] ?? normalizedValue;
 }
 
 function formatCanceledAt(value?: string) {

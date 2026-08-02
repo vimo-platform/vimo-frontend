@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Tag } from '@/components/common';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
+import type { ApiLocalTime, ClassSlot } from '@/api/user-setup';
 
 import {
   analyzeScheduleImage,
@@ -122,15 +123,7 @@ export function ScheduleAnalysisScreen() {
           </View>
 
           <View style={styles.timetableCard}>
-            {uploadedImageUri ? (
-              <Image
-                resizeMode="cover"
-                source={{ uri: uploadedImageUri }}
-                style={styles.timetableImage}
-              />
-            ) : (
-              <MockTimetable />
-            )}
+            <AnalyzedTimetable classes={analysis?.classes ?? []} />
           </View>
 
           <SectionTitle
@@ -171,6 +164,7 @@ export function ScheduleAnalysisScreen() {
               setScheduleRecommendationFromAnalysis({
                 scheduleItems: analysis?.scheduleItems,
                 selectedKeywords,
+                timetableImageUrl: analysis?.timetableImageUrl,
               });
               router.replace('/search');
             }}
@@ -236,6 +230,156 @@ function MockTimetable() {
       ))}
     </View>
   );
+}
+
+const TIMETABLE_DAYS = ['월', '화', '수', '목', '금', '토'];
+const TIMETABLE_START_MINUTES = 9 * 60;
+const TIMETABLE_END_MINUTES = 19 * 60;
+const TIMETABLE_HEADER_HEIGHT = 22;
+const TIMETABLE_TIME_GUTTER = 26;
+const TIMETABLE_WIDTH = 247;
+const TIMETABLE_HEIGHT = 340;
+const TIMETABLE_GRID_WIDTH = TIMETABLE_WIDTH - TIMETABLE_TIME_GUTTER;
+const TIMETABLE_GRID_HEIGHT = TIMETABLE_HEIGHT - TIMETABLE_HEADER_HEIGHT;
+const CLASS_COLORS = [
+  '#D57063',
+  '#A6CD70',
+  '#6F95CF',
+  '#E29958',
+  '#9A77DA',
+  '#7BD1C0',
+  '#F0C356',
+  '#66C770',
+  '#8D71C8',
+];
+
+function AnalyzedTimetable({ classes }: { classes: ClassSlot[] }) {
+  const classBlocks = classes
+    .map((item, index) => getClassBlockLayout(item, index))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+  return (
+    <View style={styles.analyzedTimetable}>
+      <View style={styles.dayHeaderRow}>
+        <View style={styles.timeHeaderSpacer} />
+        {TIMETABLE_DAYS.map((day) => (
+          <Text key={day} style={styles.dayHeaderText}>
+            {day}
+          </Text>
+        ))}
+      </View>
+
+      <View style={styles.timetableGrid}>
+        {Array.from({ length: 11 }).map((_, index) => (
+          <View key={`row-${index}`} style={[styles.gridLineHorizontal, { top: index * 31.8 }]} />
+        ))}
+        {Array.from({ length: TIMETABLE_DAYS.length + 1 }).map((_, index) => (
+          <View
+            key={`column-${index}`}
+            style={[
+              styles.gridLineVertical,
+              {
+                left:
+                  TIMETABLE_TIME_GUTTER +
+                  index * (TIMETABLE_GRID_WIDTH / TIMETABLE_DAYS.length),
+              },
+            ]}
+          />
+        ))}
+        {Array.from({ length: 11 }).map((_, index) => (
+          <Text key={`time-${index}`} style={[styles.timeLabel, { top: index * 31.8 - 3 }]}>
+            {index + 9 <= 12 ? index + 9 : index - 3}
+          </Text>
+        ))}
+
+        {classBlocks.map((item) => (
+          <View
+            key={`${item.classItem.dayOfWeek}-${item.classItem.subjectName}-${item.index}`}
+            style={[
+              styles.classBlock,
+              {
+                top: item.top,
+                left: item.left,
+                width: item.width,
+                height: item.height,
+                backgroundColor: item.color,
+              },
+            ]}>
+            <Text numberOfLines={4} style={styles.classText}>
+              {item.classItem.subjectName}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function getClassBlockLayout(classItem: ClassSlot, index: number) {
+  const dayIndex = getDayIndex(classItem.dayOfWeek);
+
+  if (dayIndex < 0) {
+    return null;
+  }
+
+  const startMinutes = getMinutes(classItem.startTime);
+  const endMinutes = getMinutes(classItem.endTime);
+  const clampedStart = Math.max(TIMETABLE_START_MINUTES, startMinutes);
+  const clampedEnd = Math.min(TIMETABLE_END_MINUTES, Math.max(endMinutes, clampedStart + 30));
+
+  if (clampedEnd <= TIMETABLE_START_MINUTES || clampedStart >= TIMETABLE_END_MINUTES) {
+    return null;
+  }
+
+  const columnWidth = TIMETABLE_GRID_WIDTH / TIMETABLE_DAYS.length;
+  const minuteRange = TIMETABLE_END_MINUTES - TIMETABLE_START_MINUTES;
+  const top = ((clampedStart - TIMETABLE_START_MINUTES) / minuteRange) * TIMETABLE_GRID_HEIGHT;
+  const height = Math.max(24, ((clampedEnd - clampedStart) / minuteRange) * TIMETABLE_GRID_HEIGHT);
+
+  return {
+    classItem,
+    index,
+    top,
+    left: TIMETABLE_TIME_GUTTER + dayIndex * columnWidth,
+    width: columnWidth + 1,
+    height,
+    color: CLASS_COLORS[index % CLASS_COLORS.length],
+  };
+}
+
+function getDayIndex(dayOfWeek: string) {
+  const normalized = dayOfWeek.trim().toUpperCase();
+  const dayMap: Record<string, number> = {
+    MONDAY: 0,
+    MON: 0,
+    월: 0,
+    TUESDAY: 1,
+    TUE: 1,
+    화: 1,
+    WEDNESDAY: 2,
+    WED: 2,
+    수: 2,
+    THURSDAY: 3,
+    THU: 3,
+    목: 3,
+    FRIDAY: 4,
+    FRI: 4,
+    금: 4,
+    SATURDAY: 5,
+    SAT: 5,
+    토: 5,
+  };
+
+  return dayMap[normalized] ?? -1;
+}
+
+function getMinutes(time: ApiLocalTime) {
+  if (typeof time === 'string') {
+    const [hour = '0', minute = '0'] = time.split(':');
+    return Number(hour) * 60 + Number(minute);
+  }
+
+  return (time.hour ?? 0) * 60 + (time.minute ?? 0);
 }
 
 const styles = StyleSheet.create({
@@ -337,13 +481,54 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  analyzedTimetable: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  dayHeaderRow: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    left: 0,
+    height: 22,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timeHeaderSpacer: {
+    width: TIMETABLE_TIME_GUTTER,
+  },
+  dayHeaderText: {
+    width: TIMETABLE_GRID_WIDTH / TIMETABLE_DAYS.length,
+    color: '#8F8F8F',
+    fontFamily: 'Pretendard',
+    fontSize: 7,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  timetableGrid: {
+    position: 'absolute',
+    top: TIMETABLE_HEADER_HEIGHT,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
+  timeLabel: {
+    position: 'absolute',
+    left: 5,
+    width: 17,
+    color: '#8F8F8F',
+    fontFamily: 'Pretendard',
+    fontSize: 7,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
   mockTimetable: {
     flex: 1,
     backgroundColor: '#FAFAFA',
   },
   gridLineHorizontal: {
     position: 'absolute',
-    left: 0,
+    left: TIMETABLE_TIME_GUTTER,
     right: 0,
     height: 1,
     backgroundColor: '#E8E8E8',

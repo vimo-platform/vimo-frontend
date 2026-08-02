@@ -24,6 +24,13 @@ export type ClassSlot = FreeTimeSlot & {
   subjectName: string;
 };
 
+export type TimetableSetupResponse = {
+  freeTimeSlots?: FreeTimeSlot[];
+  classes?: ClassSlot[];
+  keywords?: string[];
+  timetableImageUrl?: string | null;
+};
+
 export type TimetableAnalysisResponse = {
   freeTimeSlots?: FreeTimeSlot[];
   classes?: ClassSlot[];
@@ -51,6 +58,10 @@ export function saveUserSetup(payload: UserSetupPayload) {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+export function getMySetup() {
+  return apiRequest<TimetableSetupResponse>('/api/v1/users/me/setup');
 }
 
 export function reanalyzeMyTimetable(formData: FormData) {

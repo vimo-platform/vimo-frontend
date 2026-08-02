@@ -11,7 +11,8 @@ import { UserGnb } from '@/components/navigation/user-gnb';
 import { isUserAuthenticatedInCurrentSession } from '@/storage/auth-storage';
 
 import { getVolunteerPosts, updateVolunteerFavorite } from './api';
-import { getCustomizedVolunteerPosts, getScheduleRecommendationSnapshot, subscribeScheduleRecommendation } from './customized-recommendation-store';
+import { getCustomizedVolunteerPosts, getScheduleRecommendationSnapshot, setScheduleRecommendationFromAnalysis, subscribeScheduleRecommendation } from './customized-recommendation-store';
+import { getSavedScheduleAnalysis } from './schedule-analysis-api';
 import type { VolunteerPost } from './types';
 import { getSearchableVolunteerText, getVolunteerInteractionsSnapshot, mergeVolunteerInteractionsFromPosts, setVolunteerFavorite, setVolunteerPostsSnapshot, subscribeVolunteerInteractions } from './volunteer-interaction-store';
 
@@ -54,6 +55,18 @@ export function ExplorationScreen() {
       router.replace('/');
       return;
     }
+
+    getSavedScheduleAnalysis().then((savedAnalysis) => {
+      if (!savedAnalysis) {
+        return;
+      }
+
+      setScheduleRecommendationFromAnalysis({
+        scheduleItems: savedAnalysis.scheduleItems,
+        selectedKeywords: savedAnalysis.recommendedKeywords,
+        timetableImageUrl: savedAnalysis.timetableImageUrl,
+      });
+    });
 
     getVolunteerPosts()
       .then((nextPosts) => {

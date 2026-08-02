@@ -12,8 +12,9 @@ const CONFIRMED_CHARACTER = require('../../../assets/images/explorationimg/16.pn
 export function VolunteerApprovalConfirmedScreen() {
   useUserSessionGuard();
 
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, source } = useLocalSearchParams<{ id?: string; source?: string }>();
   const postId = Number(id);
+  const isFirstComeApplication = source === 'fcfs';
 
   useEffect(() => {
     if (!Number.isFinite(postId)) {
@@ -21,15 +22,16 @@ export function VolunteerApprovalConfirmedScreen() {
       return;
     }
 
-    if (Number.isFinite(postId)) {
-      markApprovalConfirmationSeen(postId);
+    markApprovalConfirmationSeen(postId);
+    if (!isFirstComeApplication) {
+      markNewApprovedApplicationsRead().catch(() => undefined);
     }
-
-    markNewApprovedApplicationsRead().catch(() => undefined);
-  }, [postId]);
+  }, [isFirstComeApplication, postId]);
 
   const handleConfirm = async () => {
-    await markNewApprovedApplicationsRead().catch(() => undefined);
+    if (!isFirstComeApplication) {
+      await markNewApprovedApplicationsRead().catch(() => undefined);
+    }
     router.replace('/explore');
   };
 
@@ -37,7 +39,9 @@ export function VolunteerApprovalConfirmedScreen() {
     <VolunteerResultScreen
       characterSource={CONFIRMED_CHARACTER}
       characterStyle={styles.confirmedCharacter}
-      description={'봉사 참여가 최종 확정되었습니다!\n봉사 일정 및 안내사항을 확인해 주세요.'}
+      description={
+        '봉사 참여가 최종 확정되었습니다!\n봉사 일정 및 안내사항을 확인해 주세요.'
+      }
       title="지원 확정"
       tone="dark"
       onConfirm={handleConfirm}

@@ -9,12 +9,14 @@ export type ScheduleRecommendationState = {
     time: string;
     title: string;
   }[];
+  timetableImageUrl?: string | null;
 };
 
 let state: ScheduleRecommendationState = {
   hasAnalyzedSchedule: false,
   selectedKeywords: [],
   scheduleItems: [],
+  timetableImageUrl: null,
 };
 
 const listeners = new Set<Listener>();
@@ -40,9 +42,11 @@ export function setCustomizedScheduleRecommendation(selectedKeywords: string[]) 
 export function setScheduleRecommendationFromAnalysis({
   scheduleItems,
   selectedKeywords,
+  timetableImageUrl,
 }: {
   scheduleItems?: ScheduleRecommendationState['scheduleItems'];
   selectedKeywords: string[];
+  timetableImageUrl?: string | null;
 }) {
   const normalizedKeywords = selectedKeywords.map((keyword) => keyword.trim()).filter(Boolean);
 
@@ -53,6 +57,7 @@ export function setScheduleRecommendationFromAnalysis({
       { time: '09:00 - 11:50', title: '국제비즈니스영어' },
       { time: '15:30 - 16:30', title: '인성과 학문 III' },
     ],
+    timetableImageUrl: timetableImageUrl ?? state.timetableImageUrl ?? null,
   };
   notify();
 }

@@ -69,10 +69,7 @@ export function ApplicationStatusScreen() {
   );
 
   const appliedCards = useMemo(() => cards.filter((card) => card.applied), [cards]);
-  const favoriteCards = useMemo(
-    () => cards.filter((card) => card.favorite && !card.applied),
-    [cards],
-  );
+  const favoriteCards = useMemo(() => buildFavoriteCards(cards), [cards]);
 
   const handleToggleLike = (id: number) => {
     const previousFavorite = favoriteIds.includes(id);
@@ -169,6 +166,24 @@ export function ApplicationStatusScreen() {
       </View>
     </SafeAreaView>
   );
+}
+
+function buildFavoriteCards(cards: ApplicationVolunteerCardType[]) {
+  return cards
+    .filter((card) => card.favorite)
+    .map((card) => {
+      if (!card.applied) {
+        return card;
+      }
+
+      return {
+        ...card,
+        applied: false,
+        actionLabel: '지원완료',
+        actionDisabled: true,
+        progressStep: undefined,
+      };
+    });
 }
 
 function buildApplicationStatusCards(

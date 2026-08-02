@@ -21,6 +21,7 @@ import {
   approveVolunteerApplication,
   getVolunteerInteractionsSnapshot,
   getVolunteerPostsSnapshot,
+  submitVolunteerApplication,
   setVolunteerFavorite,
   subscribeVolunteerInteractions,
 } from './volunteer-interaction-store';
@@ -31,7 +32,7 @@ export function VolunteerPostDetailScreen() {
   const { id, mode } = useLocalSearchParams<{ id?: string; mode?: string }>();
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, 393);
-  const { favoriteIds } = useSyncExternalStore(
+  const { appliedIds, favoriteIds } = useSyncExternalStore(
     subscribeVolunteerInteractions,
     getVolunteerInteractionsSnapshot,
     getVolunteerInteractionsSnapshot,
@@ -91,7 +92,14 @@ export function VolunteerPostDetailScreen() {
 
   const isFavorite = favoriteIds.includes(post.id);
   const isClosed = post.status !== 'RECRUITING';
-  const bottomButtonLabel = isClosed ? '지원 마감' : mode === 'confirm' ? '확인' : '지원하기';
+  const isApplied = appliedIds.includes(post.id) || post.isApplied || isAppliedStatus(post.applicationStatus);
+  const bottomButtonLabel = isClosed
+    ? '지원 마감'
+    : mode === 'confirm'
+      ? '확인'
+      : isApplied
+        ? '이미 지원한 봉사입니다'
+        : '지원하기';
   const handleToggleFavorite = () => {
     const nextFavorite = !isFavorite;
 
@@ -106,8 +114,22 @@ export function VolunteerPostDetailScreen() {
       return;
     }
 
-    if (post.recruitType === 'fcfs') {
+    if (isApplied || isClosed) {
+      return;
+    }
+
+    try {
       await createVolunteerApplication(post.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+
+      if (!message.includes('이미 신청')) {
+        return;
+      }
+    }
+
+    if (post.recruitType === 'fcfs') {
+      submitVolunteerApplication(post.id);
       approveVolunteerApplication(post.id);
 
       if (approvalNoticeSeenIds.includes(post.id)) {
@@ -115,10 +137,11 @@ export function VolunteerPostDetailScreen() {
         return;
       }
 
-      router.push(`/volunteer-approval-confirmed?id=${post.id}` as Href);
+      router.push(`/volunteer-approval-confirmed?id=${post.id}&source=fcfs` as Href);
       return;
     }
 
+    submitVolunteerApplication(post.id);
     router.push(`/volunteer-apply-complete?id=${post.id}` as Href);
   };
 
@@ -181,8 +204,8 @@ export function VolunteerPostDetailScreen() {
         <View style={styles.bottomBar}>
           <Button
             label={bottomButtonLabel}
-            disabled={isClosed}
-            style={[styles.applyButton, isClosed && styles.closedButton]}
+            disabled={isClosed || (mode !== 'confirm' && isApplied)}
+            style={[styles.applyButton, (isClosed || (mode !== 'confirm' && isApplied)) && styles.closedButton]}
             onPress={handleBottomButtonPress}
           />
         </View>
@@ -244,6 +267,19 @@ function formatDate(date: string) {
 
 function getRepeatLabel(post: VolunteerPost) {
   return post.id === 101 ? '(매주 금요일)' : '';
+}
+
+function isAppliedStatus(status: VolunteerPost['applicationStatus']) {
+  return (
+    status === 'PENDING' ||
+    status === 'APPROVED' ||
+    status === 'REJECTED' ||
+    status === 'ATTENDED' ||
+    status === 'COMPLETED' ||
+    status === 'CERTIFIED' ||
+    status === 'CERTIFICATION_REJECTED' ||
+    status === 'ABSENT'
+  );
 }
 
 const styles = StyleSheet.create({

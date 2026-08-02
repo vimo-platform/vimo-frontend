@@ -24,22 +24,22 @@ export async function verifyQrCapture({
   scanType,
   detectedQrValue,
 }: VerifyQrCaptureRequest): Promise<VerifyQrCaptureResponse> {
+  const qrValue = normalizeQrToken(detectedQrValue ?? (await scanQrFromImage(imageUri)));
+
   if (USE_MOCK_QR_VALIDATION) {
     return {
-      verified: isValidVimoQr(detectedQrValue, scanType),
+      verified: isValidMockQr(qrValue, scanType),
     };
   }
 
   const volunteerId = Number(postId);
 
   if (!Number.isFinite(volunteerId)) {
-    throw new Error('봉사 공고 정보를 확인할 수 없습니다.');
+    throw new Error('봉사 공고 정보를 확인할 수 없어요.');
   }
 
-  const qrValue = detectedQrValue ?? (await scanQrFromImage(imageUri));
-
   if (!qrValue) {
-    return { verified: false, message: 'QR 코드를 인식하지 못했습니다.' };
+    return { verified: false, message: 'QR 코드를 인식할 수 없어요.' };
   }
 
   try {
@@ -49,7 +49,7 @@ export async function verifyQrCapture({
   } catch (error) {
     return {
       verified: false,
-      message: error instanceof Error ? error.message : undefined,
+      message: error instanceof Error ? normalizeQrErrorMessage(error.message) : undefined,
     };
   }
 }
@@ -68,9 +68,19 @@ async function scanQrFromImage(imageUri?: string) {
   }
 }
 
-function isValidVimoQr(value: string | null | undefined, type: QrScanType) {
+function normalizeQrToken(value: string | null | undefined) {
+  const normalizedValue = value?.trim();
+
+  return normalizedValue && normalizedValue.length > 0 ? normalizedValue : null;
+}
+
+function isValidMockQr(value: string | null, type: QrScanType) {
   if (!value) {
     return false;
+  }
+
+  if (isUuid(value)) {
+    return true;
   }
 
   const [prefix, sessionId, qrType, issuedAt] = value.split(':');
@@ -81,4 +91,40 @@ function isValidVimoQr(value: string | null | undefined, type: QrScanType) {
     qrType === type &&
     Number.isFinite(Number(issuedAt))
   );
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
+  );
+}
+
+function normalizeQrErrorMessage(message: string) {
+  const normalizedMessage = message.trim();
+
+  if (normalizedMessage.includes('QR token has expired')) {
+    return 'QR 코드가 만료되었어요. 관리자에게 새 QR 생성을 요청해주세요.';
+  }
+
+  if (normalizedMessage.includes('QR token type mismatch')) {
+    return '시작/종료 QR 코드가 맞지 않아요.';
+  }
+
+  if (normalizedMessage.includes('Only approved applications can check in')) {
+    return '승인된 봉사만 시작 인증을 할 수 있어요.';
+  }
+
+  if (normalizedMessage.includes('Cannot check out before check-in')) {
+    return '시작 인증 후 종료 인증을 할 수 있어요.';
+  }
+
+  if (normalizedMessage.includes('already checked in')) {
+    return '이미 시작 인증이 완료되었어요.';
+  }
+
+  if (normalizedMessage.includes('오늘 진행하는 봉사가 아닙니다')) {
+    return '오늘 진행하는 봉사가 아니에요.';
+  }
+
+  return normalizedMessage || 'QR 코드 인증에 실패했어요.';
 }
