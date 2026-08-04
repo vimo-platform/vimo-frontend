@@ -16,6 +16,7 @@ import type { ApiLocalTime, ClassSlot } from '@/api/user-setup';
 
 import {
   analyzeScheduleImage,
+  getSavedScheduleAnalysis,
   saveScheduleAnalysisSelection,
   type ScheduleAnalysisResult,
 } from './schedule-analysis-api';
@@ -30,8 +31,9 @@ export function ScheduleAnalysisScreen() {
 
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, 393);
-  const { imageUri } = useLocalSearchParams<{ imageUri?: string }>();
+  const { imageUri, source } = useLocalSearchParams<{ imageUri?: string; source?: string }>();
   const uploadedImageUri = typeof imageUri === 'string' && imageUri ? imageUri : undefined;
+  const isSavedScheduleView = source === 'saved';
   const [phase, setPhase] = useState<AnalysisPhase>('loading');
   const [progress, setProgress] = useState(0);
   const [analysis, setAnalysis] = useState<ScheduleAnalysisResult | null>(null);
@@ -41,19 +43,27 @@ export function ScheduleAnalysisScreen() {
   useEffect(() => {
     let mounted = true;
 
-    analyzeScheduleImage(uploadedImageUri).then((result) => {
+    const request = isSavedScheduleView
+      ? getSavedScheduleAnalysis().then((savedAnalysis) => savedAnalysis ?? null)
+      : analyzeScheduleImage(uploadedImageUri);
+
+    request.then((result) => {
       if (!mounted) {
         return;
       }
 
       setAnalysis(result);
-      setSelectedKeywords([]);
+      setSelectedKeywords(isSavedScheduleView ? result?.recommendedKeywords ?? [] : []);
+      if (isSavedScheduleView) {
+        setProgress(100);
+        setPhase('complete');
+      }
     });
 
     return () => {
       mounted = false;
     };
-  }, [uploadedImageUri]);
+  }, [isSavedScheduleView, uploadedImageUri]);
 
   useEffect(() => {
     if (phase !== 'loading') {
@@ -163,6 +173,7 @@ export function ScheduleAnalysisScreen() {
               await saveScheduleAnalysisSelection(analysis, selectedKeywords);
               setScheduleRecommendationFromAnalysis({
                 scheduleItems: analysis?.scheduleItems,
+                freeTimeSlots: analysis?.freeTimeSlots,
                 selectedKeywords,
                 timetableImageUrl: analysis?.timetableImageUrl,
               });

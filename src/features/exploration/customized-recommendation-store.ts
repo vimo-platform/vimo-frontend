@@ -1,3 +1,5 @@
+import type { FreeTimeSlot } from '@/api/user-setup';
+
 import type { VolunteerPost } from './types';
 
 type Listener = () => void;
@@ -9,6 +11,7 @@ export type ScheduleRecommendationState = {
     time: string;
     title: string;
   }[];
+  freeTimeSlots: FreeTimeSlot[];
   timetableImageUrl?: string | null;
 };
 
@@ -16,6 +19,7 @@ let state: ScheduleRecommendationState = {
   hasAnalyzedSchedule: false,
   selectedKeywords: [],
   scheduleItems: [],
+  freeTimeSlots: [],
   timetableImageUrl: null,
 };
 
@@ -41,10 +45,12 @@ export function setCustomizedScheduleRecommendation(selectedKeywords: string[]) 
 
 export function setScheduleRecommendationFromAnalysis({
   scheduleItems,
+  freeTimeSlots,
   selectedKeywords,
   timetableImageUrl,
 }: {
   scheduleItems?: ScheduleRecommendationState['scheduleItems'];
+  freeTimeSlots?: FreeTimeSlot[];
   selectedKeywords: string[];
   timetableImageUrl?: string | null;
 }) {
@@ -57,6 +63,7 @@ export function setScheduleRecommendationFromAnalysis({
       { time: '09:00 - 11:50', title: '국제비즈니스영어' },
       { time: '15:30 - 16:30', title: '인성과 학문 III' },
     ],
+    freeTimeSlots: freeTimeSlots ?? state.freeTimeSlots,
     timetableImageUrl: timetableImageUrl ?? state.timetableImageUrl ?? null,
   };
   notify();

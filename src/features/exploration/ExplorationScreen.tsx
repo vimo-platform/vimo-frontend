@@ -9,6 +9,7 @@ import Svg, { Circle, Path, SvgUri } from 'react-native-svg';
 import { AllLine, HeartImage } from '@/components/common';
 import { UserGnb } from '@/components/navigation/user-gnb';
 import { isUserAuthenticatedInCurrentSession } from '@/storage/auth-storage';
+import type { ApiLocalTime, FreeTimeSlot } from '@/api/user-setup';
 
 import { getVolunteerPosts, updateVolunteerFavorite } from './api';
 import { getCustomizedVolunteerPosts, getScheduleRecommendationSnapshot, setScheduleRecommendationFromAnalysis, subscribeScheduleRecommendation } from './customized-recommendation-store';
@@ -63,6 +64,7 @@ export function ExplorationScreen() {
 
       setScheduleRecommendationFromAnalysis({
         scheduleItems: savedAnalysis.scheduleItems,
+        freeTimeSlots: savedAnalysis.freeTimeSlots,
         selectedKeywords: savedAnalysis.recommendedKeywords,
         timetableImageUrl: savedAnalysis.timetableImageUrl,
       });
@@ -127,6 +129,7 @@ export function ExplorationScreen() {
             {scheduleRecommendation.hasAnalyzedSchedule ? (
               <CustomizedScheduleHero
                 customizedPosts={customizedPosts}
+                freeTimeSlots={scheduleRecommendation.freeTimeSlots}
                 scheduleItems={scheduleRecommendation.scheduleItems}
               />
             ) : (
@@ -272,12 +275,15 @@ function UnregisteredScheduleHero() {
 
 function CustomizedScheduleHero({
   customizedPosts,
+  freeTimeSlots,
   scheduleItems,
 }: {
   customizedPosts: VolunteerPost[];
+  freeTimeSlots: FreeTimeSlot[];
   scheduleItems: { time: string; title: string }[];
 }) {
   const hasPosts = customizedPosts.length > 0;
+  const availableCopy = getAvailableScheduleCopy(freeTimeSlots);
 
   return (
     <>
@@ -285,28 +291,31 @@ function CustomizedScheduleHero({
         <Image resizeMode="contain" source={EXPLORATION_STAR} style={styles.customStar} />
         <Text style={styles.customTitle}>
           {hasPosts
-            ? '11:50 수업 이후, 다음 수업 전까지\n참여 가능한 교내 봉사가 있어요!'
+            ? `${availableCopy}\n참여 가능한 교내 봉사가 있어요!`
             : '지금 참여 가능한 맞춤 봉사가 없어요'}
         </Text>
       </View>
 
-      <Pressable
-        accessibilityRole="button"
-        style={({ pressed }) => [styles.todayScheduleBox, pressed && styles.pressed]}
-        onPress={() => router.push('/schedule-register')}>
-        <View>
+      <View style={styles.todayScheduleBox}>
+        <Pressable
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.todayScheduleContent, pressed && styles.pressed]}
+          onPress={() => router.push('/schedule-analysis?source=saved' as Href)}>
           <Text style={styles.todayScheduleTitle}>오늘 시간표</Text>
           {scheduleItems.map((item) => (
             <Text key={`${item.time}-${item.title}`} style={styles.todayScheduleText}>
               {item.time} {item.title}
             </Text>
           ))}
-        </View>
-        <View style={styles.scheduleEditGroup}>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.scheduleEditGroup, pressed && styles.pressed]}
+          onPress={() => router.push('/schedule-register' as Href)}>
           <ScheduleEditIcon />
           <Text style={styles.scheduleEditText}>시간표 수정하기</Text>
-        </View>
-      </Pressable>
+        </Pressable>
+      </View>
 
       {hasPosts ? (
         <View style={styles.customMiniCardRow}>
@@ -325,6 +334,82 @@ function CustomizedScheduleHero({
       )}
     </>
   );
+}
+
+function getAvailableScheduleCopy(freeTimeSlots: FreeTimeSlot[]) {
+  const todayIndex = new Date().getDay();
+  const nowMinutes = getNowMinutes();
+  const todaySlot = freeTimeSlots
+    .filter((slot) => getDayIndex(slot.dayOfWeek) === todayIndex)
+    .map((slot) => ({
+      startMinutes: getMinutes(slot.startTime),
+      endMinutes: getMinutes(slot.endTime),
+    }))
+    .filter((slot) => slot.endMinutes > nowMinutes)
+    .sort((a, b) => {
+      const leftDistance = Math.max(0, a.startMinutes - nowMinutes);
+      const rightDistance = Math.max(0, b.startMinutes - nowMinutes);
+
+      return leftDistance - rightDistance;
+    })[0];
+
+  if (!todaySlot) {
+    return '오늘 시간표 기준으로';
+  }
+
+  return `${formatMinutes(todaySlot.startMinutes)} 수업 이후, 다음 수업 전까지`;
+}
+
+function getDayIndex(dayOfWeek: string) {
+  const normalized = dayOfWeek.trim().toUpperCase();
+  const dayMap: Record<string, number> = {
+    SUNDAY: 0,
+    SUN: 0,
+    일: 0,
+    MONDAY: 1,
+    MON: 1,
+    월: 1,
+    TUESDAY: 2,
+    TUE: 2,
+    화: 2,
+    WEDNESDAY: 3,
+    WED: 3,
+    수: 3,
+    THURSDAY: 4,
+    THU: 4,
+    목: 4,
+    FRIDAY: 5,
+    FRI: 5,
+    금: 5,
+    SATURDAY: 6,
+    SAT: 6,
+    토: 6,
+  };
+
+  return dayMap[normalized] ?? -1;
+}
+
+function getMinutes(time: ApiLocalTime) {
+  if (typeof time === 'string') {
+    const [hour = '0', minute = '0'] = time.split(':');
+
+    return Number(hour) * 60 + Number(minute);
+  }
+
+  return (time.hour ?? 0) * 60 + (time.minute ?? 0);
+}
+
+function getNowMinutes() {
+  const now = new Date();
+
+  return now.getHours() * 60 + now.getMinutes();
+}
+
+function formatMinutes(minutes: number) {
+  const hour = String(Math.floor(minutes / 60)).padStart(2, '0');
+  const minute = String(minutes % 60).padStart(2, '0');
+
+  return `${hour}:${minute}`;
 }
 
 function CustomizedVolunteerMiniCard({
@@ -706,6 +791,11 @@ const styles = StyleSheet.create({
     borderColor: '#606060',
     borderRadius: 18,
   },
+  todayScheduleContent: {
+    flex: 1,
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+  },
   todayScheduleTitle: {
     color: '#606060',
     fontFamily: 'Pretendard',
@@ -723,6 +813,7 @@ const styles = StyleSheet.create({
   scheduleEditGroup: {
     width: 57,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   scheduleEditText: {

@@ -7,8 +7,8 @@ import {
   type ApiLocalTime,
   type ClassSlot,
   type FreeTimeSlot,
-  type TimetableSetupResponse,
   type TimetableAnalysisResponse,
+  type TimetableSetupResponse,
 } from '@/api/user-setup';
 
 export type ScheduleAnalysisResult = {
@@ -116,21 +116,25 @@ async function createTimetableFormData(imageUri: string) {
 function normalizeScheduleAnalysisResult(
   analysis: TimetableAnalysisResponse,
 ): ScheduleAnalysisResult {
+  const classes = analysis.classes ?? [];
+  const freeTimeSlots = analysis.freeTimeSlots ?? [];
+
   return {
-    classes: analysis.classes ?? [],
-    scheduleItems: analysis.scheduleItems ?? mapClassesToScheduleItems(analysis.classes ?? []),
-    freeTimeSlots: analysis.freeTimeSlots ?? [],
+    classes,
+    scheduleItems: analysis.scheduleItems ?? mapClassesToScheduleItems(classes),
+    freeTimeSlots,
     recommendedKeywords: TIMETABLE_KEYWORD_OPTIONS,
   };
 }
 
 function normalizeTimetableSetup(setup: TimetableSetupResponse): ScheduleAnalysisResult {
   const classes = setup.classes ?? [];
+  const freeTimeSlots = setup.freeTimeSlots ?? [];
 
   return {
     classes,
     scheduleItems: mapClassesToScheduleItems(classes),
-    freeTimeSlots: setup.freeTimeSlots ?? [],
+    freeTimeSlots,
     recommendedKeywords: setup.keywords ?? [],
     timetableImageUrl: setup.timetableImageUrl ?? null,
   };
@@ -167,7 +171,7 @@ async function getMockScheduleAnalysisResult(): Promise<ScheduleAnalysisResult> 
       },
       {
         dayOfWeek: 'TUESDAY',
-        subjectName: '서비스리더디자인',
+        subjectName: '서비스리빙디자인',
         startTime: '12:00:00',
         endTime: '14:00:00',
       },
