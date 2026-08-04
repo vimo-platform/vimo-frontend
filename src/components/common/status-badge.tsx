@@ -40,7 +40,9 @@ export function VerificationBadge({ status, count, style }: VerificationBadgePro
 
     return (
       <View style={[styles.solidVerification, isComplete ? styles.completeSolid : styles.syncingSolid, style]}>
-        <Text style={styles.solidVerificationLabel}>{isComplete ? '인증 완료' : '학사 시스템 연동 중'}</Text>
+        <Text style={styles.solidVerificationLabel}>
+          {isComplete ? '인증 완료' : '학사 시스템 연동 중'}
+        </Text>
       </View>
     );
   }

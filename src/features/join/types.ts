@@ -7,6 +7,7 @@ export type VolunteerSchedule = {
   startTime: string;
   endTime: string;
   status: 'before' | 'active';
+  applicationStatus?: string;
   title: string;
   credit: string;
   location: string;

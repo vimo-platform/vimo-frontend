@@ -370,6 +370,7 @@ const styles = StyleSheet.create({
   },
   scheduleSection: {
     alignItems: 'center',
+    gap: 28,
     paddingTop: 30,
     paddingHorizontal: 30,
   },

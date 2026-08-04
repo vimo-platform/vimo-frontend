@@ -83,7 +83,7 @@ export function ScheduleRegisterScreen() {
             <View style={styles.selectedScheduleGroup}>
               <View style={styles.selectedImageCard}>
                 <Image
-                  resizeMode="cover"
+                  resizeMode="contain"
                   source={{ uri: selectedImageUri }}
                   style={styles.selectedImage}
                 />
@@ -96,17 +96,6 @@ export function ScheduleRegisterScreen() {
                   <RemoveImageIcon />
                 </Pressable>
               </View>
-
-              <Pressable
-                accessibilityRole="button"
-                style={({ pressed }) => [styles.secondaryUploadBox, pressed && styles.pressed]}
-                onPress={pickScheduleImage}>
-                <Image
-                  resizeMode="contain"
-                  source={INPUT_TIMELINE_IMAGE}
-                  style={styles.secondaryUploadPlaceholder}
-                />
-              </Pressable>
             </View>
           ) : (
             <Pressable
@@ -235,11 +224,10 @@ const styles = StyleSheet.create({
   selectedScheduleGroup: {
     width: '100%',
     marginTop: 30,
-    gap: 26,
   },
   selectedImageCard: {
     width: '100%',
-    height: 186,
+    height: 430,
     overflow: 'hidden',
     borderRadius: 21,
     backgroundColor: '#F5F5F5',
@@ -256,21 +244,6 @@ const styles = StyleSheet.create({
     height: 24,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  secondaryUploadBox: {
-    width: '100%',
-    height: 89,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    borderWidth: 1.4,
-    borderColor: '#E3E3E3',
-    borderRadius: 21,
-    backgroundColor: '#F9F9F9',
-  },
-  secondaryUploadPlaceholder: {
-    width: 92,
-    height: 70,
   },
   selectedBottomButtons: {
     position: 'absolute',

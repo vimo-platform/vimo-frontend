@@ -294,7 +294,7 @@ function normalizePosting(data: ApiAdminVolunteer): Posting {
     capacity: data.maxParticipants ?? 0,
     applicants: data.applicantCount ?? 0,
     hoursPerSession,
-    status: normalizePostingStatus(data.status),
+    status: normalizePostingStatus(data.status, end.date),
     recruitType: normalizeRecruitType(
       data.recruitType ?? data.recruitmentType ?? data.applicationType,
     ),
@@ -304,7 +304,7 @@ function normalizePosting(data: ApiAdminVolunteer): Posting {
   };
 }
 
-function normalizePostingStatus(status?: string): PostingStatus {
+function normalizePostingStatus(status?: string, endDate?: string): PostingStatus {
   if (status === 'DRAFT') {
     return 'draft';
   }
@@ -313,7 +313,26 @@ function normalizePostingStatus(status?: string): PostingStatus {
     return 'closed';
   }
 
+  if (isPastDate(endDate)) {
+    return 'closed';
+  }
+
   return 'open';
+}
+
+function isPastDate(date?: string) {
+  if (!date) {
+    return false;
+  }
+
+  const today = new Date();
+  const todayKey = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-');
+
+  return date < todayKey;
 }
 
 function normalizeRecruitType(type?: string) {

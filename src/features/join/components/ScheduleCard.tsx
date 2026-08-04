@@ -13,15 +13,22 @@ import {
 
 export function ScheduleCard({ schedule }: { schedule: VolunteerSchedule }) {
   const postId = schedule.postId ?? schedule.id;
+  const hasStarted = schedule.applicationStatus === 'ATTENDED';
   const displayTime = formatTimeRange(schedule.startTime, schedule.endTime, false);
   const activityTime = formatTimeRange(schedule.startTime, schedule.endTime, true);
-  const period = `${formatDateWithDots(schedule.startDate)} ~ ${formatDateWithDots(
+  const dateRange = `${formatDateWithDots(schedule.startDate)} ~ ${formatDateWithDots(
     schedule.endDate,
-  )} (매주 ${getWeekdayLabel(schedule.repeatWeekday)}요일)`;
+  )}`;
+  const isWeeklySchedule = getInclusiveDayCount(schedule.startDate, schedule.endDate) >= 8;
+  const period =
+    !isWeeklySchedule
+      ? dateRange
+      : `${dateRange} (매주 ${getWeekdayLabel(schedule.repeatWeekday)}요일)`;
 
   const openDetail = () => {
     router.push(`/volunteer-post/${postId}?mode=confirm` as Href);
   };
+
   const openStartQrScan = () => {
     router.push(
       `/volunteer-qr-scan?postId=${postId}&type=start&startTime=${encodeURIComponent(
@@ -29,6 +36,7 @@ export function ScheduleCard({ schedule }: { schedule: VolunteerSchedule }) {
       )}` as Href,
     );
   };
+
   const openEndQrScan = () => {
     router.push(
       `/volunteer-qr-scan?postId=${postId}&type=end&startTime=${encodeURIComponent(
@@ -36,6 +44,7 @@ export function ScheduleCard({ schedule }: { schedule: VolunteerSchedule }) {
       )}&endTime=${encodeURIComponent(schedule.endTime)}` as Href,
     );
   };
+
   return (
     <View style={styles.scheduleGroup}>
       <View style={styles.scheduleHeading}>
@@ -62,12 +71,37 @@ export function ScheduleCard({ schedule }: { schedule: VolunteerSchedule }) {
         </Pressable>
 
         <View style={styles.cardActions}>
-          <ParticipationButton style={styles.cardAction} onPress={openStartQrScan} />
-          <ParticipationButton style={styles.cardAction} variant="end" onPress={openEndQrScan} />
+          <ParticipationButton
+            disabled={hasStarted}
+            style={styles.cardAction}
+            onPress={openStartQrScan}
+          />
+          <ParticipationButton
+            disabled={!hasStarted}
+            style={styles.cardAction}
+            variant="end"
+            onPress={openEndQrScan}
+          />
         </View>
       </View>
     </View>
   );
+}
+
+function getInclusiveDayCount(startDate: string, endDate: string) {
+  const start = parseDateKey(startDate).getTime();
+  const end = parseDateKey(endDate).getTime();
+
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) {
+    return 1;
+  }
+
+  return Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+}
+
+function parseDateKey(dateKey: string) {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
 function DetailRow({

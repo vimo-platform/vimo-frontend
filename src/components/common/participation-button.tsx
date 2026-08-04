@@ -1,4 +1,11 @@
-import { Pressable, StyleSheet, Text, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  type PressableProps,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 type ParticipationButtonVariant = 'start' | 'end';
 
@@ -23,7 +30,7 @@ export function ParticipationButton({
       disabled={disabled}
       style={({ pressed }) => [
         styles.container,
-        isEnd ? styles.endContainer : styles.startContainer,
+        styles.activeContainer,
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
         style,
@@ -45,11 +52,8 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     borderRadius: 16,
   },
-  startContainer: {
+  activeContainer: {
     backgroundColor: '#222222',
-  },
-  endContainer: {
-    backgroundColor: '#818181',
   },
   label: {
     color: '#F5F5F5',
@@ -62,6 +66,6 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   disabled: {
-    opacity: 0.5,
+    backgroundColor: '#818181',
   },
 });

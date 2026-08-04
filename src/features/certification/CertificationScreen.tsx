@@ -20,12 +20,14 @@ import { UserGnb } from '@/components/navigation/user-gnb';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
 
 import type { VolunteerPost } from '@/features/exploration/types';
-import { getMyCertificationStatusRecords } from '@/features/exploration/api';
+import { getMyCertificationStatusRecords, getVolunteerPosts } from '@/features/exploration/api';
 import {
   type CertificationRejectedRecord,
   getVolunteerInteractionsSnapshot,
   getVolunteerPostsSnapshot,
+  mergeVolunteerInteractionsFromPosts,
   mergeCertificationStatusRecords,
+  setVolunteerPostsSnapshot,
   subscribeVolunteerInteractions,
 } from '@/features/exploration/volunteer-interaction-store';
 
@@ -49,6 +51,7 @@ export function CertificationScreen() {
   const completedSectionY = useRef(0);
   const [selectedRejectedItem, setSelectedRejectedItem] =
     useState<CertificationVolunteerItem | null>(null);
+  const [posts, setPosts] = useState(() => getVolunteerPostsSnapshot());
   const interactions = useSyncExternalStore(
     subscribeVolunteerInteractions,
     getVolunteerInteractionsSnapshot,
@@ -56,10 +59,26 @@ export function CertificationScreen() {
   );
 
   useEffect(() => {
-    getMyCertificationStatusRecords().then(mergeCertificationStatusRecords);
+    let mounted = true;
+
+    Promise.all([getVolunteerPosts(), getMyCertificationStatusRecords()]).then(
+      ([nextPosts, certificationRecords]) => {
+        if (!mounted) {
+          return;
+        }
+
+        setPosts(nextPosts);
+        setVolunteerPostsSnapshot(nextPosts);
+        mergeVolunteerInteractionsFromPosts(nextPosts);
+        mergeCertificationStatusRecords(certificationRecords);
+      },
+    );
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const posts = getVolunteerPostsSnapshot();
   const activity = useMemo(
     () => buildCertificationActivity(posts, interactions),
     [interactions, posts],

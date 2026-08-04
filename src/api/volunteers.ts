@@ -274,7 +274,7 @@ export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
       data.currentParticipants ??
       0,
     creditHours,
-    status: normalizeVolunteerStatus(data.status),
+    status: normalizeVolunteerStatus(data.status, end.date),
     participationCondition: data.participationCondition ?? '',
     cancelPolicy: data.cancelPolicy ?? '취소 불가',
     guideTitle: data.guideTitle ?? '모집 안내',
@@ -304,12 +304,31 @@ function normalizeRecruitType(type: ApiVolunteer['recruitType']) {
   return 'selection';
 }
 
-function normalizeVolunteerStatus(status: ApiVolunteer['status']): VolunteerStatus {
+function normalizeVolunteerStatus(status: ApiVolunteer['status'], endDate?: string): VolunteerStatus {
   if (status === 'CLOSED' || status === 'COMPLETED') {
     return status;
   }
 
+  if (isPastDate(endDate)) {
+    return 'CLOSED';
+  }
+
   return 'RECRUITING';
+}
+
+function isPastDate(date?: string) {
+  if (!date) {
+    return false;
+  }
+
+  const today = new Date();
+  const todayKey = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-');
+
+  return date < todayKey;
 }
 
 function getDateTimeParts(dateTime?: string, date?: string, time?: ApiLocalTime) {
