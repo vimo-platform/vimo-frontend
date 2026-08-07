@@ -49,7 +49,9 @@ export default function PostingsScreen() {
 
     setIsDeleting(true);
     try {
-      await deletePosting(deleteTarget.id);
+      const deletedPostingId = deleteTarget.id;
+      await deletePosting(deletedPostingId);
+      setPostings((current) => current.filter((posting) => posting.id !== deletedPostingId));
       setDeleteTarget(null);
       setShowDeleteDone(true);
       reload();

@@ -51,6 +51,10 @@ export type ApiVolunteer = {
   applicationStatus?: VolunteerApplicationStatus;
 };
 
+function isDeletedVolunteer(data: ApiVolunteer) {
+  return data.status === 'DELETED';
+}
+
 export type ApiApplication = {
   id?: number;
   applicationId?: number;
@@ -132,20 +136,20 @@ export async function fetchVolunteers() {
     }),
   );
 
-  return detailedData.map(normalizeVolunteerPost);
+  return detailedData.filter((item) => !isDeletedVolunteer(item)).map(normalizeVolunteerPost);
 }
 
 export async function searchVolunteers(query: string) {
   const params = new URLSearchParams({ keyword: query });
   const data = await apiRequest<ApiVolunteer[]>(`/api/v1/volunteers/search?${params.toString()}`);
 
-  return data.map(normalizeVolunteerPost);
+  return data.filter((item) => !isDeletedVolunteer(item)).map(normalizeVolunteerPost);
 }
 
 export async function fetchRecommendedVolunteers() {
   const data = await apiRequest<ApiVolunteer[]>('/api/v1/volunteers/recommendations');
 
-  return data.map(normalizeVolunteerPost);
+  return data.filter((item) => !isDeletedVolunteer(item)).map(normalizeVolunteerPost);
 }
 
 export async function fetchVolunteerDetail(volunteerId: number) {
@@ -169,7 +173,7 @@ export function unfavoriteVolunteer(volunteerId: number) {
 export async function fetchMyFavoriteVolunteers() {
   const data = await apiRequest<ApiVolunteer[]>('/api/v1/users/me/favorites');
 
-  return data.map(normalizeVolunteerPost);
+  return data.filter((item) => !isDeletedVolunteer(item)).map(normalizeVolunteerPost);
 }
 
 export async function fetchMyApplications() {
@@ -305,6 +309,10 @@ function normalizeRecruitType(type: ApiVolunteer['recruitType']) {
 }
 
 function normalizeVolunteerStatus(status: ApiVolunteer['status'], endDate?: string): VolunteerStatus {
+  if (status === 'DELETED') {
+    return 'CLOSED';
+  }
+
   if (status === 'CLOSED' || status === 'COMPLETED') {
     return status;
   }

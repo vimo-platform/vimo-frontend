@@ -280,10 +280,11 @@ function CustomizedScheduleHero({
 }: {
   customizedPosts: VolunteerPost[];
   freeTimeSlots: FreeTimeSlot[];
-  scheduleItems: { time: string; title: string }[];
+  scheduleItems: { dayOfWeek?: string; time: string; title: string }[];
 }) {
   const hasPosts = customizedPosts.length > 0;
   const availableCopy = getAvailableScheduleCopy(freeTimeSlots);
+  const todayScheduleItems = getTodayScheduleItems(scheduleItems);
 
   return (
     <>
@@ -302,11 +303,15 @@ function CustomizedScheduleHero({
           style={({ pressed }) => [styles.todayScheduleContent, pressed && styles.pressed]}
           onPress={() => router.push('/schedule-analysis?source=saved' as Href)}>
           <Text style={styles.todayScheduleTitle}>오늘 시간표</Text>
-          {scheduleItems.map((item) => (
+          {todayScheduleItems.length > 0 ? (
+            todayScheduleItems.map((item) => (
             <Text key={`${item.time}-${item.title}`} style={styles.todayScheduleText}>
               {item.time} {item.title}
             </Text>
-          ))}
+            ))
+          ) : (
+            <Text style={styles.todayScheduleText}>오늘 등록된 수업이 없어요</Text>
+          )}
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -334,6 +339,14 @@ function CustomizedScheduleHero({
       )}
     </>
   );
+}
+
+function getTodayScheduleItems(
+  scheduleItems: { dayOfWeek?: string; time: string; title: string }[],
+) {
+  const todayIndex = new Date().getDay();
+
+  return scheduleItems.filter((item) => item.dayOfWeek && getDayIndex(item.dayOfWeek) === todayIndex);
 }
 
 function getAvailableScheduleCopy(freeTimeSlots: FreeTimeSlot[]) {

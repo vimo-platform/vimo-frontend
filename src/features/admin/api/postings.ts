@@ -85,7 +85,7 @@ export async function fetchMyPostings(): Promise<Posting[]> {
       }),
     );
 
-    postings = detailedData.map(normalizePosting);
+    postings = detailedData.filter((item) => item.status !== 'DELETED').map(normalizePosting);
   } catch {
     postings = [];
   }
@@ -309,7 +309,7 @@ function normalizePostingStatus(status?: string, endDate?: string): PostingStatu
     return 'draft';
   }
 
-  if (status === 'CLOSED' || status === 'COMPLETED') {
+  if (status === 'CLOSED' || status === 'COMPLETED' || status === 'DELETED') {
     return 'closed';
   }
 

@@ -8,14 +8,7 @@ type ApiApplicant = {
   studentId?: string;
   studentName?: string;
   name?: string;
-  department?: string;
-  departmentName?: string;
-  major?: string;
-  majorName?: string;
-  studentDepartment?: string;
-  studentDepartmentName?: string;
-  studentMajor?: string;
-  studentMajorName?: string;
+  Major?: string;
   introduction?: string;
   status?: string;
   appliedAt?: string;
@@ -28,14 +21,7 @@ type ApiCancellationNotice = {
   studentId?: string;
   studentName?: string;
   name?: string;
-  department?: string;
-  departmentName?: string;
-  major?: string;
-  majorName?: string;
-  studentDepartment?: string;
-  studentDepartmentName?: string;
-  studentMajor?: string;
-  studentMajorName?: string;
+  Major?: string;
   reason?: string;
   canceledAt?: string;
   student?: ApiApplicantProfile;
@@ -47,20 +33,16 @@ type ApiApplicantProfile = {
   studentId?: string;
   studentName?: string;
   name?: string;
-  department?: string;
-  departmentName?: string;
-  major?: string;
-  majorName?: string;
 };
 
 const USE_MOCK_ADMIN_API = process.env.EXPO_PUBLIC_USE_MOCK_ADMIN_API === 'true';
 
 const MAJOR_LABELS: Record<string, string> = {
   SOCIAL_WELFARE: '사회복지학과',
-  COMPUTER_SCIENCE: '컴퓨터공학과',
+  COMPUTER_SCIENCE: '컴퓨터공학부',
   LIBERAL_STUDIES: '자유전공학부',
   SENIOR_BUSINESS: '시니어비즈니스학과',
-  COMMERCE: '글로벌상경학부',
+  COMMERCE: '글로벌경영학부',
   LAW_PUBLIC_ADMINISTRATION_TAXATION: '법행정세무학부',
   CULTURE_CONTENTS: '문화콘텐츠학과',
   INTERNATIONAL_AREA_STUDIES: '국제지역학부',
@@ -255,32 +237,7 @@ function getApplicantName(data: ApiApplicant | ApiCancellationNotice) {
 }
 
 function getApplicantDepartment(data: ApiApplicant | ApiCancellationNotice) {
-  return (
-    [
-      data.majorName,
-      data.major,
-      data.studentMajorName,
-      data.studentMajor,
-      data.student?.majorName,
-      data.student?.major,
-      data.account?.majorName,
-      data.account?.major,
-      data.user?.majorName,
-      data.user?.major,
-      data.departmentName,
-      data.department,
-      data.studentDepartmentName,
-      data.studentDepartment,
-      data.student?.departmentName,
-      data.student?.department,
-      data.account?.departmentName,
-      data.account?.department,
-      data.user?.departmentName,
-      data.user?.department,
-    ]
-      .map(formatMajorLabel)
-      .find((department) => department !== null) ?? '학과 정보 없음'
-  );
+  return formatMajorLabel(data.Major) ?? '학과 정보 없음';
 }
 
 function formatMajorLabel(value?: string | null) {
@@ -291,7 +248,11 @@ function formatMajorLabel(value?: string | null) {
   const normalizedValue = value.trim();
   const upperValue = normalizedValue.toUpperCase();
 
-  if (!normalizedValue || EMPTY_DEPARTMENT_LABELS.has(upperValue) || EMPTY_DEPARTMENT_LABELS.has(normalizedValue)) {
+  if (
+    !normalizedValue ||
+    EMPTY_DEPARTMENT_LABELS.has(upperValue) ||
+    EMPTY_DEPARTMENT_LABELS.has(normalizedValue)
+  ) {
     return null;
   }
 

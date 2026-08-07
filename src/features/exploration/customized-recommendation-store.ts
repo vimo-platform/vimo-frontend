@@ -8,6 +8,7 @@ export type ScheduleRecommendationState = {
   hasAnalyzedSchedule: boolean;
   selectedKeywords: string[];
   scheduleItems: {
+    dayOfWeek?: string;
     time: string;
     title: string;
   }[];
@@ -59,10 +60,7 @@ export function setScheduleRecommendationFromAnalysis({
   state = {
     hasAnalyzedSchedule: true,
     selectedKeywords: normalizedKeywords,
-    scheduleItems: scheduleItems ?? [
-      { time: '09:00 - 11:50', title: '국제비즈니스영어' },
-      { time: '15:30 - 16:30', title: '인성과 학문 III' },
-    ],
+    scheduleItems: scheduleItems ?? state.scheduleItems,
     freeTimeSlots: freeTimeSlots ?? state.freeTimeSlots,
     timetableImageUrl: timetableImageUrl ?? state.timetableImageUrl ?? null,
   };
@@ -70,14 +68,13 @@ export function setScheduleRecommendationFromAnalysis({
 }
 
 export function getCustomizedVolunteerPosts(posts: VolunteerPost[]) {
-  const sourcePosts = posts;
   const selectedKeywordSet = new Set(state.selectedKeywords);
 
   if (selectedKeywordSet.size === 0) {
     return [];
   }
 
-  return sourcePosts
+  return posts
     .map((post, index) => ({
       index,
       matchedKeywordCount: getMatchedKeywordCount(post, selectedKeywordSet),

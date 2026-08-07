@@ -14,6 +14,7 @@ import {
 export type ScheduleAnalysisResult = {
   classes: ClassSlot[];
   scheduleItems?: {
+    dayOfWeek?: string;
     time: string;
     title: string;
   }[];
@@ -142,6 +143,7 @@ function normalizeTimetableSetup(setup: TimetableSetupResponse): ScheduleAnalysi
 
 function mapClassesToScheduleItems(classes: ClassSlot[]) {
   return classes.map((item) => ({
+    dayOfWeek: item.dayOfWeek,
     time: `${formatApiTime(item.startTime)} - ${formatApiTime(item.endTime)}`,
     title: item.subjectName,
   }));

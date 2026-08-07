@@ -316,7 +316,7 @@ function AnalyzedTimetable({ classes }: { classes: ClassSlot[] }) {
                 backgroundColor: item.color,
               },
             ]}>
-            <Text numberOfLines={4} style={styles.classText}>
+            <Text numberOfLines={getClassTextLineCount(item.height)} style={styles.classText}>
               {item.classItem.subjectName}
             </Text>
           </View>
@@ -356,6 +356,10 @@ function getClassBlockLayout(classItem: ClassSlot, index: number) {
     height,
     color: CLASS_COLORS[index % CLASS_COLORS.length],
   };
+}
+
+function getClassTextLineCount(height: number) {
+  return Math.max(2, Math.floor((height - 6) / 8));
 }
 
 function getDayIndex(dayOfWeek: string) {
@@ -555,15 +559,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
-    paddingTop: 5,
-    paddingLeft: 5,
+    overflow: 'hidden',
+    paddingTop: 3,
+    paddingHorizontal: 3,
   },
   classText: {
     color: '#FFFFFF',
     fontFamily: 'Pretendard',
-    fontSize: 8,
+    fontSize: 6,
     fontWeight: '700',
-    lineHeight: 11,
+    lineHeight: 8,
   },
   classOrange: {
     top: 31,

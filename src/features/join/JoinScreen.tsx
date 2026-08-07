@@ -233,7 +233,10 @@ export function JoinScreen() {
               const pageIndex = Math.round(event.nativeEvent.contentOffset.x / contentWidth);
               const visibleWeek = weeks[pageIndex];
               if (visibleWeek) {
-                setDisplayedMonth(visibleWeek[3]);
+                const selectedWeekdayIndex = (selectedDate.getDay() + 6) % 7;
+                const nextSelectedDate = visibleWeek[selectedWeekdayIndex] ?? visibleWeek[3];
+                setSelectedDate(nextSelectedDate);
+                setDisplayedMonth(nextSelectedDate);
               }
             }}
           />
