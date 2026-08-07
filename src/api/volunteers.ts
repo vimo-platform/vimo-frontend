@@ -44,6 +44,7 @@ export type ApiVolunteer = {
   recruitType?: 'selection' | 'fcfs' | string;
   recruitmentType?: 'selection' | 'fcfs' | string;
   applicationType?: 'selection' | 'fcfs' | string;
+  selectedCategories?: string[];
   keywords?: string[];
   createdAt?: string;
   isFavorite?: boolean;
@@ -287,7 +288,7 @@ export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
     recruitType: normalizeRecruitType(
       data.recruitType ?? data.recruitmentType ?? data.applicationType,
     ),
-    keywords: data.keywords ?? data.summaryTags ?? (data.category ? [data.category] : []),
+    keywords: normalizeVolunteerKeywords(data),
     createdAt: data.createdAt,
     isFavorite: data.isFavorite,
     isApplied: data.isApplied,
@@ -322,6 +323,36 @@ function normalizeVolunteerStatus(status: ApiVolunteer['status'], endDate?: stri
   }
 
   return 'RECRUITING';
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  EVENT_OPERATION: '행사운영',
+  FIELD_MANAGEMENT: '현장 관리',
+  ADMIN_SUPPORT: '행정지원',
+  ADMINISTRATIVE_SUPPORT: '행정지원',
+  DESIGN: '디자인',
+  MENTORING: '멘토링',
+  ENVIRONMENT: '환경보호',
+  MEDIA: '미디어',
+  IT: 'IT',
+  CLASS_SUPPORT: '수업 보조',
+  CLASS_ASSISTANCE: '수업 보조',
+};
+
+function normalizeVolunteerKeywords(data: ApiVolunteer) {
+  const categories = data.selectedCategories?.length
+    ? data.selectedCategories
+    : data.category
+      ? [data.category]
+      : [];
+
+  const categoryKeywords = categories.map((category) => CATEGORY_LABELS[category] ?? category);
+
+  if (categoryKeywords.length > 0) {
+    return categoryKeywords;
+  }
+
+  return data.keywords ?? data.summaryTags ?? [];
 }
 
 function isPastDate(date?: string) {

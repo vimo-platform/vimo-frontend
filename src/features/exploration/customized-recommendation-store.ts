@@ -84,6 +84,7 @@ export function getCustomizedVolunteerPosts(posts: VolunteerPost[]) {
       (item) =>
         item.post.status === 'RECRUITING' &&
         isVolunteerPostAvailableToday(item.post) &&
+        !isVolunteerPostOverlappingTodayClass(item.post, state.scheduleItems) &&
         item.matchedKeywordCount > 0,
     )
     .sort((a, b) => {
@@ -113,6 +114,33 @@ function isVolunteerPostAvailableToday(post: VolunteerPost) {
   return post.startDate <= todayKey && todayKey <= post.endDate;
 }
 
+function isVolunteerPostOverlappingTodayClass(
+  post: VolunteerPost,
+  scheduleItems: ScheduleRecommendationState['scheduleItems'],
+) {
+  const todayIndex = new Date().getDay();
+  const volunteerStart = toMinutes(post.startTime);
+  const volunteerEnd = toMinutes(post.endTime);
+
+  if (volunteerStart === null || volunteerEnd === null || volunteerEnd <= volunteerStart) {
+    return true;
+  }
+
+  return scheduleItems.some((item) => {
+    if (getDayIndex(item.dayOfWeek) !== todayIndex) {
+      return false;
+    }
+
+    const classTime = parseTimeRange(item.time);
+
+    if (!classTime) {
+      return false;
+    }
+
+    return volunteerStart < classTime.end && classTime.start < volunteerEnd;
+  });
+}
+
 function getTodayDateKey() {
   const now = new Date();
   const year = now.getFullYear();
@@ -120,6 +148,44 @@ function getTodayDateKey() {
   const day = String(now.getDate()).padStart(2, '0');
 
   return `${year}-${month}-${day}`;
+}
+
+function getDayIndex(dayOfWeek?: string) {
+  const key = dayOfWeek?.toUpperCase();
+  const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+
+  return days.indexOf(key ?? '');
+}
+
+function toMinutes(time: FreeTimeSlot['startTime'] | string) {
+  if (!time) {
+    return null;
+  }
+
+  if (typeof time === 'string') {
+    const [hourText, minuteText] = time.split(':');
+    const hour = Number(hourText);
+    const minute = Number(minuteText);
+
+    return Number.isFinite(hour) && Number.isFinite(minute) ? hour * 60 + minute : null;
+  }
+
+  const hour = time.hour ?? 0;
+  const minute = time.minute ?? 0;
+
+  return hour * 60 + minute;
+}
+
+function parseTimeRange(timeRange: string) {
+  const [startText, endText] = timeRange.split(/\s*[-~]\s*/);
+  const start = toMinutes(startText);
+  const end = toMinutes(endText);
+
+  if (start === null || end === null || end <= start) {
+    return null;
+  }
+
+  return { start, end };
 }
 
 function getPostCreatedAt(post: VolunteerPost, fallbackIndex: number) {

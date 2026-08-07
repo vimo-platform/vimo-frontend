@@ -144,7 +144,7 @@ export async function deletePosting(id: string): Promise<void> {
 
 export async function generatePostingDraft(
   memo: string,
-): Promise<{ title: string; description: string; keywords: string[] }> {
+): Promise<{ title: string; description: string; keywords: string[]; category?: string }> {
   if (!USE_MOCK_ADMIN_API) {
     const data = await apiRequest<ApiAiDraftResponse>('/api/v1/admin/volunteers/ai', {
       method: 'POST',
@@ -155,6 +155,7 @@ export async function generatePostingDraft(
       title: data.titleDraft ?? memo.trim().split('\n')[0].slice(0, 24),
       description: data.contentDraft ?? memo.trim(),
       keywords: data.summaryTagsDraft ?? (data.categoryDraft ? [data.categoryDraft] : []),
+      category: data.categoryDraft,
     };
   }
 
@@ -165,6 +166,7 @@ export async function generatePostingDraft(
     title: summary,
     description: `${memo.trim()}\n\n전문적인 활동 경험이 없어도 참여 가능하며, 책임감 있게 활동 가능한 재학생의 많은 지원 바랍니다.`,
     keywords: ['정기 참여 가능자 우대', '성실 근무자 우대'],
+    category: undefined,
   };
 }
 
@@ -234,7 +236,7 @@ function getSaveMethod(posting: Posting) {
 
 async function toApiVolunteerPayload(posting: Posting) {
   const currentUser = await getCurrentUser();
-  const category = getValidCategory(posting.tags);
+  const category = posting.category ?? getValidCategory(posting.tags);
 
   return {
     studentId: currentUser?.studentId ?? 'admin01',
@@ -298,6 +300,7 @@ function normalizePosting(data: ApiAdminVolunteer): Posting {
     recruitType: normalizeRecruitType(
       data.recruitType ?? data.recruitmentType ?? data.applicationType,
     ),
+    category: data.category,
     tags: data.summaryTags ?? (data.category ? [data.category] : []),
     gender: normalizeGender(data.targetGender),
     createdAt: start.date || new Date().toISOString().slice(0, 10),

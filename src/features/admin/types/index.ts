@@ -25,6 +25,7 @@ export type Posting = {
   hoursPerSession: number;
   status: PostingStatus;
   recruitType?: RecruitType;
+  category?: string;
   tags: string[];
   noCancel?: boolean;
   gender?: Gender;

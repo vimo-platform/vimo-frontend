@@ -139,6 +139,7 @@ export default function CreatePostingScreen() {
         hoursPerSession: normalizedCreditHours,
         status: 'draft',
         recruitType,
+        category: draft.category,
         tags: draft.keywords,
         gender,
         createdAt: new Date().toISOString().slice(0, 10),
@@ -195,7 +196,10 @@ export default function CreatePostingScreen() {
         return;
       }
 
-      Alert.alert('저장 실패', '공고 임시저장에 실패했습니다.');
+      Alert.alert(
+        '저장 실패',
+        error instanceof Error ? error.message : '공고 임시저장에 실패했습니다.',
+      );
     } finally {
       setIsSavingDraft(false);
     }
