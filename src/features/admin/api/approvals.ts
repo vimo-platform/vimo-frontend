@@ -1,6 +1,5 @@
 import { apiRequest } from '@/api/client';
 import { fetchMyPostings } from '@/features/admin/api/postings';
-import { mockApprovals } from '@/features/admin/data/mock-approvals';
 import type { Approval, ApprovalStatus, Posting } from '@/features/admin/types';
 
 type ApiApplicant = {
@@ -11,18 +10,10 @@ type ApiApplicant = {
 
 let approvals: Approval[] = [];
 
-const USE_MOCK_ADMIN_API = process.env.EXPO_PUBLIC_USE_MOCK_ADMIN_API === 'true';
-
-// 승인 화면에는 "봉사 종료(체크아웃) 이후" 건만 노출한다.
-// 상태 흐름: PENDING(신청) → APPROVED(채택) → ATTENDED(체크인) → COMPLETED(체크아웃) → CERTIFIED/CERTIFICATION_REJECTED
+// 승인 화면에는 봉사 종료(checkout) 이후 관리자 최종 인증 대상만 노출한다.
 const POST_CHECKOUT_STATUSES = new Set(['COMPLETED', 'CERTIFIED', 'CERTIFICATION_REJECTED']);
 
 export async function fetchApprovals(): Promise<Approval[]> {
-  if (USE_MOCK_ADMIN_API) {
-    approvals = [...mockApprovals];
-    return [...approvals];
-  }
-
   try {
     const postings = await fetchMyPostings();
     const applicantGroups = await Promise.all(
@@ -52,7 +43,7 @@ export async function setApprovalStatus(
   status: ApprovalStatus,
   reason = '관리자 반려',
 ): Promise<void> {
-  if (!USE_MOCK_ADMIN_API && isNumericId(id)) {
+  if (isNumericId(id)) {
     if (status === 'approved') {
       await apiRequest<void>(
         `/api/v1/admin/volunteers/applications/${id}/certification-approve`,
@@ -96,7 +87,6 @@ function normalizeApprovalStatus(status?: string): ApprovalStatus {
     return 'rejected';
   }
 
-  // COMPLETED: 봉사 종료 후 인증 승인 대기
   return 'pending';
 }
 

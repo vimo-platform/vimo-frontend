@@ -1,5 +1,4 @@
 import { apiRequest } from '@/api/client';
-import { mockApplicants, mockFcfsApplicants } from '@/features/admin/data/mock-applicants';
 import type { Applicant } from '@/features/admin/types';
 
 type ApiApplicant = {
@@ -7,35 +6,21 @@ type ApiApplicant = {
   volunteerId?: number;
   studentId?: string;
   studentName?: string;
-  name?: string;
+  majorName?: string;
   Major?: string;
   introduction?: string;
   status?: string;
   appliedAt?: string;
-  student?: ApiApplicantProfile;
-  account?: ApiApplicantProfile;
-  user?: ApiApplicantProfile;
 };
 
 type ApiCancellationNotice = {
   studentId?: string;
   studentName?: string;
-  name?: string;
+  majorName?: string;
   Major?: string;
   reason?: string;
   canceledAt?: string;
-  student?: ApiApplicantProfile;
-  account?: ApiApplicantProfile;
-  user?: ApiApplicantProfile;
 };
-
-type ApiApplicantProfile = {
-  studentId?: string;
-  studentName?: string;
-  name?: string;
-};
-
-const USE_MOCK_ADMIN_API = process.env.EXPO_PUBLIC_USE_MOCK_ADMIN_API === 'true';
 
 const MAJOR_LABELS: Record<string, string> = {
   SOCIAL_WELFARE: '사회복지학과',
@@ -60,61 +45,39 @@ const MAJOR_LABELS: Record<string, string> = {
   SECONDARY_SPECIAL_EDUCATION: '중등특수교육과',
 };
 
-const EMPTY_DEPARTMENT_LABELS = new Set([
-  'NONE',
-  'NULL',
-  'UNKNOWN',
-  '학과 정보 없음',
-  '학과정보없음',
-  '학과 없음',
-  '학과없음',
-]);
-
 export async function fetchApplicants(postingId: string): Promise<Applicant[]> {
-  if (USE_MOCK_ADMIN_API) {
-    return mockApplicants;
+  if (!isNumericId(postingId)) {
+    return [];
   }
 
-  if (isNumericId(postingId)) {
-    try {
-      const data = await apiRequest<ApiApplicant[]>(
-        `/api/v1/admin/volunteers/${postingId}/application`,
-      );
-      const detailedData = await fetchApplicantDetails(data);
-      const cancellations = await fetchCancellationNotices(postingId);
+  try {
+    const data = await apiRequest<ApiApplicant[]>(`/api/v1/admin/volunteers/${postingId}/application`);
+    const detailedData = await fetchApplicantDetails(data);
+    const cancellations = await fetchCancellationNotices(postingId);
 
-      return mergeApplicantsWithCancellations(detailedData, cancellations);
-    } catch {
-      return [];
-    }
+    return mergeApplicantsWithCancellations(detailedData, cancellations);
+  } catch {
+    return [];
   }
-
-  return [];
 }
 
 export async function fetchFcfsApplicants(postingId: string): Promise<Applicant[]> {
-  if (USE_MOCK_ADMIN_API) {
-    return mockFcfsApplicants;
+  if (!isNumericId(postingId)) {
+    return [];
   }
 
-  if (isNumericId(postingId)) {
-    try {
-      const data = await apiRequest<ApiApplicant[]>(
-        `/api/v1/admin/volunteers/${postingId}/application`,
-      );
-      const detailedData = await fetchApplicantDetails(data);
+  try {
+    const data = await apiRequest<ApiApplicant[]>(`/api/v1/admin/volunteers/${postingId}/application`);
+    const detailedData = await fetchApplicantDetails(data);
 
-      return detailedData.map((applicant) => normalizeApplicant(applicant));
-    } catch {
-      return [];
-    }
+    return detailedData.map((applicant) => normalizeApplicant(applicant));
+  } catch {
+    return [];
   }
-
-  return [];
 }
 
 export async function approveApplicant(applicationId: string): Promise<void> {
-  if (USE_MOCK_ADMIN_API || !isNumericId(applicationId)) {
+  if (!isNumericId(applicationId)) {
     return;
   }
 
@@ -124,7 +87,7 @@ export async function approveApplicant(applicationId: string): Promise<void> {
 }
 
 export async function rejectApplicant(applicationId: string, reason = '관리자 반려'): Promise<void> {
-  if (USE_MOCK_ADMIN_API || !isNumericId(applicationId)) {
+  if (!isNumericId(applicationId)) {
     return;
   }
 
@@ -219,25 +182,11 @@ function normalizeCancellation(cancellation: ApiCancellationNotice) {
 }
 
 function getApplicantName(data: ApiApplicant | ApiCancellationNotice) {
-  return (
-    data.studentName ??
-    data.name ??
-    data.student?.studentName ??
-    data.student?.name ??
-    data.account?.studentName ??
-    data.account?.name ??
-    data.user?.studentName ??
-    data.user?.name ??
-    data.studentId ??
-    data.student?.studentId ??
-    data.account?.studentId ??
-    data.user?.studentId ??
-    ''
-  );
+  return data.studentName ?? data.studentId ?? '';
 }
 
 function getApplicantDepartment(data: ApiApplicant | ApiCancellationNotice) {
-  return formatMajorLabel(data.Major) ?? '학과 정보 없음';
+  return data.majorName ?? formatMajorLabel(data.Major) ?? '학과 정보 없음';
 }
 
 function formatMajorLabel(value?: string | null) {
@@ -248,11 +197,7 @@ function formatMajorLabel(value?: string | null) {
   const normalizedValue = value.trim();
   const upperValue = normalizedValue.toUpperCase();
 
-  if (
-    !normalizedValue ||
-    EMPTY_DEPARTMENT_LABELS.has(upperValue) ||
-    EMPTY_DEPARTMENT_LABELS.has(normalizedValue)
-  ) {
+  if (!normalizedValue || upperValue === 'NONE' || upperValue === 'NULL' || upperValue === 'UNKNOWN') {
     return null;
   }
 

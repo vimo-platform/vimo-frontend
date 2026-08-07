@@ -16,8 +16,6 @@ type VerifyQrCaptureResponse = {
   message?: string;
 };
 
-const USE_MOCK_QR_VALIDATION = process.env.EXPO_PUBLIC_USE_MOCK_QR_VALIDATION === 'true';
-
 export async function verifyQrCapture({
   imageUri,
   postId,
@@ -25,12 +23,6 @@ export async function verifyQrCapture({
   detectedQrValue,
 }: VerifyQrCaptureRequest): Promise<VerifyQrCaptureResponse> {
   const qrValue = normalizeQrToken(detectedQrValue ?? (await scanQrFromImage(imageUri)));
-
-  if (USE_MOCK_QR_VALIDATION) {
-    return {
-      verified: isValidMockQr(qrValue, scanType),
-    };
-  }
 
   const volunteerId = Number(postId);
 
@@ -72,31 +64,6 @@ function normalizeQrToken(value: string | null | undefined) {
   const normalizedValue = value?.trim();
 
   return normalizedValue && normalizedValue.length > 0 ? normalizedValue : null;
-}
-
-function isValidMockQr(value: string | null, type: QrScanType) {
-  if (!value) {
-    return false;
-  }
-
-  if (isUuid(value)) {
-    return true;
-  }
-
-  const [prefix, sessionId, qrType, issuedAt] = value.split(':');
-
-  return (
-    prefix === 'vimo' &&
-    sessionId.length > 0 &&
-    qrType === type &&
-    Number.isFinite(Number(issuedAt))
-  );
-}
-
-function isUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value,
-  );
 }
 
 function normalizeQrErrorMessage(message: string) {

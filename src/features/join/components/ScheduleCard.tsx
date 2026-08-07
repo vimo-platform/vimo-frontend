@@ -19,11 +19,13 @@ export function ScheduleCard({ schedule }: { schedule: VolunteerSchedule }) {
   const dateRange = `${formatDateWithDots(schedule.startDate)} ~ ${formatDateWithDots(
     schedule.endDate,
   )}`;
-  const isWeeklySchedule = getInclusiveDayCount(schedule.startDate, schedule.endDate) >= 8;
-  const period =
-    !isWeeklySchedule
-      ? dateRange
-      : `${dateRange} (매주 ${getWeekdayLabel(schedule.repeatWeekday)}요일)`;
+  const repeatWeekday = schedule.repeatWeekday;
+  const isWeeklySchedule =
+    getInclusiveDayCount(schedule.startDate, schedule.endDate) >= 8 &&
+    typeof repeatWeekday === 'number';
+  const period = isWeeklySchedule
+    ? `${dateRange} (매주 ${getWeekdayLabel(repeatWeekday)}요일)`
+    : dateRange;
 
   const openDetail = () => {
     router.push(`/volunteer-post/${postId}?mode=confirm` as Href);

@@ -227,7 +227,7 @@ function MockTimetable() {
   ];
 
   return (
-    <View style={styles.mockTimetable}>
+    <View style={styles.timetablePreview}>
       {Array.from({ length: 8 }).map((_, index) => (
         <View key={`row-${index}`} style={[styles.gridLineHorizontal, { top: 34 + index * 37 }]} />
       ))}
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  mockTimetable: {
+  timetablePreview: {
     flex: 1,
     backgroundColor: '#FAFAFA',
   },

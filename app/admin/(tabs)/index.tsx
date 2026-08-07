@@ -36,14 +36,13 @@ export default function FieldQrScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* TODO: 로고 이미지 교체 (assets/icons/logo.png) */}
         <Image source={require("@/assets/admin/icons/logo.png")} style={styles.logo} />
         <Text style={styles.greeting}>{user?.name}님, 안녕하세요!</Text>
 
         <WeekCalendar
           selected={selected}
           onSelect={setSelected}
-          marked={[dateKey(new Date())]} // TODO: 일정 있는 날짜를 서버에서 받아 표시
+          marked={[dateKey(new Date())]}
         />
 
         <View style={styles.divider} />

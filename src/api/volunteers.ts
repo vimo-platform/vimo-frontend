@@ -6,75 +6,6 @@ import type {
   VolunteerStatus,
 } from '@/features/exploration/types';
 
-export type ApiVolunteer = {
-  id?: number;
-  volunteerId?: number;
-  studentId?: string;
-  departmentName?: string;
-  title?: string;
-  organization?: string;
-  category?: string;
-  content?: string;
-  summaryTags?: string[];
-  location?: string;
-  startAt?: string;
-  endAt?: string;
-  volunteerDate?: string;
-  startDate?: string;
-  endDate?: string;
-  startTime?: ApiLocalTime;
-  endTime?: ApiLocalTime;
-  recruitmentEndDate?: string;
-  capacity?: number;
-  maxParticipants?: number;
-  neededCount?: number;
-  appliedCount?: number;
-  applicantCount?: number;
-  applicationCount?: number;
-  currentApplicants?: number;
-  currentParticipants?: number;
-  creditHours?: number;
-  rewardHours?: number;
-  status?: VolunteerStatus | string;
-  participationCondition?: string;
-  cancelPolicy?: string;
-  guideTitle?: string;
-  description?: string;
-  requirements?: string[];
-  recruitType?: 'selection' | 'fcfs' | string;
-  recruitmentType?: 'selection' | 'fcfs' | string;
-  applicationType?: 'selection' | 'fcfs' | string;
-  selectedCategories?: string[];
-  keywords?: string[];
-  createdAt?: string;
-  isFavorite?: boolean;
-  isApplied?: boolean;
-  applicationStatus?: VolunteerApplicationStatus;
-};
-
-function isDeletedVolunteer(data: ApiVolunteer) {
-  return data.status === 'DELETED';
-}
-
-export type ApiApplication = {
-  id?: number;
-  applicationId?: number;
-  volunteerId: number;
-  status: VolunteerApplicationStatus;
-  applicationStatus?: VolunteerApplicationStatus;
-  cancelReason?: string;
-  rejectedReason?: string;
-  rejectReason?: string;
-  certificationRejectReason?: string;
-  rejectedAt?: string;
-  volunteer?: ApiVolunteer;
-  title?: string;
-  category?: string;
-  location?: string;
-  startAt?: string;
-  endAt?: string;
-};
-
 type ApiLocalTime =
   | string
   | {
@@ -83,6 +14,60 @@ type ApiLocalTime =
       second?: number;
       nano?: number;
     };
+
+export type ApiVolunteer = {
+  id?: number;
+  volunteerId?: number;
+  title?: string;
+  organization?: string;
+  category?: string;
+  selectedCategories?: string[];
+  keywords?: string[];
+  summaryTags?: string[];
+  content?: string;
+  description?: string;
+  departmentName?: string;
+  location?: string;
+  startAt?: string;
+  endAt?: string;
+  volunteerDate?: string;
+  startDate?: string;
+  endDate?: string;
+  startTime?: ApiLocalTime;
+  endTime?: ApiLocalTime;
+  capacity?: number;
+  maxParticipants?: number;
+  neededCount?: number;
+  applicantCount?: number;
+  appliedCount?: number;
+  applicationCount?: number;
+  currentApplicants?: number;
+  currentParticipants?: number;
+  rewardHours?: number;
+  creditHours?: number;
+  status?: VolunteerStatus | 'DELETED' | string;
+  recruitType?: 'SELECTION' | 'FIRST_COME' | string;
+  recruitmentType?: 'SELECTION' | 'FIRST_COME' | string;
+  applicationType?: 'SELECTION' | 'FIRST_COME' | string;
+  createdAt?: string;
+  isFavorite?: boolean;
+  isApplied?: boolean;
+  applicationStatus?: VolunteerApplicationStatus;
+};
+
+export type ApiApplication = {
+  volunteerId: number;
+  title?: string;
+  category?: string;
+  location?: string;
+  startAt?: string;
+  endAt?: string;
+  status?: VolunteerApplicationStatus;
+  applicationStatus?: VolunteerApplicationStatus;
+  rejectReason?: string;
+  certificationRejectReason?: string;
+  rejectedAt?: string;
+};
 
 export type ApiCertificationStatus =
   | 'PENDING'
@@ -93,49 +78,20 @@ export type ApiCertificationStatus =
 
 export type ApiCertification = {
   volunteerId: number;
-  status: ApiCertificationStatus;
+  status?: ApiCertificationStatus;
   applicationStatus?: ApiCertificationStatus;
-  submittedAt?: string;
   rejectedAt?: string;
-  rejectedReason?: string;
   rejectReason?: string;
   certificationRejectReason?: string;
-  volunteer?: ApiVolunteer;
 };
 
-export type SubmitCertificationPayload = {
-  startedAt?: string;
-  endedAt?: string;
-  checkInQrValue?: string;
-  checkOutQrValue?: string;
-  note?: string;
-};
-
-export type VolunteerQrVerifyPayload = {
-  volunteerId: number;
-  type: 'start' | 'end';
-  qrImage?: FormData;
-  qrValue?: string | null;
-};
+function isDeletedVolunteer(data: ApiVolunteer) {
+  return data.status === 'DELETED';
+}
 
 export async function fetchVolunteers() {
   const data = await apiRequest<ApiVolunteer[]>('/api/v1/volunteers');
-  const detailedData = await Promise.all(
-    data.map(async (item) => {
-      const id = item.id ?? item.volunteerId;
-
-      if (typeof id !== 'number') {
-        return item;
-      }
-
-      try {
-        const detail = await apiRequest<ApiVolunteer>(`/api/v1/volunteers/${id}`);
-        return { ...item, ...detail };
-      } catch {
-        return item;
-      }
-    }),
-  );
+  const detailedData = await enrichVolunteerDetails(data);
 
   return detailedData.filter((item) => !isDeletedVolunteer(item)).map(normalizeVolunteerPost);
 }
@@ -143,14 +99,9 @@ export async function fetchVolunteers() {
 export async function searchVolunteers(query: string) {
   const params = new URLSearchParams({ keyword: query });
   const data = await apiRequest<ApiVolunteer[]>(`/api/v1/volunteers/search?${params.toString()}`);
+  const detailedData = await enrichVolunteerDetails(data);
 
-  return data.filter((item) => !isDeletedVolunteer(item)).map(normalizeVolunteerPost);
-}
-
-export async function fetchRecommendedVolunteers() {
-  const data = await apiRequest<ApiVolunteer[]>('/api/v1/volunteers/recommendations');
-
-  return data.filter((item) => !isDeletedVolunteer(item)).map(normalizeVolunteerPost);
+  return detailedData.filter((item) => !isDeletedVolunteer(item)).map(normalizeVolunteerPost);
 }
 
 export async function fetchVolunteerDetail(volunteerId: number) {
@@ -173,8 +124,9 @@ export function unfavoriteVolunteer(volunteerId: number) {
 
 export async function fetchMyFavoriteVolunteers() {
   const data = await apiRequest<ApiVolunteer[]>('/api/v1/users/me/favorites');
+  const detailedData = await enrichVolunteerDetails(data);
 
-  return data.filter((item) => !isDeletedVolunteer(item)).map(normalizeVolunteerPost);
+  return detailedData.filter((item) => !isDeletedVolunteer(item)).map(normalizeVolunteerPost);
 }
 
 export async function fetchMyApplications() {
@@ -211,20 +163,6 @@ export async function fetchMyCertifications() {
   return apiRequest<ApiCertification[]>('/api/v1/users/me/certifications');
 }
 
-export function submitVolunteerCertification(
-  volunteerId: number,
-  payload?: SubmitCertificationPayload,
-) {
-  return apiRequest<ApiCertification>(`/api/v1/volunteers/${volunteerId}/certification`, {
-    method: 'POST',
-    body: JSON.stringify({ qrToken: payload?.checkOutQrValue ?? payload?.checkInQrValue ?? '' }),
-  });
-}
-
-export function fetchVolunteerCertification(volunteerId: number) {
-  return apiRequest<ApiCertification>(`/api/v1/volunteers/${volunteerId}/certification`);
-}
-
 export async function verifyVolunteerCheckIn(volunteerId: number, qrToken: string) {
   const result = await apiRequest<ApiApplication>(`/api/v1/volunteers/${volunteerId}/checkin`, {
     method: 'POST',
@@ -250,7 +188,6 @@ export async function verifyVolunteerCheckOut(volunteerId: number, qrToken: stri
 }
 
 export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
-  const id = data.id ?? data.volunteerId ?? 0;
   const start = getDateTimeParts(data.startAt, data.volunteerDate ?? data.startDate, data.startTime);
   const end = getDateTimeParts(data.endAt, data.endDate ?? data.volunteerDate, data.endTime);
   const creditHours =
@@ -260,16 +197,16 @@ export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
   const capacity = data.neededCount ?? data.capacity ?? data.maxParticipants ?? 0;
 
   return {
-    id,
+    id: data.id ?? data.volunteerId ?? 0,
     title: data.title ?? '',
-    organization: data.organization ?? data.departmentName ?? data.category ?? '',
+    organization: data.organization ?? data.departmentName ?? categoryToLabel(data.category) ?? '',
     location: data.location ?? '',
-    category: data.category ?? data.organization ?? data.departmentName ?? '',
+    category: categoryToLabel(data.category) ?? data.category ?? data.organization ?? '',
     startDate: start.date,
     endDate: end.date,
     startTime: start.time,
     endTime: end.time,
-    recruitmentEndDate: data.recruitmentEndDate ?? start.date,
+    recruitmentEndDate: start.date,
     neededCount: capacity,
     appliedCount:
       data.appliedCount ??
@@ -280,42 +217,50 @@ export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
       0,
     creditHours,
     status: normalizeVolunteerStatus(data.status, end.date),
-    participationCondition: data.participationCondition ?? '',
-    cancelPolicy: data.cancelPolicy ?? '취소 불가',
-    guideTitle: data.guideTitle ?? '모집 안내',
+    participationCondition: getPrimaryTag(data.summaryTags),
+    cancelPolicy: '취소 불가',
+    guideTitle: '모집 안내',
     description: data.description ?? data.content ?? '',
-    requirements: data.requirements ?? data.summaryTags ?? [],
-    recruitType: normalizeRecruitType(
-      data.recruitType ?? data.recruitmentType ?? data.applicationType,
-    ),
+    requirements: data.summaryTags ?? [],
+    recruitType: normalizeRecruitType(data.recruitType ?? data.recruitmentType ?? data.applicationType),
     keywords: normalizeVolunteerKeywords(data),
-    createdAt: data.createdAt,
+    createdAt: data.createdAt ?? start.date,
     isFavorite: data.isFavorite,
     isApplied: data.isApplied,
     applicationStatus: data.applicationStatus,
   };
 }
 
-function normalizeRecruitType(type: ApiVolunteer['recruitType']) {
-  if (
-    type === 'fcfs' ||
-    type === 'FCFS' ||
-    type === 'FIRST_COME' ||
-    type === 'FIRST_COME_FIRST_SERVED'
-  ) {
-    return 'fcfs';
-  }
+function getPrimaryTag(tags?: string[]) {
+  return tags?.[0] ?? '';
+}
 
-  return 'selection';
+async function enrichVolunteerDetails(data: ApiVolunteer[]) {
+  return Promise.all(
+    data.map(async (item) => {
+      const id = item.id ?? item.volunteerId;
+
+      if (typeof id !== 'number') {
+        return item;
+      }
+
+      try {
+        const detail = await apiRequest<ApiVolunteer>(`/api/v1/volunteers/${id}`);
+        return { ...item, ...detail };
+      } catch {
+        return item;
+      }
+    }),
+  );
+}
+
+function normalizeRecruitType(type?: ApiVolunteer['recruitType']) {
+  return type === 'FIRST_COME' || type === 'fcfs' || type === 'FCFS' ? 'fcfs' : 'selection';
 }
 
 function normalizeVolunteerStatus(status: ApiVolunteer['status'], endDate?: string): VolunteerStatus {
-  if (status === 'DELETED') {
+  if (status === 'DELETED' || status === 'CLOSED' || status === 'COMPLETED') {
     return 'CLOSED';
-  }
-
-  if (status === 'CLOSED' || status === 'COMPLETED') {
-    return status;
   }
 
   if (isPastDate(endDate)) {
@@ -339,6 +284,14 @@ const CATEGORY_LABELS: Record<string, string> = {
   CLASS_ASSISTANCE: '수업 보조',
 };
 
+function categoryToLabel(category?: string) {
+  if (!category) {
+    return undefined;
+  }
+
+  return CATEGORY_LABELS[category] ?? category;
+}
+
 function normalizeVolunteerKeywords(data: ApiVolunteer) {
   const categories = data.selectedCategories?.length
     ? data.selectedCategories
@@ -346,13 +299,9 @@ function normalizeVolunteerKeywords(data: ApiVolunteer) {
       ? [data.category]
       : [];
 
-  const categoryKeywords = categories.map((category) => CATEGORY_LABELS[category] ?? category);
+  const categoryKeywords = categories.map((category) => categoryToLabel(category) ?? category);
 
-  if (categoryKeywords.length > 0) {
-    return categoryKeywords;
-  }
-
-  return data.keywords ?? data.summaryTags ?? [];
+  return categoryKeywords.length > 0 ? categoryKeywords : data.keywords ?? data.summaryTags ?? [];
 }
 
 function isPastDate(date?: string) {
@@ -411,7 +360,7 @@ function getCreditHoursFromParts(
     return 0;
   }
 
-  // 회차(하루) 기준 인정 시간: 여러 날에 걸친 공고여도 시작일의 시작~종료 시간으로 계산
+  // 회차 기준 인정 시간: 여러 날짜에 걸친 공고도 하루의 시작~종료 시간으로 계산한다.
   const start = new Date(`${startDate}T${startTime}:00`).getTime();
   const end = new Date(`${startDate}T${endTime}:00`).getTime();
 
@@ -421,4 +370,3 @@ function getCreditHoursFromParts(
 
   return Math.round((end - start) / (1000 * 60 * 60));
 }
-
