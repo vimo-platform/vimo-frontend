@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
@@ -17,12 +17,18 @@ import {
   getCurrentUser,
   isUserAuthenticatedInCurrentSession,
 } from '@/storage/auth-storage';
+import { completeVolunteerActivity } from '@/features/exploration/volunteer-interaction-store';
 
 import { CalendarCircle } from './components/CalendarCircle';
 import { JoinStatusButton } from './components/JoinStatusButton';
 import { ParticipationLogo } from './components/ParticipationLogo';
 import { ScheduleCard } from './components/ScheduleCard';
 import { getMyVolunteerSchedules } from './api';
+import {
+  notifyManagerActivityEnded,
+  notifyManagerActivityStarted,
+} from './manager-notification-service';
+import { QrSuccessDialog } from './QrActivityScanScreen';
 import type { VolunteerSchedule } from './types';
 import {
   addDays,
@@ -44,9 +50,17 @@ export function JoinScreen() {
   const [displayedMonth, setDisplayedMonth] = useState(today);
   const [userName, setUserName] = useState('사용자');
   const [schedules, setSchedules] = useState<VolunteerSchedule[]>([]);
+  const { qrSuccess, time, postId, startTime } = useLocalSearchParams<{
+    qrSuccess?: string;
+    time?: string;
+    postId?: string;
+    startTime?: string;
+  }>();
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, 393);
   const weekListRef = useRef<FlatList<Date[]>>(null);
+  const notifiedStartKeyRef = useRef<string | null>(null);
+  const notifiedEndKeyRef = useRef<string | null>(null);
 
   const weeks = useMemo(() => {
     const currentWeekStart = startOfWeek(today);
@@ -72,6 +86,11 @@ export function JoinScreen() {
   const selectedSchedules = schedules.filter((schedule) =>
     isScheduleOnDate(schedule, selectedDate),
   );
+  const qrSuccessType = qrSuccess === 'end' ? 'end' : 'start';
+  const showQrSuccess = qrSuccess === 'start' || qrSuccess === 'end';
+  const qrSuccessTime = typeof time === 'string' && time ? time : '11:30';
+  const qrActivityStartTime =
+    typeof startTime === 'string' && startTime ? startTime : '11:30';
 
   useEffect(() => {
     if (!isUserAuthenticatedInCurrentSession()) {
@@ -92,8 +111,57 @@ export function JoinScreen() {
       });
   }, []);
 
+  useEffect(() => {
+    if (qrSuccess !== 'end') {
+      return;
+    }
+
+    const completedPostId = Number(postId);
+    if (Number.isFinite(completedPostId)) {
+      completeVolunteerActivity(completedPostId);
+    }
+
+    const notificationKey = `${postId ?? 'unknown'}:${qrActivityStartTime}:${qrSuccessTime}`;
+    if (notifiedEndKeyRef.current === notificationKey) {
+      return;
+    }
+
+    notifiedEndKeyRef.current = notificationKey;
+
+    getCurrentUser().then((user) => {
+      notifyManagerActivityEnded({
+        studentName: user?.name?.trim() || userName,
+        startTime: qrActivityStartTime,
+        endTime: qrSuccessTime,
+        postId: Number.isFinite(completedPostId) ? completedPostId : undefined,
+      });
+    });
+  }, [postId, qrActivityStartTime, qrSuccess, qrSuccessTime, userName]);
+
+  useEffect(() => {
+    if (qrSuccess !== 'start') {
+      return;
+    }
+
+    const notificationKey = `${postId ?? 'unknown'}:${qrSuccessTime}`;
+    if (notifiedStartKeyRef.current === notificationKey) {
+      return;
+    }
+
+    notifiedStartKeyRef.current = notificationKey;
+    const startedPostId = Number(postId);
+
+    getCurrentUser().then((user) => {
+      notifyManagerActivityStarted({
+        studentName: user?.name?.trim() || userName,
+        startTime: qrSuccessTime,
+        postId: Number.isFinite(startedPostId) ? startedPostId : undefined,
+      });
+    });
+  }, [postId, qrSuccess, qrSuccessTime, userName]);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={[styles.screen, { width: contentWidth }]}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -187,6 +255,13 @@ export function JoinScreen() {
         </ScrollView>
 
         <UserGnb activeKey="participation" />
+        {showQrSuccess ? (
+          <QrSuccessDialog
+            time={qrSuccessTime}
+            type={qrSuccessType}
+            onConfirm={() => router.replace('/explore')}
+          />
+        ) : null}
       </View>
     </SafeAreaView>
   );
@@ -204,7 +279,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 36,
+    paddingBottom: 126,
   },
   header: {
     paddingHorizontal: 30,

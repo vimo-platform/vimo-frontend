@@ -32,7 +32,7 @@ export function Figma({ name, scale = 1, style }: Props) {
     <Image
       source={source}
       style={[{ width: width * scale, height: height * scale }, style]}
-      contentFit="contain"
+      contentFit={name === "gnb" ? "fill" : "contain"}
     />
   );
 }

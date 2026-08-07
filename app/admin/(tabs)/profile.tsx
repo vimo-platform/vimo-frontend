@@ -1,3 +1,5 @@
+import { router } from "expo-router";
+import { useState } from "react";
 import {
   Image,
   Pressable,
@@ -7,8 +9,10 @@ import {
   View,
 } from "react-native";
 
+import { logout as requestLogout } from "@/api/auth";
 import { Colors } from "@/features/admin/constants/theme";
 import { useAuth } from "@/features/admin/hooks/use-admin-auth";
+import { clearUserSession } from "@/storage/auth-storage";
 
 function MenuRow({ label, last }: { label: string; last?: boolean }) {
   return (
@@ -21,6 +25,24 @@ function MenuRow({ label, last }: { label: string; last?: boolean }) {
 
 export default function ProfileScreen() {
   const { user } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) {
+      return;
+    }
+
+    setIsLoggingOut(true);
+
+    try {
+      await requestLogout();
+    } catch {
+      // 서버 로그아웃 요청이 실패해도 앱에서는 로컬 세션을 지워 로그아웃을 완료한다.
+    } finally {
+      clearUserSession();
+      router.replace("/");
+    }
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -35,7 +57,12 @@ export default function ProfileScreen() {
             <Text style={styles.name}>{user.name}</Text>
             <Text style={styles.email}>{user.email}</Text>
             <View style={styles.linkRow}>
-              <Pressable>
+              <Pressable
+                accessibilityRole="button"
+                disabled={isLoggingOut}
+                hitSlop={8}
+                onPress={handleLogout}
+              >
                 <Text style={styles.logout}>로그아웃</Text>
               </Pressable>
               <Text style={styles.linkDivider}>|</Text>

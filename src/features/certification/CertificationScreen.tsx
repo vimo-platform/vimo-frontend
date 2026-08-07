@@ -1,8 +1,9 @@
 import { Asset } from 'expo-asset';
 import { router, type Href } from 'expo-router';
-import { useMemo, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   Image,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -19,9 +20,12 @@ import { UserGnb } from '@/components/navigation/user-gnb';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
 
 import type { VolunteerPost } from '@/features/exploration/types';
+import { getMyCertificationStatusRecords } from '@/features/exploration/api';
 import {
+  type CertificationRejectedRecord,
   getVolunteerInteractionsSnapshot,
   getVolunteerPostsSnapshot,
+  mergeCertificationStatusRecords,
   subscribeVolunteerInteractions,
 } from '@/features/exploration/volunteer-interaction-store';
 
@@ -30,7 +34,8 @@ const CERTIFICATION_RECTANGLE = require('../../../assets/images/certificationimg
 
 type CertificationVolunteerItem = {
   post: VolunteerPost;
-  status: 'pending' | 'complete';
+  status: 'pending' | 'rejected' | 'complete';
+  rejection?: CertificationRejectedRecord;
 };
 
 export function CertificationScreen() {
@@ -40,12 +45,19 @@ export function CertificationScreen() {
   const contentWidth = Math.min(width, 393);
   const scrollRef = useRef<ScrollView>(null);
   const pendingSectionY = useRef(0);
+  const rejectedSectionY = useRef(0);
   const completedSectionY = useRef(0);
+  const [selectedRejectedItem, setSelectedRejectedItem] =
+    useState<CertificationVolunteerItem | null>(null);
   const interactions = useSyncExternalStore(
     subscribeVolunteerInteractions,
     getVolunteerInteractionsSnapshot,
     getVolunteerInteractionsSnapshot,
   );
+
+  useEffect(() => {
+    getMyCertificationStatusRecords().then(mergeCertificationStatusRecords);
+  }, []);
 
   const posts = getVolunteerPostsSnapshot();
   const activity = useMemo(
@@ -56,6 +68,11 @@ export function CertificationScreen() {
   const progressRatio = Math.min(activity.completedHours / REQUIRED_GRADUATION_HOURS, 1);
 
   const openCertificationProgress = (item: CertificationVolunteerItem) => {
+    if (item.status === 'rejected') {
+      setSelectedRejectedItem(item);
+      return;
+    }
+
     router.push(
       item.status === 'complete'
         ? (`/verification-complete/${item.post.id}` as Href)
@@ -68,7 +85,7 @@ export function CertificationScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={[styles.screen, { width: contentWidth }]}>
         <ScrollView
           ref={scrollRef}
@@ -112,10 +129,10 @@ export function CertificationScreen() {
           <View style={styles.summaryCard}>
             <Text style={styles.summaryTitle}>총 활동 요약</Text>
             <View style={styles.summaryItems}>
-              <SummaryItem color="#BEECD0" count={activity.appliedCount} icon="send" label="지원한 봉사" />
-              <SummaryItem color="#ECD2BE" count={activity.plannedCount} icon="clock" label="활동 예정" />
-              <SummaryItem color="#BED8EC" count={activity.activityCompletedCount} icon="check" label="활동 완료" />
-              <SummaryItem color="#ECE9BE" count={activity.completedItems.length} icon="star" label="완료한 봉사" />
+              <SummaryItem color="#ECE9BE" count={activity.appliedCount} icon="send" label="지원한 봉사" />
+              <SummaryItem color="#BED8EC" count={activity.pendingItems.length} icon="check" label="승인 대기" />
+              <SummaryItem color="#FFD9D9" count={activity.rejectedItems.length} icon="clock" label="반려" />
+              <SummaryItem color="#BEECD0" count={activity.completedItems.length} icon="star" label="승인 완료" />
             </View>
           </View>
 
@@ -123,7 +140,8 @@ export function CertificationScreen() {
 
           <CertificationSection
             items={activity.pendingItems}
-            title={`인증 대기 : ${activity.pendingItems.length}`}
+            title={`승인 대기 : ${formatSectionCount(activity.pendingItems.length)}`}
+            tone="pending"
             onLayout={(y) => {
               pendingSectionY.current = y;
             }}
@@ -133,14 +151,32 @@ export function CertificationScreen() {
           <View style={styles.thinDivider} />
 
           <CertificationSection
+            items={activity.rejectedItems}
+            title={`반려 : ${formatSectionCount(activity.rejectedItems.length)}`}
+            tone="rejected"
+            onLayout={(y) => {
+              rejectedSectionY.current = y;
+            }}
+            onPressItem={openCertificationProgress}
+          />
+
+          <View style={styles.thinDivider} />
+
+          <CertificationSection
             items={activity.completedItems}
-            title={`인증 완료 : ${activity.completedItems.length}`}
+            title={`승인 완료 : ${formatSectionCount(activity.completedItems.length)}`}
+            tone="complete"
             onLayout={(y) => {
               completedSectionY.current = y;
             }}
             onPressItem={openCertificationProgress}
           />
         </ScrollView>
+
+        <RejectedCertificationModal
+          item={selectedRejectedItem}
+          onClose={() => setSelectedRejectedItem(null)}
+        />
 
         <UserGnb activeKey="verification" />
       </View>
@@ -154,35 +190,49 @@ function buildCertificationActivity(
 ) {
   const completedIds = new Set(interactions.certificationCompletedIds);
   const activityCompletedIds = new Set(interactions.activityCompletedIds);
+  const rejectedRecords = new Map(
+    interactions.certificationRejectedRecords.map((record) => [record.id, record]),
+  );
+  const rejectedIds = new Set(rejectedRecords.keys());
 
   const pendingItems = posts
-    .filter((post) => activityCompletedIds.has(post.id) && !completedIds.has(post.id))
+    .filter(
+      (post) =>
+        activityCompletedIds.has(post.id) &&
+        !completedIds.has(post.id) &&
+        !rejectedIds.has(post.id),
+    )
     .map((post) => ({ post, status: 'pending' as const }));
+  const rejectedItems = posts
+    .filter((post) => rejectedIds.has(post.id))
+    .map((post) => ({
+      post,
+      status: 'rejected' as const,
+      rejection: rejectedRecords.get(post.id),
+    }));
   const completedItems = posts
     .filter((post) => completedIds.has(post.id))
     .map((post) => ({ post, status: 'complete' as const }));
-  const plannedCount = interactions.approvedIds.filter(
-    (id) => !activityCompletedIds.has(id) && !completedIds.has(id),
-  ).length;
   const completedHours = completedItems.reduce((total, item) => total + item.post.creditHours, 0);
 
   return {
     appliedCount: interactions.appliedIds.length,
-    plannedCount,
-    activityCompletedCount: interactions.activityCompletedIds.length,
     completedHours,
     pendingItems,
+    rejectedItems,
     completedItems,
   };
 }
 
 function CertificationSection({
   items,
+  tone,
   title,
   onLayout,
   onPressItem,
 }: {
   items: CertificationVolunteerItem[];
+  tone: 'pending' | 'rejected' | 'complete';
   title: string;
   onLayout: (y: number) => void;
   onPressItem: (item: CertificationVolunteerItem) => void;
@@ -193,7 +243,15 @@ function CertificationSection({
       onLayout={(event) => {
         onLayout(event.nativeEvent.layout.y);
       }}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <View
+        style={[
+          styles.sectionTitlePill,
+          tone === 'pending' && styles.pendingSectionTitlePill,
+          tone === 'rejected' && styles.rejectedSectionTitlePill,
+          tone === 'complete' && styles.completeSectionTitlePill,
+        ]}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
       <View style={styles.cardList}>
         {items.map((item) => (
           <CertificationVolunteerCard
@@ -215,18 +273,22 @@ function CertificationVolunteerCard({
   onPress: () => void;
 }) {
   const isComplete = item.status === 'complete';
+  const isRejected = item.status === 'rejected';
 
   return (
     <Pressable
       accessibilityRole="button"
       style={({ pressed }) => [
         styles.volunteerCard,
+        isRejected && styles.rejectedVolunteerCard,
         isComplete && styles.completedVolunteerCard,
         pressed && styles.pressed,
       ]}
       onPress={onPress}>
       <View style={styles.cardContent}>
-        <CertificationStatusPill status={isComplete ? 'complete' : 'syncing'} />
+        <CertificationStatusPill
+          status={isComplete ? 'complete' : isRejected ? 'rejected' : 'syncing'}
+        />
         <View style={styles.cardTextGroup}>
           <Text numberOfLines={1} style={styles.cardTitle}>
             {item.post.title}
@@ -291,15 +353,84 @@ function CertificationFilterChip({
   );
 }
 
-function CertificationStatusPill({ status }: { status: 'syncing' | 'complete' }) {
+function CertificationStatusPill({ status }: { status: 'syncing' | 'rejected' | 'complete' }) {
   const isComplete = status === 'complete';
+  const isRejected = status === 'rejected';
 
   return (
-    <View style={[styles.statusPill, isComplete ? styles.completeStatusPill : styles.syncingStatusPill]}>
-      <Text style={styles.statusPillText}>
-        {isComplete ? '인증 완료' : '학사 시스템 연동 중'}
+    <View
+      style={[
+        styles.statusPill,
+        isComplete && styles.completeStatusPill,
+        isRejected && styles.rejectedStatusPill,
+        !isComplete && !isRejected && styles.syncingStatusPill,
+      ]}>
+      <Text style={[styles.statusPillText, isRejected && styles.rejectedStatusPillText]}>
+        {isComplete ? '인증 완료' : isRejected ? '반려 처리' : '학사 시스템 연동 중'}
       </Text>
     </View>
+  );
+}
+
+function RejectedCertificationModal({
+  item,
+  onClose,
+}: {
+  item: CertificationVolunteerItem | null;
+  onClose: () => void;
+}) {
+  const rejection = item?.rejection;
+
+  return (
+    <Modal animationType="fade" transparent visible={Boolean(item)} onRequestClose={onClose}>
+      <View style={styles.rejectedModalOverlay}>
+        <View style={styles.rejectedModalDimmed} />
+        <View style={styles.rejectedModalDialog}>
+          <Pressable
+            accessibilityLabel="반려 안내 닫기"
+            accessibilityRole="button"
+            hitSlop={10}
+            style={({ pressed }) => [styles.rejectedModalCloseButton, pressed && styles.pressed]}
+            onPress={onClose}>
+            <CloseIcon />
+          </Pressable>
+
+          <View style={styles.rejectedAlertCircle}>
+            <Text style={styles.rejectedAlertText}>!</Text>
+          </View>
+          <Text style={styles.rejectedModalTitle}>해당 활동이 반려되었어요</Text>
+          <Text style={styles.rejectedDateText}>
+            {rejection ? `${formatRejectedDate(rejection.rejectedAt)} 취소` : ''}
+          </Text>
+
+          <View style={styles.rejectedReasonBox}>
+            <Text style={styles.rejectedReasonTitle}>반려 사유</Text>
+            <Text style={styles.rejectedReasonText}>{rejection?.reason ?? ''}</Text>
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.rejectedInquiryButton, pressed && styles.pressed]}
+            onPress={onClose}>
+            <Text style={styles.rejectedInquiryText}>문의하기</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <Svg height={24} viewBox="0 0 24 24" width={24}>
+      <Path
+        d="M18 6 6 18M6 6l12 12"
+        fill="none"
+        stroke="#222222"
+        strokeLinecap="round"
+        strokeWidth={1.5}
+      />
+    </Svg>
   );
 }
 
@@ -357,7 +488,7 @@ function SummaryIcon({ type }: { type: 'send' | 'clock' | 'check' | 'star' }) {
         <Path
           d="M20.5 4.5 9.8 15.2M20.5 4.5 16.8 20 9.8 15.2 4 12.2 20.5 4.5Z"
           fill="none"
-          stroke="#62C98D"
+          stroke="#CDBF4A"
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth={2}
@@ -389,7 +520,7 @@ function SummaryIcon({ type }: { type: 'send' | 'clock' | 'check' | 'star' }) {
       <Path
         d="m12 4.5 2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7L12 4.5Z"
         fill="none"
-        stroke="#C9BD55"
+        stroke="#59A76A"
         strokeLinejoin="round"
         strokeWidth={2}
       />
@@ -416,6 +547,26 @@ function formatCredit(hours: number) {
   return hours >= 6 ? `일 최대 ${hours}시간` : `회차당 ${hours}시간`;
 }
 
+function formatSectionCount(count: number) {
+  return String(count).padStart(2, '0');
+}
+
+function formatRejectedDate(date: string) {
+  const rejectedDate = new Date(date);
+
+  if (Number.isNaN(rejectedDate.getTime())) {
+    return date;
+  }
+
+  const year = rejectedDate.getFullYear();
+  const month = String(rejectedDate.getMonth() + 1).padStart(2, '0');
+  const day = String(rejectedDate.getDate()).padStart(2, '0');
+  const hours = String(rejectedDate.getHours()).padStart(2, '0');
+  const minutes = String(rejectedDate.getMinutes()).padStart(2, '0');
+
+  return `${year}. ${month}. ${day}. ${hours}:${minutes}`;
+}
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -428,7 +579,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 38,
-    paddingBottom: 104,
+    paddingBottom: 126,
   },
   title: {
     alignSelf: 'center',
@@ -611,11 +762,30 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingTop: 26,
   },
+  sectionTitlePill: {
+    minWidth: 94,
+    height: 31,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  pendingSectionTitlePill: {
+    backgroundColor: '#222222',
+  },
+  rejectedSectionTitlePill: {
+    backgroundColor: '#C07777',
+  },
+  completeSectionTitlePill: {
+    backgroundColor: '#59A76A',
+  },
   sectionTitle: {
-    color: '#111111',
+    color: '#FFFFFF',
     fontFamily: 'Pretendard',
     fontSize: 14,
     fontWeight: '700',
+    lineHeight: 20,
   },
   cardList: {
     gap: 20,
@@ -638,6 +808,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 10,
     elevation: 3,
+  },
+  rejectedVolunteerCard: {
+    borderColor: '#C07777',
+    backgroundColor: '#FFF5F5',
   },
   completedVolunteerCard: {
     borderColor: 'transparent',
@@ -663,6 +837,11 @@ const styles = StyleSheet.create({
   completeStatusPill: {
     backgroundColor: '#9C9C9C',
   },
+  rejectedStatusPill: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#C07777',
+  },
   statusPillText: {
     color: '#FFFFFF',
     fontFamily: 'Pretendard',
@@ -670,6 +849,118 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 14,
     textAlign: 'center',
+  },
+  rejectedStatusPillText: {
+    color: '#C07777',
+  },
+  rejectedModalOverlay: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rejectedModalDimmed: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(34, 34, 34, 0.62)',
+  },
+  rejectedModalDialog: {
+    width: 318,
+    alignItems: 'center',
+    paddingTop: 36,
+    paddingRight: 37,
+    paddingBottom: 29,
+    paddingLeft: 37,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  rejectedModalCloseButton: {
+    position: 'absolute',
+    top: 17,
+    right: 17,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rejectedAlertCircle: {
+    width: 70,
+    height: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 35,
+    backgroundColor: '#FFE4E4',
+  },
+  rejectedAlertText: {
+    color: '#E78483',
+    fontFamily: 'Pretendard',
+    fontSize: 43,
+    fontWeight: '700',
+    lineHeight: 48,
+  },
+  rejectedModalTitle: {
+    marginTop: 18,
+    color: '#222222',
+    fontFamily: 'Pretendard',
+    fontSize: 20,
+    fontWeight: '700',
+    lineHeight: 28,
+    textAlign: 'center',
+  },
+  rejectedDateText: {
+    marginTop: 18,
+    color: '#E78483',
+    fontFamily: 'Pretendard',
+    fontSize: 13,
+    fontWeight: '400',
+    lineHeight: 18,
+    textAlign: 'center',
+  },
+  rejectedReasonBox: {
+    width: 246,
+    minHeight: 133,
+    marginTop: 25,
+    paddingTop: 18,
+    paddingHorizontal: 25,
+    paddingBottom: 18,
+    borderWidth: 1,
+    borderColor: '#E78483',
+    borderRadius: 18,
+    backgroundColor: '#FFF5F5',
+  },
+  rejectedReasonTitle: {
+    color: '#E78483',
+    fontFamily: 'Pretendard',
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
+  rejectedReasonText: {
+    marginTop: 9,
+    color: '#222222',
+    fontFamily: 'Pretendard',
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 23,
+  },
+  rejectedInquiryButton: {
+    width: 267,
+    height: 47,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 30,
+    borderRadius: 13,
+    backgroundColor: '#222222',
+  },
+  rejectedInquiryText: {
+    color: '#FFFFFF',
+    fontFamily: 'Pretendard',
+    fontSize: 18,
+    fontWeight: '600',
+    lineHeight: 26,
   },
   cardTextGroup: {
     width: 164,

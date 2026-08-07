@@ -13,44 +13,70 @@ import {
 import { Stack, router } from "expo-router";
 
 import { getWorkingPosting, setWorkingPosting } from "@/features/admin/api/postings";
+import {
+  DateSelectModal,
+  LocationSelectModal,
+  PickerButton,
+  TimeSelectModal,
+} from "@/features/admin/components/posting-detail-pickers";
 import { Colors } from "@/features/admin/constants/theme";
 import type { Gender } from "@/features/admin/types";
 
 const GENDERS: Gender[] = ["전체", "남성", "여성"];
 
+function splitPeriod(period?: string) {
+  const [from = "", to = ""] = (period ?? "").split("~").map((part) => part.trim());
+
+  return { from, to: to || from };
+}
+
 export default function PostingEditScreen() {
   const base = getWorkingPosting();
+  const initialPeriod = splitPeriod(base?.period);
   const [title, setTitle] = useState(base?.title ?? "");
   const [hoursText, setHoursText] = useState(
     base ? `회차당 ${base.hoursPerSession}시간 인정` : "",
   );
   const [location, setLocation] = useState(base?.location ?? "");
-  const [period, setPeriod] = useState(base?.period ?? "");
-  const [timeText, setTimeText] = useState(
-    base ? `${base.startTime} ~ ${base.endTime}` : "",
-  );
+  const [dateFrom, setDateFrom] = useState(initialPeriod.from);
+  const [dateTo, setDateTo] = useState(initialPeriod.to);
+  const [startTime, setStartTime] = useState(base?.startTime ?? "");
+  const [endTime, setEndTime] = useState(base?.endTime ?? "");
   const [capacity, setCapacity] = useState(base?.capacity ?? 1);
   const [gender, setGender] = useState<Gender>(base?.gender ?? "전체");
   const [description, setDescription] = useState(base?.description ?? "");
+  const [tags, setTags] = useState<string[]>(base?.tags ?? []);
+  const [noCancel, setNoCancel] = useState(base?.noCancel !== false);
+
+  const [locationPickerVisible, setLocationPickerVisible] = useState(false);
+  const [datePickerTarget, setDatePickerTarget] = useState<"from" | "to" | null>(null);
+  const [timePickerTarget, setTimePickerTarget] = useState<"start" | "end" | null>(null);
 
   if (!base) {
     return null;
   }
 
+  const selectedDateValue = datePickerTarget === "from" ? dateFrom : dateTo;
+  const selectedTimeValue = timePickerTarget === "start" ? startTime : endTime;
+
   const save = () => {
     const hours = Number(hoursText.match(/\d+/)?.[0] ?? base.hoursPerSession);
-    const [start, end] = timeText.split("~").map((s) => s.trim());
+    const period =
+      dateFrom && dateTo ? `${dateFrom} ~ ${dateTo}` : dateFrom || dateTo || base.period;
+
     setWorkingPosting({
       ...base,
       title: title.trim(),
       hoursPerSession: hours,
       location: location.trim(),
-      period: period.trim(),
-      startTime: start || base.startTime,
-      endTime: end || base.endTime,
-      capacity,
+      period,
+      startTime: startTime || base.startTime,
+      endTime: endTime || base.endTime,
+      capacity: Math.max(1, capacity),
       gender,
       description: description.trim(),
+      tags,
+      noCancel,
     });
     router.back();
   };
@@ -67,19 +93,69 @@ export default function PostingEditScreen() {
 
         <Label text="키워드" />
         <View style={styles.tags}>
-          {base.tags.map((tag) => (
-            <Text key={tag} style={styles.tag}>
-              {tag}
-            </Text>
+          {tags.map((tag) => (
+            <KeywordChip
+              key={tag}
+              label={tag}
+              onRemove={() => setTags((prev) => prev.filter((t) => t !== tag))}
+            />
           ))}
-          <Text style={[styles.tag, styles.tagWarn]}>취소 불가</Text>
+          {noCancel && (
+            <KeywordChip label="취소 불가" warn onRemove={() => setNoCancel(false)} />
+          )}
         </View>
 
         <Label text="세부 내용" />
-        <View style={styles.detailCard}>
-          <EditRow icon="location-outline" caption="활동 장소" value={location} onChange={setLocation} />
-          <EditRow icon="calendar-clear-outline" caption="활동 기간" value={period} onChange={setPeriod} />
-          <EditRow icon="time-outline" caption="활동 시간" value={timeText} onChange={setTimeText} last />
+        <Text style={styles.subCaption}>활동 장소</Text>
+        <PickerButton
+          icon="location-outline"
+          label={location || "활동 장소를 선택해 주세요"}
+          selected={Boolean(location)}
+          onPress={() => setLocationPickerVisible(true)}
+        />
+
+        <Text style={styles.subCaption}>활동 기간</Text>
+        <View style={styles.rangeRow}>
+          <View style={styles.rangeCol}>
+            <PickerButton
+              icon="calendar-clear-outline"
+              label={dateFrom || "시작 날짜"}
+              selected={Boolean(dateFrom)}
+              onPress={() => setDatePickerTarget("from")}
+            />
+          </View>
+          <Text style={styles.rangeSep}>~</Text>
+          <View style={styles.rangeCol}>
+            <PickerButton
+              icon="calendar-clear-outline"
+              label={dateTo || "종료 날짜"}
+              selected={Boolean(dateTo)}
+              onPress={() => setDatePickerTarget("to")}
+            />
+          </View>
+        </View>
+
+        <Text style={styles.subCaption}>활동 시간</Text>
+        <View style={styles.rangeRow}>
+          <View style={styles.timeCol}>
+            <Text style={styles.timeLabel}>시작</Text>
+            <PickerButton
+              icon="time-outline"
+              label={startTime || "시작 시간"}
+              selected={Boolean(startTime)}
+              onPress={() => setTimePickerTarget("start")}
+            />
+          </View>
+          <Text style={[styles.rangeSep, styles.rangeSepTime]}>~</Text>
+          <View style={styles.timeCol}>
+            <Text style={styles.timeLabel}>종료</Text>
+            <PickerButton
+              icon="time-outline"
+              label={endTime || "종료 시간"}
+              selected={Boolean(endTime)}
+              onPress={() => setTimePickerTarget("end")}
+            />
+          </View>
         </View>
 
         <Label text="모집 인원" />
@@ -88,7 +164,16 @@ export default function PostingEditScreen() {
             <Pressable onPress={() => setCapacity(Math.max(1, capacity - 1))} hitSlop={8}>
               <Text style={styles.stepperSign}>−</Text>
             </Pressable>
-            <Text style={styles.stepperValue}>{capacity}</Text>
+            <TextInput
+              keyboardType="number-pad"
+              selectTextOnFocus
+              style={[styles.stepperValue, styles.stepperInput]}
+              value={capacity ? String(capacity) : ""}
+              onChangeText={(value) => {
+                const numericValue = Number(value.replace(/\D/g, ""));
+                setCapacity(Number.isFinite(numericValue) ? numericValue : 0);
+              }}
+            />
             <Pressable onPress={() => setCapacity(capacity + 1)} hitSlop={8}>
               <Text style={styles.stepperSign}>＋</Text>
             </Pressable>
@@ -124,6 +209,53 @@ export default function PostingEditScreen() {
           <Text style={styles.submitButtonText}>AI 공고 생성</Text>
         </Pressable>
       </ScrollView>
+
+      <LocationSelectModal
+        selectedLocation={location}
+        visible={locationPickerVisible}
+        onClose={() => setLocationPickerVisible(false)}
+        onSelect={(nextLocation) => {
+          setLocation(nextLocation);
+          setLocationPickerVisible(false);
+        }}
+      />
+
+      <DateSelectModal
+        selectedDate={selectedDateValue}
+        visible={datePickerTarget !== null}
+        onClose={() => setDatePickerTarget(null)}
+        onSelect={(date) => {
+          if (datePickerTarget === "from") {
+            setDateFrom(date);
+            if (!dateTo) {
+              setDateTo(date);
+            }
+          }
+
+          if (datePickerTarget === "to") {
+            setDateTo(date);
+          }
+
+          setDatePickerTarget(null);
+        }}
+      />
+
+      <TimeSelectModal
+        selectedTime={selectedTimeValue}
+        visible={timePickerTarget !== null}
+        onClose={() => setTimePickerTarget(null)}
+        onSelect={(time) => {
+          if (timePickerTarget === "start") {
+            setStartTime(time);
+          }
+
+          if (timePickerTarget === "end") {
+            setEndTime(time);
+          }
+
+          setTimePickerTarget(null);
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -134,6 +266,30 @@ function Label({ text }: { text: string }) {
       {text}
       <Text style={styles.required}> *</Text>
     </Text>
+  );
+}
+
+function KeywordChip({
+  label,
+  warn,
+  onRemove,
+}: {
+  label: string;
+  warn?: boolean;
+  onRemove: () => void;
+}) {
+  return (
+    <View style={[styles.tag, warn && styles.tagWarn]}>
+      <Text style={[styles.tagText, warn && styles.tagWarnText]}>{label}</Text>
+      <Pressable
+        onPress={onRemove}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel={`${label} 키워드 삭제`}
+      >
+        <Ionicons name="close" size={15} color={warn ? "#E0526E" : Colors.textSecondary} />
+      </Pressable>
+    </View>
   );
 }
 
@@ -161,44 +317,6 @@ function Field({
   );
 }
 
-function EditRow({
-  icon,
-  caption,
-  value,
-  onChange,
-  last,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  caption: string;
-  value: string;
-  onChange: (t: string) => void;
-  last?: boolean;
-}) {
-  const [editing, setEditing] = useState(false);
-  return (
-    <View style={[styles.editRow, !last && styles.editRowBorder]}>
-      <Ionicons name={icon} size={18} color={Colors.text} />
-      <View style={styles.editRowBody}>
-        <Text style={styles.editRowCaption}>{caption}</Text>
-        {editing ? (
-          <TextInput
-            style={styles.editRowInput}
-            value={value}
-            onChangeText={onChange}
-            autoFocus
-            onBlur={() => setEditing(false)}
-          />
-        ) : (
-          <Text style={styles.editRowValue}>{value}</Text>
-        )}
-      </View>
-      <Pressable style={styles.editRowButton} onPress={() => setEditing((v) => !v)}>
-        <Text style={styles.editRowButtonText}>수정</Text>
-      </Pressable>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -217,6 +335,12 @@ const styles = StyleSheet.create({
   },
   required: {
     color: "#E0526E",
+  },
+  subCaption: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 14,
+    marginBottom: 8,
   },
   fieldWrap: {
     borderWidth: 1,
@@ -238,67 +362,51 @@ const styles = StyleSheet.create({
   tags: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: 8,
   },
   tag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
     backgroundColor: "#F1F1F1",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    fontSize: 11,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  tagText: {
+    fontSize: 13,
     fontWeight: "600",
     color: Colors.textSecondary,
   },
   tagWarn: {
     backgroundColor: "#FDE8EC",
+  },
+  tagWarnText: {
     color: "#E0526E",
   },
-  detailCard: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-  },
-  editRow: {
+  rangeRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 10,
-    paddingVertical: 14,
   },
-  editRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  editRowBody: {
+  rangeCol: {
     flex: 1,
-    gap: 2,
   },
-  editRowCaption: {
-    fontSize: 11,
+  rangeSep: {
     color: Colors.textSecondary,
+    fontSize: 15,
+    marginTop: 14,
   },
-  editRowValue: {
-    fontSize: 14,
-    color: Colors.text,
+  rangeSepTime: {
+    marginTop: 39,
   },
-  editRowInput: {
-    fontSize: 14,
-    color: Colors.text,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.primary,
-    paddingVertical: 2,
+  timeCol: {
+    flex: 1,
+    gap: 6,
   },
-  editRowButton: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  editRowButtonText: {
+  timeLabel: {
+    color: Colors.textSecondary,
     fontSize: 12,
-    fontWeight: "600",
-    color: Colors.text,
   },
   capacityRow: {
     flexDirection: "row",
@@ -322,6 +430,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: Colors.text,
+  },
+  stepperInput: {
+    minWidth: 32,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    textAlign: "center",
   },
   genderChips: {
     flexDirection: "row",

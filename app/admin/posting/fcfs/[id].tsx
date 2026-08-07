@@ -16,7 +16,7 @@ export default function FcfsApplicantsScreen() {
   useEffect(() => {
     Promise.all([fetchPosting(id), fetchFcfsApplicants(id)]).then(([p, list]) => {
       // 선착순: 정원이 다 차 있으면 자동으로 마감 처리
-      if (p && p.status === "open" && list.length >= p.capacity) {
+      if (p && p.status !== "closed" && list.length >= p.capacity) {
         closePosting(p.id);
         p = { ...p, status: "closed" };
       }
@@ -25,7 +25,10 @@ export default function FcfsApplicantsScreen() {
     });
   }, [id]);
 
-  const closed = posting?.status === "closed";
+  const closed =
+    posting?.status === "closed" || applicants.length >= (posting?.capacity ?? 0);
+  // 선착순은 정원까지만 확정, 정원을 넘겨 지원한 인원은 마감 처리
+  const confirmedCount = Math.min(applicants.length, posting?.capacity ?? 0);
 
   const close = async () => {
     await closePosting(id);
@@ -48,26 +51,37 @@ export default function FcfsApplicantsScreen() {
           <Text style={styles.listTitle}>지원자 목록</Text>
           <Text style={styles.count}>
             <Text style={{ color: closed ? Colors.text : Colors.success }}>
-              {applicants.length}
+              {confirmedCount}
             </Text>{" "}
             / {posting.capacity}
           </Text>
         </View>
+
+        {closed && (
+          <Text style={styles.closedNotice}>
+            선착순 {posting.capacity}명이 모두 채워져 모집이 마감되었습니다.
+          </Text>
+        )}
+
         <FlatList
           data={applicants}
           keyExtractor={(a) => a.id}
-          renderItem={({ item, index }) => (
-            <View style={styles.row}>
-              <Text style={styles.order}>{String(index + 1).padStart(2, "0")}.</Text>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.department}>{item.department}</Text>
-              <View style={[styles.badge, closed && styles.badgeOff]}>
-                <Text style={[styles.badgeText, closed && styles.badgeTextOff]}>
-                  참여확정
-                </Text>
+          renderItem={({ item, index }) => {
+            const confirmed = index < posting.capacity;
+
+            return (
+              <View style={styles.row}>
+                <Text style={styles.order}>{String(index + 1).padStart(2, "0")}.</Text>
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.department}>{item.department}</Text>
+                <View style={[styles.badge, !confirmed && styles.badgeOff]}>
+                  <Text style={[styles.badgeText, !confirmed && styles.badgeTextOff]}>
+                    {confirmed ? "참여확정" : "모집 마감"}
+                  </Text>
+                </View>
               </View>
-            </View>
-          )}
+            );
+          }}
         />
       </View>
 
@@ -80,7 +94,9 @@ export default function FcfsApplicantsScreen() {
         onPress={close}
         disabled={closed}
       >
-        <Text style={styles.closeButtonText}>모집 마감</Text>
+        <Text style={[styles.closeButtonText, closed && styles.closeButtonTextOff]}>
+          {closed ? "모집 마감됨" : "모집 마감"}
+        </Text>
       </Pressable>
     </View>
   );
@@ -115,6 +131,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: Colors.textSecondary,
+  },
+  closedNotice: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.danger,
+    marginBottom: 6,
   },
   row: {
     flexDirection: "row",
@@ -172,6 +194,9 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 16,
     fontWeight: "700",
+  },
+  closeButtonTextOff: {
+    color: "#B9BEC6",
   },
   pressed: {
     opacity: 0.85,

@@ -40,7 +40,7 @@ export default function ApprovalsScreen() {
 
   const submitReject = async () => {
     if (!rejectId || !reason.trim()) return;
-    await setApprovalStatus(rejectId, "rejected");
+    await setApprovalStatus(rejectId, "rejected", reason.trim());
     setRejectId(null);
     setReason("");
     await load();

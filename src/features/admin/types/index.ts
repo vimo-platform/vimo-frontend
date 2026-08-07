@@ -5,12 +5,12 @@ export type User = {
   department: string;
 };
 
-export type PostingStatus = "open" | "closed" | "draft";
+export type PostingStatus = 'open' | 'closed' | 'draft';
 
-// selection: 관리자가 채택, fcfs: 선착순 (정원이 차면 자동 마감)
-export type RecruitType = "selection" | "fcfs";
+// selection: 관리자가 선발, fcfs: 선착순 모집
+export type RecruitType = 'selection' | 'fcfs';
 
-export type Gender = "전체" | "남성" | "여성";
+export type Gender = '전체' | '남성' | '여성' | '?꾩껜' | '?⑥꽦' | '?ъ꽦';
 
 export type Posting = {
   id: string;
@@ -26,11 +26,12 @@ export type Posting = {
   status: PostingStatus;
   recruitType?: RecruitType;
   tags: string[];
+  noCancel?: boolean;
   gender?: Gender;
   createdAt: string;
 };
 
-export type SessionStatus = "before" | "ongoing" | "done";
+export type SessionStatus = 'before' | 'ongoing' | 'done';
 
 export type Session = {
   id: string;
@@ -44,7 +45,7 @@ export type Session = {
   status: SessionStatus;
 };
 
-export type ParticipantStatus = "ongoing" | "done" | "none";
+export type ParticipantStatus = 'ongoing' | 'done' | 'none';
 
 export type Participant = {
   id: string;
@@ -58,11 +59,10 @@ export type Applicant = {
   name: string;
   department: string;
   selected: boolean;
-  // 지원 취소한 학생만 값이 있음
   cancel?: { at: string; reason: string };
 };
 
-export type ApprovalStatus = "pending" | "approved" | "rejected";
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 
 export type Approval = {
   id: string;

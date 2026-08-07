@@ -22,8 +22,20 @@ export function ScheduleCard({ schedule }: { schedule: VolunteerSchedule }) {
   const openDetail = () => {
     router.push(`/volunteer-post/${postId}?mode=confirm` as Href);
   };
-  const noop = () => {};
-
+  const openStartQrScan = () => {
+    router.push(
+      `/volunteer-qr-scan?postId=${postId}&type=start&startTime=${encodeURIComponent(
+        schedule.startTime,
+      )}` as Href,
+    );
+  };
+  const openEndQrScan = () => {
+    router.push(
+      `/volunteer-qr-scan?postId=${postId}&type=end&startTime=${encodeURIComponent(
+        schedule.startTime,
+      )}&endTime=${encodeURIComponent(schedule.endTime)}` as Href,
+    );
+  };
   return (
     <View style={styles.scheduleGroup}>
       <View style={styles.scheduleHeading}>
@@ -34,24 +46,26 @@ export function ScheduleCard({ schedule }: { schedule: VolunteerSchedule }) {
         <StatusBadge status={schedule.status} />
       </View>
 
-      <Pressable
-        accessibilityRole="button"
-        style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-        onPress={openDetail}>
-        <Text style={styles.cardTitle}>{schedule.title}</Text>
-        <Text style={styles.credit}>{schedule.credit}</Text>
+      <View style={styles.card}>
+        <Pressable
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.cardContent, pressed && styles.pressed]}
+          onPress={openDetail}>
+          <Text style={styles.cardTitle}>{schedule.title}</Text>
+          <Text style={styles.credit}>{schedule.credit}</Text>
 
-        <View style={styles.details}>
-          <DetailRow icon="location" text={schedule.location} />
-          <DetailRow icon="calendar" text={period} />
-          <DetailRow icon="clock" text={activityTime} />
-        </View>
+          <View style={styles.details}>
+            <DetailRow icon="location" text={schedule.location} />
+            <DetailRow icon="calendar" text={period} />
+            <DetailRow icon="clock" text={activityTime} />
+          </View>
+        </Pressable>
 
         <View style={styles.cardActions}>
-          <ParticipationButton style={styles.cardAction} onPress={noop} />
-          <ParticipationButton style={styles.cardAction} variant="end" onPress={noop} />
+          <ParticipationButton style={styles.cardAction} onPress={openStartQrScan} />
+          <ParticipationButton style={styles.cardAction} variant="end" onPress={openEndQrScan} />
         </View>
-      </Pressable>
+      </View>
     </View>
   );
 }
@@ -152,6 +166,13 @@ const styles = StyleSheet.create({
     borderColor: '#9C9C9C',
     borderRadius: 21,
     backgroundColor: '#FFFFFF',
+  },
+  cardContent: {
+    marginHorizontal: -26,
+    marginTop: -26,
+    paddingHorizontal: 26,
+    paddingTop: 26,
+    paddingBottom: 1,
   },
   cardTitle: {
     color: '#222222',

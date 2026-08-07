@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
-import { fetchApplicants } from "@/features/admin/api/applicants";
+import { approveApplicant, fetchApplicants } from "@/features/admin/api/applicants";
 import { closePosting, fetchPosting } from "@/features/admin/api/postings";
 import { CancelReasonSheet } from "@/features/admin/components/cancel-reason-sheet";
 import { PostingSummary } from "@/features/admin/components/posting-summary";
@@ -21,10 +21,21 @@ export default function ApplicantsScreen() {
     fetchApplicants(id).then(setApplicants);
   }, [id]);
 
-  const toggle = (applicantId: string) =>
-    setApplicants((prev) =>
-      prev.map((a) => (a.id === applicantId ? { ...a, selected: !a.selected } : a)),
-    );
+  // 채택: 신청(PENDING)을 실제로 서버에 채택 반영. 이미 채택된 건은 되돌릴 수 없음(백엔드 제약).
+  const selectApplicant = async (applicant: Applicant) => {
+    if (applicant.selected) {
+      return;
+    }
+
+    try {
+      await approveApplicant(applicant.id);
+      setApplicants((prev) =>
+        prev.map((a) => (a.id === applicant.id ? { ...a, selected: true } : a)),
+      );
+    } catch {
+      Alert.alert("채택 실패", "잠시 후 다시 시도해 주세요.");
+    }
+  };
 
   const selectedCount = applicants.filter((a) => a.selected).length;
 
@@ -76,10 +87,10 @@ export default function ApplicantsScreen() {
               ) : (
                 <Pressable
                   style={[styles.selectBtn, item.selected && styles.selectBtnOn]}
-                  onPress={() => toggle(item.id)}
+                  onPress={() => selectApplicant(item)}
                 >
                   <Text style={[styles.selectText, item.selected && styles.selectTextOn]}>
-                    채택
+                    {item.selected ? "채택됨" : "채택"}
                   </Text>
                 </Pressable>
               )}

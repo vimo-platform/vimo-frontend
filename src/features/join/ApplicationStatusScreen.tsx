@@ -1,5 +1,5 @@
-import { Href, router } from 'expo-router';
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { Href, router, useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,13 +7,19 @@ import { AllLine, TopBar } from '@/components/common';
 import { UserGnb } from '@/components/navigation/user-gnb';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
 
-import { deleteVolunteerApplication } from '@/features/exploration/api';
+import {
+  deleteVolunteerApplication,
+  getVolunteerPosts,
+  updateVolunteerFavorite,
+} from '@/features/exploration/api';
 import {
   cancelVolunteerApplication,
   getVolunteerInteractionsSnapshot,
   getVolunteerPostsSnapshot,
+  mergeVolunteerInteractionsFromPosts,
+  setVolunteerPostsSnapshot,
+  setVolunteerFavorite,
   subscribeVolunteerInteractions,
-  toggleVolunteerFavorite,
 } from '@/features/exploration/volunteer-interaction-store';
 import type { VolunteerPost } from '@/features/exploration/types';
 
@@ -32,13 +38,35 @@ export function ApplicationStatusScreen() {
     getVolunteerInteractionsSnapshot,
     getVolunteerInteractionsSnapshot,
   );
+  const [posts, setPosts] = useState(() => getVolunteerPostsSnapshot());
   const cards = useMemo(
-    () => buildApplicationStatusCards(getVolunteerPostsSnapshot(), favoriteIds, appliedIds),
-    [appliedIds, favoriteIds],
+    () => buildApplicationStatusCards(posts, favoriteIds, appliedIds),
+    [appliedIds, favoriteIds, posts],
   );
   const [cancelTarget, setCancelTarget] = useState<ApplicationVolunteerCardType | null>(null);
   const [cancelCompleteTarget, setCancelCompleteTarget] =
     useState<ApplicationVolunteerCardType | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+
+      getVolunteerPosts().then((nextPosts) => {
+        if (!mounted) {
+          return;
+        }
+
+        setPosts(nextPosts);
+        setVolunteerPostsSnapshot(nextPosts);
+        mergeVolunteerInteractionsFromPosts(nextPosts);
+      });
+
+      return () => {
+        mounted = false;
+      };
+    }, []),
+  );
 
   const appliedCards = useMemo(() => cards.filter((card) => card.applied), [cards]);
   const favoriteCards = useMemo(
@@ -47,7 +75,13 @@ export function ApplicationStatusScreen() {
   );
 
   const handleToggleLike = (id: number) => {
-    toggleVolunteerFavorite(id);
+    const previousFavorite = favoriteIds.includes(id);
+    const nextFavorite = !previousFavorite;
+
+    setVolunteerFavorite(id, nextFavorite);
+    updateVolunteerFavorite(id, nextFavorite).catch(() => {
+      setVolunteerFavorite(id, previousFavorite);
+    });
   };
 
   const openVolunteerPost = (item: ApplicationVolunteerCardType) => {
@@ -55,7 +89,7 @@ export function ApplicationStatusScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={[styles.screen, { width: contentWidth }]}>
         <TopBar
           title="지원 현황"
@@ -99,11 +133,12 @@ export function ApplicationStatusScreen() {
           onClose={() => {
             setCancelTarget(null);
           }}
-          onConfirm={() => {
+          onConfirm={(reason) => {
             if (!cancelTarget) {
               return;
             }
 
+            setCancelReason(reason);
             setCancelCompleteTarget(cancelTarget);
             setCancelTarget(null);
           }}
@@ -117,7 +152,9 @@ export function ApplicationStatusScreen() {
           onConfirm={async () => {
             if (cancelCompleteTarget) {
               try {
-                await deleteVolunteerApplication(cancelCompleteTarget.id);
+                await deleteVolunteerApplication(cancelCompleteTarget.id, {
+                  cancelReason,
+                });
               } catch {
                 return;
               }
@@ -125,6 +162,7 @@ export function ApplicationStatusScreen() {
               cancelVolunteerApplication(cancelCompleteTarget.id);
             }
 
+            setCancelReason('');
             setCancelCompleteTarget(null);
           }}
         />
@@ -139,9 +177,10 @@ function buildApplicationStatusCards(
   appliedIds: number[],
 ): ApplicationVolunteerCardType[] {
   return posts
-    .filter((post) => favoriteIds.includes(post.id) || appliedIds.includes(post.id))
+    .filter((post) => favoriteIds.includes(post.id) || isTrackableApplication(post, appliedIds))
     .map((post) => {
-      const applied = appliedIds.includes(post.id);
+      const applied = isTrackableApplication(post, appliedIds);
+      const progressStep = getApplicationProgressStep(post);
 
       return {
         id: post.id,
@@ -157,10 +196,55 @@ function buildApplicationStatusCards(
         applied,
         actionLabel: post.status !== 'RECRUITING' ? '지원 마감' : '지원하기',
         actionDisabled: post.status !== 'RECRUITING',
-        hasPreferredCondition: true,
-        progressStep: applied ? 2 : undefined,
+        hasPreferredCondition: hasPreferredCondition(post),
+        progressStep: applied ? progressStep : undefined,
       };
     });
+}
+
+function isTrackableApplication(post: VolunteerPost, appliedIds: number[]) {
+  if (!appliedIds.includes(post.id)) {
+    return false;
+  }
+
+  const status = post.applicationStatus;
+
+  return (
+    !status ||
+    status === 'PENDING' ||
+    status === 'APPROVED' ||
+    status === 'ATTENDED' ||
+    status === 'COMPLETED' ||
+    status === 'CERTIFIED'
+  );
+}
+
+function getApplicationProgressStep(post: VolunteerPost): ApplicationVolunteerCardType['progressStep'] {
+  if (post.recruitType === 'fcfs') {
+    return 3;
+  }
+
+  if (post.applicationStatus === 'APPROVED') {
+    return 3;
+  }
+
+  if (post.applicationStatus === 'ATTENDED') {
+    return 4;
+  }
+
+  if (post.applicationStatus === 'COMPLETED' || post.applicationStatus === 'CERTIFIED') {
+    return 5;
+  }
+
+  return 2;
+}
+
+function hasPreferredCondition(post: VolunteerPost) {
+  const conditionTexts = [post.participationCondition, ...post.requirements]
+    .filter(Boolean)
+    .join(' ');
+
+  return /우대|조건|가능자/.test(conditionTexts);
 }
 
 function formatCredit(hours: number) {
@@ -229,7 +313,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 26,
-    paddingBottom: 90,
+    paddingBottom: 126,
   },
   section: {
     alignItems: 'center',

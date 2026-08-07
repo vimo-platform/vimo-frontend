@@ -1,7 +1,7 @@
-import { mockVolunteerPosts } from './mock';
 import type { VolunteerPost } from './types';
 
 type Listener = () => void;
+const APPROVAL_NOTICE_SEEN_IDS_KEY = 'vimo.approvalNoticeSeenIds';
 
 type VolunteerInteractionState = {
   favoriteIds: number[];
@@ -9,20 +9,35 @@ type VolunteerInteractionState = {
   approvedIds: number[];
   activityCompletedIds: number[];
   certificationCompletedIds: number[];
+  certificationRejectedRecords: CertificationRejectedRecord[];
   approvalNoticeSeenIds: number[];
 };
 
+export type CertificationRejectedRecord = {
+  id: number;
+  rejectedAt: string;
+  reason: string;
+};
+
+export type CertificationStatusRecord = {
+  volunteerId: number;
+  status: string;
+  rejectedAt?: string;
+  rejectedReason?: string;
+};
+
 let state: VolunteerInteractionState = {
-  favoriteIds: [101],
+  favoriteIds: [],
   appliedIds: [],
   approvedIds: [],
-  activityCompletedIds: [101],
-  certificationCompletedIds: [102],
-  approvalNoticeSeenIds: [],
+  activityCompletedIds: [],
+  certificationCompletedIds: [],
+  certificationRejectedRecords: [],
+  approvalNoticeSeenIds: readStoredApprovalNoticeSeenIds(),
 };
 
 const listeners = new Set<Listener>();
-let volunteerPostsSnapshot = mockVolunteerPosts;
+let volunteerPostsSnapshot: VolunteerPost[] = [];
 
 export function subscribeVolunteerInteractions(listener: Listener) {
   listeners.add(listener);
@@ -45,12 +60,30 @@ export function getVolunteerInteractionsSnapshot() {
   return state;
 }
 
+export function resetVolunteerInteractions() {
+  state = {
+    favoriteIds: [],
+    appliedIds: [],
+    approvedIds: [],
+    activityCompletedIds: [],
+    certificationCompletedIds: [],
+    certificationRejectedRecords: [],
+    approvalNoticeSeenIds: readStoredApprovalNoticeSeenIds(),
+  };
+  volunteerPostsSnapshot = [];
+  notify();
+}
+
 export function toggleVolunteerFavorite(id: number) {
+  setVolunteerFavorite(id, !state.favoriteIds.includes(id));
+}
+
+export function setVolunteerFavorite(id: number, isFavorite: boolean) {
   state = {
     ...state,
-    favoriteIds: state.favoriteIds.includes(id)
-      ? state.favoriteIds.filter((favoriteId) => favoriteId !== id)
-      : [...state.favoriteIds, id],
+    favoriteIds: isFavorite
+      ? unique([...state.favoriteIds, id])
+      : state.favoriteIds.filter((favoriteId) => favoriteId !== id),
   };
   notify();
 }
@@ -90,6 +123,28 @@ export function completeVolunteerActivity(id: number) {
   notify();
 }
 
+export function rejectVolunteerCertification(record: CertificationRejectedRecord) {
+  const nextRejectedRecords = state.certificationRejectedRecords.some(
+    (rejectedRecord) => rejectedRecord.id === record.id,
+  )
+    ? state.certificationRejectedRecords.map((rejectedRecord) =>
+        rejectedRecord.id === record.id ? record : rejectedRecord,
+      )
+    : [...state.certificationRejectedRecords, record];
+
+  state = {
+    ...state,
+    activityCompletedIds: state.activityCompletedIds.includes(record.id)
+      ? state.activityCompletedIds
+      : [...state.activityCompletedIds, record.id],
+    certificationCompletedIds: state.certificationCompletedIds.filter(
+      (completedId) => completedId !== record.id,
+    ),
+    certificationRejectedRecords: nextRejectedRecords,
+  };
+  notify();
+}
+
 export function completeVolunteerCertification(id: number) {
   state = {
     ...state,
@@ -99,6 +154,60 @@ export function completeVolunteerCertification(id: number) {
     certificationCompletedIds: state.certificationCompletedIds.includes(id)
       ? state.certificationCompletedIds
       : [...state.certificationCompletedIds, id],
+    certificationRejectedRecords: state.certificationRejectedRecords.filter(
+      (rejectedRecord) => rejectedRecord.id !== id,
+    ),
+  };
+  notify();
+}
+
+export function mergeCertificationStatusRecords(records: CertificationStatusRecord[]) {
+  if (records.length === 0) {
+    return;
+  }
+
+  // 승인 대기(활동 완료 후 인증 대기): 체크인(ATTENDED)/체크아웃(COMPLETED)까지 QR 인증을 마친 건만.
+  const pendingIds = records
+    .filter((record) => record.status === 'ATTENDED' || record.status === 'COMPLETED')
+    .map((record) => record.volunteerId);
+  // 인증(승인) 완료: 관리자가 활동 인증을 승인한 CERTIFIED만.
+  // APPROVED(신청 채택)나 기간 경과만으로는 완료로 보지 않는다. (QR 미인증 건이 완료로 잡히는 문제 방지)
+  const completedIds = records
+    .filter((record) => record.status === 'CERTIFIED')
+    .map((record) => record.volunteerId);
+  const rejectedRecords = records
+    .filter(
+      (record) =>
+        record.status === 'REJECTED' ||
+        record.status === 'CERTIFICATION_REJECTED' ||
+        record.status === 'ABSENT',
+    )
+    .map((record) => ({
+      id: record.volunteerId,
+      rejectedAt: record.rejectedAt ?? new Date().toISOString(),
+      reason: record.rejectedReason ?? '반려 사유를 확인해 주세요.',
+    }));
+  const rejectedIds = new Set(rejectedRecords.map((record) => record.id));
+  const nextRejectedRecords = [
+    ...state.certificationRejectedRecords.filter(
+      (record) => !rejectedIds.has(record.id),
+    ),
+    ...rejectedRecords,
+  ];
+
+  state = {
+    ...state,
+    activityCompletedIds: unique([
+      ...state.activityCompletedIds,
+      ...pendingIds,
+      ...completedIds,
+      ...rejectedRecords.map((record) => record.id),
+    ]),
+    certificationCompletedIds: unique([
+      ...state.certificationCompletedIds.filter((id) => !rejectedIds.has(id)),
+      ...completedIds,
+    ]),
+    certificationRejectedRecords: nextRejectedRecords,
   };
   notify();
 }
@@ -115,10 +224,13 @@ export function markApprovalConfirmationSeen(id: number) {
     return;
   }
 
+  const approvalNoticeSeenIds = [...state.approvalNoticeSeenIds, id];
+
   state = {
     ...state,
-    approvalNoticeSeenIds: [...state.approvalNoticeSeenIds, id],
+    approvalNoticeSeenIds,
   };
+  writeStoredApprovalNoticeSeenIds(approvalNoticeSeenIds);
   notify();
 }
 
@@ -130,10 +242,96 @@ export function cancelVolunteerApplication(id: number) {
   notify();
 }
 
+export function mergeVolunteerInteractionsFromPosts(posts: VolunteerPost[]) {
+  const hasFavoriteFlags = posts.some((post) => typeof post.isFavorite === 'boolean');
+  const hasApplicationFlags = posts.some(
+    (post) => typeof post.isApplied === 'boolean' || typeof post.applicationStatus === 'string',
+  );
+
+  if (!hasFavoriteFlags && !hasApplicationFlags) {
+    return;
+  }
+
+  const favoriteIds = hasFavoriteFlags
+    ? posts.filter((post) => post.isFavorite).map((post) => post.id)
+    : state.favoriteIds;
+  const appliedIds = hasApplicationFlags
+    ? posts
+        .filter((post) => post.isApplied || isAppliedStatus(post.applicationStatus))
+        .map((post) => post.id)
+    : state.appliedIds;
+  const approvedIds = hasApplicationFlags
+    ? posts
+        .filter((post) => post.applicationStatus === 'APPROVED')
+        .map((post) => post.id)
+    : state.approvedIds;
+
+  state = {
+    ...state,
+    favoriteIds,
+    appliedIds,
+    approvedIds,
+  };
+  notify();
+}
+
 export function getSearchableVolunteerText(post: VolunteerPost) {
   return [post.title, post.organization, post.location, post.category].join(' ').toLowerCase();
 }
 
 function notify() {
   listeners.forEach((listener) => listener());
+}
+
+function isAppliedStatus(status: VolunteerPost['applicationStatus']) {
+  return (
+    status === 'PENDING' ||
+    status === 'APPROVED' ||
+    status === 'REJECTED' ||
+    status === 'ATTENDED' ||
+    status === 'COMPLETED' ||
+    status === 'CERTIFIED' ||
+    status === 'CERTIFICATION_REJECTED' ||
+    status === 'ABSENT'
+  );
+}
+
+function unique<T>(items: T[]) {
+  return Array.from(new Set(items));
+}
+
+function readStoredApprovalNoticeSeenIds() {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(APPROVAL_NOTICE_SEEN_IDS_KEY);
+
+    if (!rawValue) {
+      return [];
+    }
+
+    const parsedValue = JSON.parse(rawValue);
+
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    return parsedValue.filter((id): id is number => typeof id === 'number');
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredApprovalNoticeSeenIds(ids: number[]) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(APPROVAL_NOTICE_SEEN_IDS_KEY, JSON.stringify(unique(ids)));
+  } catch {
+    // Persistence is best-effort; in-memory state still prevents repeat within the session.
+  }
 }

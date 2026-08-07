@@ -3,7 +3,21 @@ import { getAccessToken, removeAccessToken } from '@/storage/auth-storage';
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ??
   process.env.EXPO_PUBLIC_API_BASE_URL ??
-  'http://localhost:8080';
+  'https://api2.hwangs.site';
+
+export class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
+export function isAuthError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
+}
 
 export async function readErrorMessage(response: Response) {
   const message = await response.text();
@@ -21,13 +35,16 @@ export async function apiRequest<TResponse>(
   accessToken?: string,
 ): Promise<TResponse> {
   const storedAccessToken = accessToken ?? (await getAccessToken());
+  const isFormDataBody =
+    typeof FormData !== 'undefined' && init?.body instanceof FormData;
+  const headers = {
+    ...(isFormDataBody ? {} : { 'Content-Type': 'application/json' }),
+    ...(storedAccessToken ? { Authorization: `Bearer ${storedAccessToken}` } : {}),
+    ...init?.headers,
+  };
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(storedAccessToken ? { Authorization: `Bearer ${storedAccessToken}` } : {}),
-      ...init?.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -35,12 +52,18 @@ export async function apiRequest<TResponse>(
       await removeAccessToken();
     }
 
-    throw new Error(await readErrorMessage(response));
+    throw new ApiError(response.status, await readErrorMessage(response));
   }
 
   if (response.status === 204) {
     return undefined as TResponse;
   }
 
-  return (await response.json()) as TResponse;
+  const text = await response.text();
+
+  if (text.trim().length === 0) {
+    return undefined as TResponse;
+  }
+
+  return JSON.parse(text) as TResponse;
 }

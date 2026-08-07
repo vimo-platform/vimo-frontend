@@ -1,5 +1,6 @@
 import { apiRequest } from '@/api/client';
 
+import { mockVolunteerSchedules } from './mock';
 import type { VolunteerSchedule } from './types';
 
 type UserVolunteerResponse = {
@@ -12,8 +13,20 @@ type UserVolunteerResponse = {
   applicationStatus: 'APPROVED' | 'COMPLETED' | string;
 };
 
+const USE_MOCK_SCHEDULES = process.env.EXPO_PUBLIC_USE_MOCK_SCHEDULES === 'true';
+
 export async function getMyVolunteerSchedules(): Promise<VolunteerSchedule[]> {
-  const data = await apiRequest<UserVolunteerResponse[]>('/api/v1/users/me/volunteers');
+  if (USE_MOCK_SCHEDULES) {
+    return mockVolunteerSchedules;
+  }
+
+  let data: UserVolunteerResponse[];
+
+  try {
+    data = await apiRequest<UserVolunteerResponse[]>('/api/v1/users/me/volunteers');
+  } catch {
+    return [];
+  }
 
   return data.map((item) => {
     const start = parseDateTime(item.startAt);

@@ -1,9 +1,9 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 
-import { fetchMyPostings, setWorkingPosting } from "@/features/admin/api/postings";
+import { deletePosting, fetchMyPostings, setWorkingPosting } from "@/features/admin/api/postings";
 import { ActivityCard } from "@/features/admin/components/activity-card";
 import { Colors } from "@/features/admin/constants/theme";
 import type { Posting, PostingStatus } from "@/features/admin/types";
@@ -28,12 +28,41 @@ export default function PostingsScreen() {
   const [postings, setPostings] = useState<Posting[]>([]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
+  const [deleteTarget, setDeleteTarget] = useState<Posting | null>(null);
+  const [showDeleteDone, setShowDeleteDone] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const reload = useCallback(() => {
+    fetchMyPostings().then(setPostings);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      fetchMyPostings().then(setPostings);
-    }, []),
+      reload();
+    }, [reload]),
   );
+
+  const confirmDelete = async () => {
+    if (!deleteTarget || isDeleting) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deletePosting(deleteTarget.id);
+      setDeleteTarget(null);
+      setShowDeleteDone(true);
+      reload();
+    } catch (error) {
+      setDeleteTarget(null);
+      Alert.alert(
+        "삭제 실패",
+        error instanceof Error ? error.message : "공고 삭제에 실패했습니다.",
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (params.filter) {
@@ -109,14 +138,34 @@ export default function PostingsScreen() {
                   모집{item.capacity}명 / 지원{item.applicants}명
                 </Text>
                 {isDraft ? (
-                  <Pressable
-                    style={({ pressed }) => [styles.editPill, pressed && styles.pressed]}
-                    onPress={openDraft}
-                  >
-                    <Text style={styles.pillText}>수정</Text>
-                  </Pressable>
+                  <View style={styles.draftActions}>
+                    <Pressable
+                      style={({ pressed }) => [styles.deletePill, pressed && styles.pressed]}
+                      onPress={() => setDeleteTarget(item)}
+                    >
+                      <Text style={styles.deletePillText}>삭제</Text>
+                    </Pressable>
+                    <Pressable
+                      style={({ pressed }) => [styles.editPill, pressed && styles.pressed]}
+                      onPress={openDraft}
+                    >
+                      <Text style={styles.editPillText}>수정</Text>
+                    </Pressable>
+                  </View>
+                ) : item.status === "closed" ? (
+                  <View style={styles.draftActions}>
+                    <Pressable
+                      style={({ pressed }) => [styles.deletePill, pressed && styles.pressed]}
+                      onPress={() => setDeleteTarget(item)}
+                    >
+                      <Text style={styles.deletePillText}>삭제</Text>
+                    </Pressable>
+                    <View style={[styles.pill, styles.pillOff]}>
+                      <Text style={styles.pillText}>{STATUS_LABEL[item.status]}</Text>
+                    </View>
+                  </View>
                 ) : (
-                  <View style={[styles.pill, item.status !== "open" && styles.pillOff]}>
+                  <View style={styles.pill}>
                     <Text style={styles.pillText}>{STATUS_LABEL[item.status]}</Text>
                   </View>
                 )}
@@ -131,6 +180,66 @@ export default function PostingsScreen() {
       >
         <Text style={styles.createButtonText}>＋ 공고 작성</Text>
       </Pressable>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={deleteTarget !== null}
+        onRequestClose={() => setDeleteTarget(null)}
+      >
+        <View style={styles.sheetOverlay}>
+          <View style={styles.sheetCard}>
+            <Ionicons name="warning-outline" size={54} color="#E78483" />
+            <Text style={styles.dialogTitle}>공고를 삭제하시겠어요?</Text>
+            <Text style={styles.dialogDesc}>삭제 후에는 복구할 수 없습니다.</Text>
+            <View style={styles.dialogButtons}>
+              <Pressable
+                style={({ pressed }) => [styles.dialogCancel, pressed && styles.pressed]}
+                onPress={() => setDeleteTarget(null)}
+              >
+                <Text style={styles.dialogCancelText}>닫기</Text>
+              </Pressable>
+              <Pressable
+                disabled={isDeleting}
+                style={({ pressed }) => [styles.dialogDelete, pressed && styles.pressed]}
+                onPress={confirmDelete}
+              >
+                <Text style={styles.dialogDeleteText}>삭제</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showDeleteDone}
+        onRequestClose={() => setShowDeleteDone(false)}
+      >
+        <View style={styles.dialogOverlay}>
+          <View style={styles.dialogCard}>
+            <Pressable
+              style={styles.doneClose}
+              hitSlop={10}
+              onPress={() => setShowDeleteDone(false)}
+            >
+              <Ionicons name="close" size={22} color={Colors.textSecondary} />
+            </Pressable>
+            <View style={styles.doneCircle}>
+              <Ionicons name="checkmark" size={28} color={Colors.white} />
+            </View>
+            <Text style={styles.dialogTitle}>공고 삭제 완료</Text>
+            <Text style={styles.dialogDesc}>봉사 공고가 성공적으로{"\n"}삭제되었습니다.</Text>
+            <Pressable
+              style={({ pressed }) => [styles.doneConfirm, pressed && styles.pressed]}
+              onPress={() => setShowDeleteDone(false)}
+            >
+              <Text style={styles.doneConfirmText}>확인</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -198,27 +307,60 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   countText: {
+    flexShrink: 1,
     fontSize: 14,
     fontWeight: "700",
     color: Colors.text,
   },
   pill: {
+    width: 105,
+    height: 31,
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#222222",
     borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  },
+  draftActions: {
+    flexDirection: "row",
+    gap: 10,
   },
   editPill: {
+    width: 105,
+    height: 31,
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#222222",
     borderRadius: 18,
-    paddingHorizontal: 24,
-    paddingVertical: 8,
+    paddingTop: 7,
+    paddingBottom: 8,
+    paddingHorizontal: 30,
+  },
+  editPillText: {
+    color: "#F5F5F5",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  deletePill: {
+    width: 105,
+    height: 31,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFE0E0",
+    borderRadius: 18,
+    paddingTop: 7,
+    paddingBottom: 8,
+    paddingHorizontal: 30,
+  },
+  deletePillText: {
+    color: "#E87070",
+    fontSize: 13,
+    fontWeight: "700",
   },
   pillOff: {
     backgroundColor: "#B9BEC6",
   },
   pillText: {
-    color: Colors.white,
+    color: "#F5F5F5",
     fontSize: 13,
     fontWeight: "700",
   },
@@ -239,5 +381,122 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
+  },
+  dialogOverlay: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(17, 17, 17, 0.56)",
+    paddingHorizontal: 40,
+  },
+  sheetOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(17, 17, 17, 0.56)",
+  },
+  sheetCard: {
+    alignItems: "center",
+    paddingTop: 28,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    backgroundColor: Colors.card,
+  },
+  dialogCard: {
+    width: "100%",
+    maxWidth: 320,
+    alignItems: "center",
+    paddingTop: 32,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    backgroundColor: Colors.card,
+  },
+  warnCircle: {
+    width: 60,
+    height: 60,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 30,
+    backgroundColor: "#FCE4E5",
+  },
+  dialogTitle: {
+    marginTop: 18,
+    fontSize: 19,
+    fontWeight: "800",
+    color: Colors.text,
+    textAlign: "center",
+  },
+  dialogDesc: {
+    marginTop: 12,
+    fontSize: 14,
+    fontWeight: "500",
+    lineHeight: 21,
+    color: Colors.textSecondary,
+    textAlign: "center",
+  },
+  dialogButtons: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 26,
+    justifyContent: "center",
+  },
+  dialogCancel: {
+    width: 143,
+    height: 60,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 14,
+    backgroundColor: "#818181",
+  },
+  dialogCancelText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#F5F5F5",
+  },
+  dialogDelete: {
+    width: 143,
+    height: 60,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 14,
+    backgroundColor: "#FFE0E0",
+  },
+  dialogDeleteText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#EB7E7E",
+  },
+  doneClose: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  doneCircle: {
+    width: 54,
+    height: 54,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 27,
+    backgroundColor: "#757575",
+  },
+  doneConfirm: {
+    alignSelf: "stretch",
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 26,
+    borderRadius: 14,
+    backgroundColor: "#222222",
+  },
+  doneConfirmText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.white,
   },
 });

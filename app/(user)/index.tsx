@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 
 import { login } from '@/api/auth';
+import { fetchNewApprovedApplications } from '@/api/volunteers';
+import { getVolunteerPostById } from '@/features/exploration/api';
 import {
+  clearUserSession,
   getSavedStudentId,
   getUserOnboardingCompleted,
   markUserAuthenticated,
@@ -11,7 +14,11 @@ import {
   setCurrentUser,
   setSavedStudentId,
 } from '@/storage/auth-storage';
-import { getPendingApprovalConfirmationId } from '@/features/exploration/volunteer-interaction-store';
+import {
+  approveVolunteerApplication,
+  getPendingApprovalConfirmationId,
+  resetVolunteerInteractions,
+} from '@/features/exploration/volunteer-interaction-store';
 import EntryFlowScreen from '@/features/auth/screens/EntryFlowScreen';
 import type { SchoolLoginSubmitValues } from '@/features/auth/screens/SchoolLoginScreen';
 
@@ -39,6 +46,9 @@ export default function EntryScreen() {
     setErrorMessage(null);
 
     try {
+      clearUserSession();
+      resetVolunteerInteractions();
+
       const response = await login({
         studentId,
         password,
@@ -67,6 +77,27 @@ export default function EntryScreen() {
         return;
       }
 
+      try {
+        const newApprovedApplications = await fetchNewApprovedApplications();
+        const selectionApprovedApplications = await Promise.all(
+          newApprovedApplications
+            .filter((application) => isApprovedApplication(application))
+            .map(async (application) => {
+              const post = await getVolunteerPostById(application.volunteerId);
+
+              return post?.recruitType === 'selection' ? application : null;
+            }),
+        );
+
+        selectionApprovedApplications.forEach((application) => {
+          if (application) {
+            approveVolunteerApplication(application.volunteerId);
+          }
+        });
+      } catch {
+        // Approval notifications are non-blocking; keep login flow available offline.
+      }
+
       const pendingApprovalId = getPendingApprovalConfirmationId();
       router.replace(
         pendingApprovalId
@@ -92,4 +123,8 @@ export default function EntryScreen() {
       onSubmit={handleLogin}
     />
   );
+}
+
+function isApprovedApplication(application: { status?: string; applicationStatus?: string }) {
+  return (application.applicationStatus ?? application.status) === 'APPROVED';
 }

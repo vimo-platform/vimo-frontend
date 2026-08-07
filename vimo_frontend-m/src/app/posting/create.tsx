@@ -20,14 +20,21 @@ import {
 } from "@/api/postings";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { Colors } from "@/constants/theme";
+import type { RecruitType } from "@/types";
 
 const GENDERS = ["전체", "남성", "여성"] as const;
+
+const RECRUIT_METHODS: { value: RecruitType; label: string }[] = [
+  { value: "selection", label: "선발 모집" },
+  { value: "fcfs", label: "선착순 모집" },
+];
 
 export default function CreatePostingScreen() {
   const [memo, setMemo] = useState("");
   const [location, setLocation] = useState("");
   const [count, setCount] = useState(3);
   const [gender, setGender] = useState<(typeof GENDERS)[number]>("전체");
+  const [recruitType, setRecruitType] = useState<RecruitType>("selection");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [startTime, setStartTime] = useState("11:30");
@@ -54,6 +61,7 @@ export default function CreatePostingScreen() {
         applicants: 0,
         hoursPerSession: 3,
         status: "draft",
+        recruitType,
         tags: draft.keywords,
         gender,
         createdAt: new Date().toISOString().slice(0, 10),
@@ -123,6 +131,23 @@ export default function CreatePostingScreen() {
               onPress={() => setGender(g)}
             >
               <Text style={[styles.chipText, gender === g && styles.chipTextOn]}>{g}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={styles.label}>모집 방법</Text>
+        <View style={styles.chips}>
+          {RECRUIT_METHODS.map((m) => (
+            <Pressable
+              key={m.value}
+              style={[styles.chip, recruitType === m.value && styles.chipOn]}
+              onPress={() => setRecruitType(m.value)}
+            >
+              <Text
+                style={[styles.chipText, recruitType === m.value && styles.chipTextOn]}
+              >
+                {m.label}
+              </Text>
             </Pressable>
           ))}
         </View>
