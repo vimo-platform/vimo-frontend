@@ -48,7 +48,9 @@ export function VolunteerPostDetailScreen() {
   useEffect(() => {
     const postId = Number(id);
 
-    if (!Number.isFinite(postId) || snapshotPost) {
+    // 목록 스냅샷에 키워드(summaryTags 기반)가 비어 있으면, 상세 API를 받아 채운다.
+    // 목록 응답에는 summaryTags/category가 없어 enrich 실패 시 키워드가 누락될 수 있다.
+    if (!Number.isFinite(postId) || (snapshotPost && snapshotPost.participationCondition)) {
       return;
     }
 
@@ -179,8 +181,12 @@ export function VolunteerPostDetailScreen() {
             <Text style={styles.credit}>봉사 인정 시간 : {formatCredit(post.creditHours)} 인정</Text>
 
             <View style={styles.chipRow}>
-              <Text style={styles.infoChip}>{post.participationCondition}</Text>
-              <Text style={styles.warningChip}>{post.cancelPolicy}</Text>
+              {post.participationCondition ? (
+                <Text style={styles.infoChip}>{post.participationCondition}</Text>
+              ) : null}
+              {post.cancelPolicy ? (
+                <Text style={styles.warningChip}>{post.cancelPolicy}</Text>
+              ) : null}
             </View>
           </View>
 

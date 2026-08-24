@@ -111,7 +111,8 @@ export default function SchoolLoginScreen({
               <SchoolIcon />
               <TextInput
                 autoCapitalize="none"
-                keyboardType="number-pad"
+                autoCorrect={false}
+                keyboardType="default"
                 onChangeText={handleStudentIdChange}
                 placeholder="학번을 입력하세요"
                 placeholderTextColor="#818181"

@@ -217,7 +217,8 @@ export function normalizeVolunteerPost(data: ApiVolunteer): VolunteerPost {
       0,
     creditHours,
     status: normalizeVolunteerStatus(data.status, end.date),
-    participationCondition: getPrimaryTag(data.summaryTags),
+    participationCondition:
+      getPrimaryTag(data.summaryTags) || getPrimaryTag(normalizeVolunteerKeywords(data)),
     cancelPolicy: '취소 불가',
     guideTitle: '모집 안내',
     description: data.description ?? data.content ?? '',
