@@ -196,7 +196,7 @@ export function VolunteerPostDetailScreen() {
             <DetailRow icon="location" text={post.location} />
             <DetailRow
               icon="calendar"
-              text={`${formatDate(post.startDate)} ~ ${formatDate(post.endDate)}\n${getRepeatLabel(post)}`}
+              text={`${formatDate(post.startDate)} ~ ${formatDate(post.endDate)}`}
             />
             <DetailRow icon="clock" text={`${post.startTime} ~ ${post.endTime}`} />
 
@@ -238,10 +238,6 @@ function formatCredit(hours: number) {
 function formatDate(date: string) {
   const [year, month, day] = date.split('-');
   return `${year}.${month}.${day}`;
-}
-
-function getRepeatLabel(post: VolunteerPost) {
-  return post.id === 101 ? '(매주 금요일)' : '';
 }
 
 function isAppliedStatus(status: VolunteerPost['applicationStatus']) {
@@ -389,9 +385,9 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#222222',
     fontFamily: 'Pretendard',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    lineHeight: 27,
+    lineHeight: 25,
   },
   thinDivider: {
     height: 1,
