@@ -196,7 +196,7 @@ export function VolunteerPostDetailScreen() {
             <DetailRow icon="location" text={post.location} />
             <DetailRow
               icon="calendar"
-              text={`${formatDate(post.startDate)} ~ ${formatDate(post.endDate)}\n${getRepeatLabel(post)}`}
+              text={`${formatDate(post.startDate)} ~ ${formatDate(post.endDate)}`}
             />
             <DetailRow icon="clock" text={`${post.startTime} ~ ${post.endTime}`} />
 
@@ -234,7 +234,7 @@ function DetailRow({ icon, text }: { icon: 'calendar' | 'clock' | 'location'; te
 function InfoIcon({ type }: { type: 'calendar' | 'clock' | 'location' }) {
   if (type === 'location') {
     return (
-      <Svg height={13} viewBox="0 0 12 14" width={11}>
+      <Svg height={14} viewBox="0 0 12 14" width={12}>
         <Path d="M6 13s4-4.16 4-7A4 4 0 1 0 2 6c0 2.84 4 7 4 7Z" fill="#555555" />
         <Circle cx={6} cy={6} fill="#FFFFFF" r={1.5} />
       </Svg>
@@ -243,7 +243,7 @@ function InfoIcon({ type }: { type: 'calendar' | 'clock' | 'location' }) {
 
   if (type === 'calendar') {
     return (
-      <Svg height={12} viewBox="0 0 14 14" width={12}>
+      <Svg height={13} viewBox="0 0 14 14" width={13}>
         <Path
           d="M2 3h10v9H2V3Zm2-2v3m6-3v3M2 6h10"
           fill="none"
@@ -255,7 +255,7 @@ function InfoIcon({ type }: { type: 'calendar' | 'clock' | 'location' }) {
   }
 
   return (
-    <Svg height={12} viewBox="0 0 14 14" width={12}>
+    <Svg height={13} viewBox="0 0 14 14" width={13}>
       <Circle cx={7} cy={7} fill="#555555" r={6} />
       <Path d="M7 3.5V7l2.5 1.5" fill="none" stroke="#FFFFFF" strokeLinecap="round" strokeWidth={1.3} />
     </Svg>
@@ -269,10 +269,6 @@ function formatCredit(hours: number) {
 function formatDate(date: string) {
   const [year, month, day] = date.split('-');
   return `${year}.${month}.${day}`;
-}
-
-function getRepeatLabel(post: VolunteerPost) {
-  return post.id === 101 ? '(매주 금요일)' : '';
 }
 
 function isAppliedStatus(status: VolunteerPost['applicationStatus']) {
@@ -420,9 +416,9 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#222222',
     fontFamily: 'Pretendard',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    lineHeight: 27,
+    lineHeight: 25,
   },
   thinDivider: {
     height: 1,
