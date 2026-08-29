@@ -1,6 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet, Text, View } from "react-native";
 
+import { PostingInfoIcon, type PostingInfoIconType } from "@/components/common/posting-info-icon";
 import { Colors } from "@/features/admin/constants/theme";
 import type { Posting } from "@/features/admin/types";
 
@@ -14,10 +15,10 @@ export function PostingSummary({ posting }: { posting: Posting }) {
       <Text style={styles.hours}>봉사 인정 시간 : 회차당 {posting.hoursPerSession}시간 인정</Text>
 
       <View style={styles.detailBlock}>
-        <InfoRow icon="location-outline" text={posting.location || "장소 정보 없음"} />
-        <InfoRow icon="calendar-clear-outline" text={posting.period || "일자 정보 없음"} />
+        <InfoRow icon="location" text={posting.location || "장소 정보 없음"} />
+        <InfoRow icon="calendar" text={posting.period || "일자 정보 없음"} />
         <InfoRow
-          icon="time-outline"
+          icon="clock"
           text={
             posting.startTime || posting.endTime
               ? `${posting.startTime || "--:--"} ~ ${posting.endTime || "--:--"}`
@@ -49,10 +50,22 @@ export function PostingSummary({ posting }: { posting: Posting }) {
   );
 }
 
-function InfoRow({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
+function InfoRow({
+  icon,
+  text,
+}: {
+  icon: PostingInfoIconType | keyof typeof Ionicons.glyphMap;
+  text: string;
+}) {
   return (
     <View style={styles.infoRow}>
-      <Ionicons name={icon} size={17} color={Colors.textSecondary} />
+      <View style={styles.infoIconSlot}>
+        {icon === "location" || icon === "calendar" || icon === "clock" ? (
+          <PostingInfoIcon type={icon} color={Colors.textSecondary} />
+        ) : (
+          <Ionicons name={icon} size={16} color={Colors.textSecondary} />
+        )}
+      </View>
       <Text style={styles.infoText}>{text}</Text>
     </View>
   );
@@ -81,6 +94,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+  },
+  infoIconSlot: {
+    width: 16,
+    alignItems: "center",
   },
   infoText: {
     flex: 1,

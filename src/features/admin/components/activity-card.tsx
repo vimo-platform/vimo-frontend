@@ -2,6 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { PostingInfoIcon, type PostingInfoIconType } from "@/components/common/posting-info-icon";
 import { Colors } from "@/features/admin/constants/theme";
 
 type Props = {
@@ -32,18 +33,20 @@ export function ActivityCard({
         {right ?? (onPress ? <Ionicons name="chevron-forward" size={20} color={Colors.text} /> : null)}
       </Pressable>
       <Text style={styles.hours}>봉사 인정 시간 : 회차당 {hoursPerSession}시간 인정</Text>
-      <InfoRow icon="location-outline" text={location} />
-      <InfoRow icon="calendar-clear-outline" text={period} />
-      <InfoRow icon="time-outline" text={time} />
+      <InfoRow icon="location" text={location} />
+      <InfoRow icon="calendar" text={period} />
+      <InfoRow icon="clock" text={time} />
       {children}
     </View>
   );
 }
 
-function InfoRow({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
+function InfoRow({ icon, text }: { icon: PostingInfoIconType; text: string }) {
   return (
     <View style={styles.infoRow}>
-      <Ionicons name={icon} size={15} color={Colors.textSecondary} />
+      <View style={styles.infoIconSlot}>
+        <PostingInfoIcon type={icon} color={Colors.textSecondary} />
+      </View>
       <Text style={styles.infoText}>{text}</Text>
     </View>
   );
@@ -79,6 +82,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     marginBottom: 6,
+  },
+  infoIconSlot: {
+    width: 16,
+    alignItems: "center",
   },
   infoText: {
     fontSize: 13,
