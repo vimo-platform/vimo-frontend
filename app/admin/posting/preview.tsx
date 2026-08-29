@@ -5,6 +5,7 @@ import { Stack, router, useFocusEffect } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 
 import { isAuthError } from "@/api/client";
+import { PostingInfoIcon, type PostingInfoIconType } from "@/components/common/posting-info-icon";
 import { getWorkingPosting, setWorkingPosting, upsertPosting } from "@/features/admin/api/postings";
 import { Colors } from "@/features/admin/constants/theme";
 import type { Posting } from "@/features/admin/types";
@@ -95,16 +96,16 @@ export default function PostingPreviewScreen() {
         options={{
           title: "공고 작성",
           headerTitleAlign: "center",
-          headerRight: () => (
-            <Pressable disabled={isSaving} onPress={saveDraft} hitSlop={10}>
-              <DraftSaveIcon />
-            </Pressable>
-          ),
         }}
       />
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>{posting.title}</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>{posting.title}</Text>
+          <Pressable disabled={isSaving} onPress={saveDraft} hitSlop={10}>
+            <DraftSaveIcon />
+          </Pressable>
+        </View>
         <Text style={styles.hours}>
           봉사 인정 시간 : 회차당 {posting.hoursPerSession}시간 인정
         </Text>
@@ -128,12 +129,12 @@ export default function PostingPreviewScreen() {
 
         <View style={styles.thickDivider} />
 
-        <InfoRow icon="location-outline" text={posting.location} />
+        <InfoRow icon="location" text={posting.location} />
         <InfoRow
-          icon="calendar-clear-outline"
+          icon="calendar"
           text={posting.period}
         />
-        <InfoRow icon="time-outline" text={`${posting.startTime} ~ ${posting.endTime}`} />
+        <InfoRow icon="clock" text={`${posting.startTime} ~ ${posting.endTime}`} />
 
         <View style={styles.thinDivider} />
 
@@ -248,10 +249,12 @@ function DraftSaveIcon() {
   );
 }
 
-function InfoRow({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
+function InfoRow({ icon, text }: { icon: PostingInfoIconType; text: string }) {
   return (
     <View style={styles.infoRow}>
-      <Ionicons name={icon} size={18} color={Colors.text} />
+      <View style={styles.infoIconSlot}>
+        <PostingInfoIcon type={icon} />
+      </View>
       <Text style={styles.infoText}>{text}</Text>
     </View>
   );
@@ -266,7 +269,14 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 40,
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
   title: {
+    flex: 1,
     fontSize: 22,
     fontWeight: "800",
     color: Colors.text,
@@ -320,6 +330,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     marginBottom: 14,
+  },
+  infoIconSlot: {
+    width: 16,
+    alignItems: "center",
   },
   infoText: {
     flex: 1,

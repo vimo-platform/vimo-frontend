@@ -9,10 +9,10 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Path } from 'react-native-svg';
 
 import { AllLine, Button, HeartImage } from '@/components/common';
 import { BackIcon } from '@/components/common/icons';
+import { PostingInfoIcon } from '@/components/common/posting-info-icon';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
 
 import { createVolunteerApplication, getVolunteerPostById, updateVolunteerFavorite } from './api';
@@ -224,41 +224,10 @@ function DetailRow({ icon, text }: { icon: 'calendar' | 'clock' | 'location'; te
   return (
     <View style={styles.detailRow}>
       <View style={styles.detailIconSlot}>
-        <InfoIcon type={icon} />
+        <PostingInfoIcon type={icon} />
       </View>
       <Text style={styles.detailText}>{text}</Text>
     </View>
-  );
-}
-
-function InfoIcon({ type }: { type: 'calendar' | 'clock' | 'location' }) {
-  if (type === 'location') {
-    return (
-      <Svg height={13} viewBox="0 0 12 14" width={11}>
-        <Path d="M6 13s4-4.16 4-7A4 4 0 1 0 2 6c0 2.84 4 7 4 7Z" fill="#555555" />
-        <Circle cx={6} cy={6} fill="#FFFFFF" r={1.5} />
-      </Svg>
-    );
-  }
-
-  if (type === 'calendar') {
-    return (
-      <Svg height={12} viewBox="0 0 14 14" width={12}>
-        <Path
-          d="M2 3h10v9H2V3Zm2-2v3m6-3v3M2 6h10"
-          fill="none"
-          stroke="#555555"
-          strokeWidth={1.7}
-        />
-      </Svg>
-    );
-  }
-
-  return (
-    <Svg height={12} viewBox="0 0 14 14" width={12}>
-      <Circle cx={7} cy={7} fill="#555555" r={6} />
-      <Path d="M7 3.5V7l2.5 1.5" fill="none" stroke="#FFFFFF" strokeLinecap="round" strokeWidth={1.3} />
-    </Svg>
   );
 }
 
