@@ -3,7 +3,7 @@ export type VolunteerSchedule = {
   postId?: number;
   startDate: string;
   endDate: string;
-  repeatWeekday: number;
+  repeatWeekday?: number;
   startTime: string;
   endTime: string;
   status: 'before' | 'active';

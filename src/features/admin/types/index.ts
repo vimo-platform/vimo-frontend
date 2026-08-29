@@ -10,7 +10,7 @@ export type PostingStatus = 'open' | 'closed' | 'draft';
 // selection: 관리자가 선발, fcfs: 선착순 모집
 export type RecruitType = 'selection' | 'fcfs';
 
-export type Gender = '전체' | '남성' | '여성' | '?꾩껜' | '?⑥꽦' | '?ъ꽦';
+export type Gender = '전체' | '남성' | '여성';
 
 export type Posting = {
   id: string;

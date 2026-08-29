@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalDimmed: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(34, 34, 34, 0.5)',
   },
   modalDialog: {

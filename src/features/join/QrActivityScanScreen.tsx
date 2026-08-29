@@ -30,12 +30,11 @@ type ScanStep = 'loading' | 'camera' | 'failed';
 export function QrActivityScanScreen() {
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, 393);
-  const { postId, type, startTime, endTime, mockResult } = useLocalSearchParams<{
+  const { postId, type, startTime, endTime } = useLocalSearchParams<{
     postId?: string;
     type?: 'start' | 'end';
     startTime?: string;
     endTime?: string;
-    mockResult?: 'success' | 'fail';
   }>();
   const [step, setStep] = useState<ScanStep>('loading');
   const [permission, requestPermission] = useCameraPermissions();
@@ -76,13 +75,6 @@ export function QrActivityScanScreen() {
 
     setIsVerifying(true);
 
-    if (mockResult === 'fail') {
-      setIsVerifying(false);
-      setFailureMessage(null);
-      setStep('failed');
-      return;
-    }
-
     let capturedImageUri: string | undefined;
 
     try {
@@ -95,15 +87,12 @@ export function QrActivityScanScreen() {
         capturedImageUri = picture.uri;
       }
 
-      const verification =
-        mockResult === 'success'
-          ? { verified: true }
-          : await verifyQrCapture({
-              imageUri: capturedImageUri,
-              postId,
-              scanType,
-              detectedQrValue,
-            });
+      const verification = await verifyQrCapture({
+        imageUri: capturedImageUri,
+        postId,
+        scanType,
+        detectedQrValue,
+      });
 
       if (!verification.verified) {
         // 서버가 내려준 구체적 실패 사유(QR 만료, 타입 불일치, 미승인, 이미 체크인 등)를 노출

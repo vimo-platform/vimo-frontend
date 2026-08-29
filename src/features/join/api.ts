@@ -1,6 +1,5 @@
 import { apiRequest } from '@/api/client';
 
-import { mockVolunteerSchedules } from './mock';
 import type { VolunteerSchedule } from './types';
 
 type UserVolunteerResponse = {
@@ -13,18 +12,7 @@ type UserVolunteerResponse = {
   applicationStatus: 'APPROVED' | 'ATTENDED' | 'COMPLETED' | string;
 };
 
-type UserApplicationResponse = Partial<UserVolunteerResponse> & {
-  status?: string;
-  volunteer?: Partial<UserVolunteerResponse>;
-};
-
-const USE_MOCK_SCHEDULES = process.env.EXPO_PUBLIC_USE_MOCK_SCHEDULES === 'true';
-
 export async function getMyVolunteerSchedules(): Promise<VolunteerSchedule[]> {
-  if (USE_MOCK_SCHEDULES) {
-    return mockVolunteerSchedules;
-  }
-
   let data: UserVolunteerResponse[] = [];
 
   try {
@@ -34,10 +22,10 @@ export async function getMyVolunteerSchedules(): Promise<VolunteerSchedule[]> {
   }
 
   try {
-    const applications = await apiRequest<UserApplicationResponse[]>('/api/v1/users/me/applications');
+    const applications = await apiRequest<UserVolunteerResponse[]>('/api/v1/users/me/applications');
     data = mergeScheduleSources(data, applications);
   } catch {
-    // The participation endpoint may already include every in-progress schedule.
+    // 참여 예정 조회 API가 현재 진행 중인 일정까지 포함하면 추가 병합 없이 그대로 사용한다.
   }
 
   return data
@@ -47,7 +35,7 @@ export async function getMyVolunteerSchedules(): Promise<VolunteerSchedule[]> {
 
 function mergeScheduleSources(
   schedules: UserVolunteerResponse[],
-  applications: UserApplicationResponse[],
+  applications: UserVolunteerResponse[],
 ) {
   const scheduleMap = new Map<number, UserVolunteerResponse>();
 
@@ -55,50 +43,14 @@ function mergeScheduleSources(
     scheduleMap.set(schedule.volunteerId, schedule);
   });
 
-  applications
-    .map(normalizeApplicationSchedule)
-    .filter((item): item is UserVolunteerResponse => Boolean(item))
-    .forEach((application) => {
-      scheduleMap.set(application.volunteerId, {
-        ...scheduleMap.get(application.volunteerId),
-        ...application,
-      });
+  applications.forEach((application) => {
+    scheduleMap.set(application.volunteerId, {
+      ...scheduleMap.get(application.volunteerId),
+      ...application,
     });
+  });
 
   return Array.from(scheduleMap.values());
-}
-
-function normalizeApplicationSchedule(
-  application: UserApplicationResponse,
-): UserVolunteerResponse | null {
-  const volunteer = application.volunteer ?? {};
-  const volunteerId = application.volunteerId ?? volunteer.volunteerId;
-  const startAt = application.startAt ?? volunteer.startAt;
-  const endAt = application.endAt ?? volunteer.endAt;
-  const title = application.title ?? volunteer.title;
-  const location = application.location ?? volunteer.location;
-  const applicationStatus = application.applicationStatus ?? application.status;
-
-  if (
-    typeof volunteerId !== 'number' ||
-    !startAt ||
-    !endAt ||
-    !title ||
-    !location ||
-    !applicationStatus
-  ) {
-    return null;
-  }
-
-  return {
-    volunteerId,
-    title,
-    category: application.category ?? volunteer.category ?? '',
-    location,
-    startAt,
-    endAt,
-    applicationStatus,
-  };
 }
 
 function mapScheduleResponse(item: UserVolunteerResponse): VolunteerSchedule {
@@ -111,7 +63,7 @@ function mapScheduleResponse(item: UserVolunteerResponse): VolunteerSchedule {
     postId: item.volunteerId,
     startDate: start.date,
     endDate: end.date,
-    repeatWeekday: new Date(item.startAt).getDay(),
+    repeatWeekday: getRepeatWeekday(item.startAt, item.endAt),
     startTime: start.time,
     endTime: end.time,
     status: item.applicationStatus === 'ATTENDED' ? 'active' : 'before',
@@ -129,6 +81,19 @@ function parseDateTime(value: string) {
     date,
     time: time.slice(0, 5),
   };
+}
+
+function getRepeatWeekday(startAt: string, endAt: string) {
+  const start = new Date(startAt);
+  const end = new Date(endAt);
+
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
+    return undefined;
+  }
+
+  const days = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+  return days >= 8 ? start.getDay() : undefined;
 }
 
 function getCreditHours(startAt: string, endAt: string) {

@@ -878,7 +878,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rejectedModalDimmed: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(34, 34, 34, 0.62)',
   },
   rejectedModalDialog: {

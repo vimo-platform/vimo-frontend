@@ -13,11 +13,17 @@ import {
   View,
   type ImageSourcePropType,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, {
   Circle,
   Path,
   SvgUri,
 } from 'react-native-svg';
+
+// 온보딩 화면은 393x852(상단 안전영역 59) 프레임 기준 고정 좌표로 배치되어 있다.
+// 이보다 노치/다이내믹 아일랜드가 큰 기기에서 상단이 상태바에 겹쳐 잘리므로,
+// 디자인 기준(59)을 초과하는 만큼만 콘텐츠를 아래로 내린다.
+const DESIGN_TOP_INSET = 59;
 
 import {
   isUserAuthenticatedInCurrentSession,
@@ -81,6 +87,8 @@ const ONBOARDING_PAGES = [
 type OnboardingVisual = (typeof ONBOARDING_PAGES)[number]['visual'];
 
 export default function OnboardingScreen() {
+  const insets = useSafeAreaInsets();
+  const extraTopInset = Math.max(insets.top - DESIGN_TOP_INSET, 0);
   const [pageIndex, setPageIndex] = useState(0);
   const canShowOnboarding = isUserAuthenticatedInCurrentSession();
   const currentPage = ONBOARDING_PAGES[pageIndex];
@@ -111,7 +119,7 @@ export default function OnboardingScreen() {
     <View style={styles.safeArea}>
       <StatusBar style="dark" />
       <LinearGradient colors={['#F8F8FA', '#FFFFFF', '#F5F5F7']} style={styles.screen}>
-        <View style={styles.content}>
+        <View style={[styles.content, { paddingTop: extraTopInset }]}>
           {currentPage.visual === 'welcome' ? <WelcomeBackground /> : null}
           {currentPage.visual === 'volunteer-management' ? <ManagementBackground /> : null}
           {currentPage.visual === 'participation' ? <ParticipationBackground /> : null}

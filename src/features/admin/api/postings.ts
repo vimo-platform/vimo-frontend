@@ -1,6 +1,5 @@
 import { apiRequest } from '@/api/client';
 import { getCurrentUser } from '@/storage/auth-storage';
-import { initialPostings } from '@/features/admin/data/mock-postings';
 import type { Posting, PostingStatus, RecruitType } from '@/features/admin/types';
 
 type ApiLocalTime =
@@ -19,12 +18,14 @@ type ApiAdminVolunteer = {
   title?: string;
   content?: string;
   category?: string;
+  selectedCategories?: string[];
   summaryTags?: string[];
   startAt?: string;
   endAt?: string;
   volunteerDate?: string;
   startDate?: string;
   endDate?: string;
+  dayOfWeek?: number;
   startTime?: ApiLocalTime;
   endTime?: ApiLocalTime;
   location?: string;
@@ -48,8 +49,6 @@ type ApiAiDraftResponse = {
 let postings: Posting[] = [];
 let workingPosting: Posting | null = null;
 
-const USE_MOCK_ADMIN_API = process.env.EXPO_PUBLIC_USE_MOCK_ADMIN_API === 'true';
-
 export function setWorkingPosting(posting: Posting): void {
   workingPosting = posting;
 }
@@ -63,11 +62,6 @@ export function newPostingId(): string {
 }
 
 export async function fetchMyPostings(): Promise<Posting[]> {
-  if (USE_MOCK_ADMIN_API) {
-    postings = [...initialPostings];
-    return [...postings].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-  }
-
   try {
     const data = await apiRequest<ApiAdminVolunteer[]>('/api/v1/admin/volunteers');
     const detailedData = await Promise.all(
@@ -94,10 +88,6 @@ export async function fetchMyPostings(): Promise<Posting[]> {
 }
 
 export async function fetchPosting(id: string): Promise<Posting | undefined> {
-  if (USE_MOCK_ADMIN_API) {
-    return initialPostings.find((p) => p.id === id);
-  }
-
   if (isNumericId(id)) {
     const data = await apiRequest<ApiAdminVolunteer>(`/api/v1/admin/volunteers/${id}`);
     const posting = normalizePosting(data);
@@ -109,18 +99,13 @@ export async function fetchPosting(id: string): Promise<Posting | undefined> {
 }
 
 export async function upsertPosting(posting: Posting): Promise<void> {
-  if (USE_MOCK_ADMIN_API) {
-    postings = upsertLocalPosting(postings, posting);
-    return;
-  }
-
   const savedPosting = await savePostingToApi(posting);
   postings = upsertLocalPosting(postings, savedPosting);
   workingPosting = savedPosting;
 }
 
 export async function closePosting(id: string): Promise<void> {
-  if (USE_MOCK_ADMIN_API || !isNumericId(id)) {
+  if (!isNumericId(id)) {
     postings = postings.map((p) => (p.id === id ? { ...p, status: 'closed' } : p));
     return;
   }
@@ -133,7 +118,7 @@ export async function closePosting(id: string): Promise<void> {
 }
 
 export async function deletePosting(id: string): Promise<void> {
-  if (USE_MOCK_ADMIN_API || !isNumericId(id)) {
+  if (!isNumericId(id)) {
     postings = postings.filter((p) => p.id !== id);
     return;
   }
@@ -145,28 +130,16 @@ export async function deletePosting(id: string): Promise<void> {
 export async function generatePostingDraft(
   memo: string,
 ): Promise<{ title: string; description: string; keywords: string[]; category?: string }> {
-  if (!USE_MOCK_ADMIN_API) {
-    const data = await apiRequest<ApiAiDraftResponse>('/api/v1/admin/volunteers/ai', {
-      method: 'POST',
-      body: JSON.stringify({ content: memo }),
-    });
-
-    return {
-      title: data.titleDraft ?? memo.trim().split('\n')[0].slice(0, 24),
-      description: data.contentDraft ?? memo.trim(),
-      keywords: data.summaryTagsDraft ?? (data.categoryDraft ? [data.categoryDraft] : []),
-      category: data.categoryDraft,
-    };
-  }
-
-  await new Promise((resolve) => setTimeout(resolve, 1800));
-  const summary = memo.trim().split('\n')[0].slice(0, 24);
+  const data = await apiRequest<ApiAiDraftResponse>('/api/v1/admin/volunteers/ai', {
+    method: 'POST',
+    body: JSON.stringify({ content: memo }),
+  });
 
   return {
-    title: summary,
-    description: `${memo.trim()}\n\n전문적인 활동 경험이 없어도 참여 가능하며, 책임감 있게 활동 가능한 재학생의 많은 지원 바랍니다.`,
-    keywords: ['정기 참여 가능자 우대', '성실 근무자 우대'],
-    category: undefined,
+    title: data.titleDraft ?? memo.trim().split('\n')[0].slice(0, 24),
+    description: data.contentDraft ?? memo.trim(),
+    keywords: data.summaryTagsDraft ?? [],
+    category: data.categoryDraft,
   };
 }
 
@@ -185,10 +158,8 @@ async function savePostingToApi(posting: Posting) {
     return normalizePosting(published);
   }
 
-  const path = getSavePath(posting);
-  const method = getSaveMethod(posting);
-  const data = await apiRequest<ApiAdminVolunteer>(path, {
-    method,
+  const data = await apiRequest<ApiAdminVolunteer>(getSavePath(posting), {
+    method: getSaveMethod(posting),
     body: JSON.stringify(await toApiVolunteerPayload(posting)),
   });
 
@@ -236,7 +207,7 @@ function getSaveMethod(posting: Posting) {
 
 async function toApiVolunteerPayload(posting: Posting) {
   const currentUser = await getCurrentUser();
-  const category = posting.category ?? getValidCategory(posting.tags);
+  const category = toApiCategory(posting.category) ?? toApiCategory(posting.tags[0]);
 
   return {
     studentId: currentUser?.studentId ?? 'admin01',
@@ -257,12 +228,10 @@ async function toApiVolunteerPayload(posting: Posting) {
   };
 }
 
-// 앱 값 -> 백엔드 enum (백엔드는 SELECTION / FIRST_COME 만 허용)
 function toApiRecruitType(type?: RecruitType) {
   return type === 'fcfs' ? 'FIRST_COME' : 'SELECTION';
 }
 
-// 앱 값 -> 백엔드 enum (ALL / MALE / FEMALE)
 function toApiGender(gender?: string) {
   if (gender === '남성') {
     return 'MALE';
@@ -297,11 +266,9 @@ function normalizePosting(data: ApiAdminVolunteer): Posting {
     applicants: data.applicantCount ?? 0,
     hoursPerSession,
     status: normalizePostingStatus(data.status, end.date),
-    recruitType: normalizeRecruitType(
-      data.recruitType ?? data.recruitmentType ?? data.applicationType,
-    ),
-    category: data.category,
-    tags: data.summaryTags ?? (data.category ? [data.category] : []),
+    recruitType: normalizeRecruitType(data.recruitType ?? data.recruitmentType ?? data.applicationType),
+    category: categoryToLabel(data.category),
+    tags: data.summaryTags ?? [],
     gender: normalizeGender(data.targetGender),
     createdAt: start.date || new Date().toISOString().slice(0, 10),
   };
@@ -323,32 +290,8 @@ function normalizePostingStatus(status?: string, endDate?: string): PostingStatu
   return 'open';
 }
 
-function isPastDate(date?: string) {
-  if (!date) {
-    return false;
-  }
-
-  const today = new Date();
-  const todayKey = [
-    today.getFullYear(),
-    String(today.getMonth() + 1).padStart(2, '0'),
-    String(today.getDate()).padStart(2, '0'),
-  ].join('-');
-
-  return date < todayKey;
-}
-
 function normalizeRecruitType(type?: string) {
-  if (
-    type === 'fcfs' ||
-    type === 'FCFS' ||
-    type === 'FIRST_COME' ||
-    type === 'FIRST_COME_FIRST_SERVED'
-  ) {
-    return 'fcfs';
-  }
-
-  return 'selection';
+  return type === 'FIRST_COME' || type === 'fcfs' || type === 'FCFS' ? 'fcfs' : 'selection';
 }
 
 function normalizeGender(gender?: string) {
@@ -365,6 +308,48 @@ function normalizeGender(gender?: string) {
   }
 
   return undefined;
+}
+
+const CATEGORY_TO_API: Record<string, string> = {
+  행사운영: 'EVENT_OPERATION',
+  '현장 관리': 'FIELD_MANAGEMENT',
+  행정지원: 'ADMIN_SUPPORT',
+  디자인: 'DESIGN',
+  멘토링: 'MENTORING',
+  환경보호: 'ENVIRONMENT',
+  미디어: 'MEDIA',
+  IT: 'IT',
+  '수업 보조': 'CLASS_SUPPORT',
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  EVENT_OPERATION: '행사운영',
+  FIELD_MANAGEMENT: '현장 관리',
+  ADMIN_SUPPORT: '행정지원',
+  ADMINISTRATIVE_SUPPORT: '행정지원',
+  DESIGN: '디자인',
+  MENTORING: '멘토링',
+  ENVIRONMENT: '환경보호',
+  MEDIA: '미디어',
+  IT: 'IT',
+  CLASS_SUPPORT: '수업 보조',
+  CLASS_ASSISTANCE: '수업 보조',
+};
+
+function toApiCategory(category?: string) {
+  if (!category) {
+    return undefined;
+  }
+
+  return CATEGORY_TO_API[category] ?? (CATEGORY_LABELS[category] ? category : undefined);
+}
+
+function categoryToLabel(category?: string) {
+  if (!category) {
+    return undefined;
+  }
+
+  return CATEGORY_LABELS[category] ?? category;
 }
 
 function parsePostingDate(period: string) {
@@ -447,7 +432,7 @@ function getCreditHoursFromParts(
     return 0;
   }
 
-  // 회차(하루) 기준 인정 시간: 여러 날에 걸친 공고여도 시작일의 시작~종료 시간으로 계산
+  // 회차 기준 인정 시간: 여러 날짜에 걸친 공고도 하루의 시작~종료 시간으로 계산한다.
   const start = new Date(`${startDate}T${startTime}:00`).getTime();
   const end = new Date(`${startDate}T${endTime}:00`).getTime();
 
@@ -456,22 +441,6 @@ function getCreditHoursFromParts(
   }
 
   return Math.round((end - start) / (1000 * 60 * 60));
-}
-
-const VALID_CATEGORIES = new Set([
-  '행사운영',
-  '현장 관리',
-  '행정지원',
-  '디자인',
-  '멘토링',
-  '환경보호',
-  'IT',
-  '미디어',
-  '수업 보조',
-]);
-
-function getValidCategory(tags: string[]) {
-  return tags.find((tag) => VALID_CATEGORIES.has(tag.trim()))?.trim();
 }
 
 function formatApiTime(time?: ApiLocalTime) {
@@ -487,6 +456,21 @@ function formatApiTime(time?: ApiLocalTime) {
   const minute = String(time.minute ?? 0).padStart(2, '0');
 
   return `${hour}:${minute}`;
+}
+
+function isPastDate(date?: string) {
+  if (!date) {
+    return false;
+  }
+
+  const today = new Date();
+  const todayKey = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-');
+
+  return date < todayKey;
 }
 
 function isNumericId(id: string) {

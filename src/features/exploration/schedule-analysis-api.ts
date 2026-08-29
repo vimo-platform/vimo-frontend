@@ -23,9 +23,6 @@ export type ScheduleAnalysisResult = {
   timetableImageUrl?: string | null;
 };
 
-const USE_MOCK_SCHEDULE_ANALYSIS =
-  process.env.EXPO_PUBLIC_USE_MOCK_SCHEDULE_ANALYSIS === 'true';
-
 export const TIMETABLE_KEYWORD_OPTIONS = [
   '행사운영',
   '현장 관리',
@@ -39,10 +36,6 @@ export const TIMETABLE_KEYWORD_OPTIONS = [
 ];
 
 export async function analyzeScheduleImage(imageUri?: string): Promise<ScheduleAnalysisResult> {
-  if (USE_MOCK_SCHEDULE_ANALYSIS) {
-    return getMockScheduleAnalysisResult();
-  }
-
   if (!imageUri) {
     return getEmptyScheduleAnalysisResult();
   }
@@ -61,7 +54,7 @@ export async function saveScheduleAnalysisSelection(
   analysis: ScheduleAnalysisResult | null,
   selectedKeywords: string[],
 ) {
-  if (USE_MOCK_SCHEDULE_ANALYSIS || !analysis) {
+  if (!analysis) {
     return;
   }
 
@@ -72,10 +65,6 @@ export async function saveScheduleAnalysisSelection(
 }
 
 export async function getSavedScheduleAnalysis(): Promise<ScheduleAnalysisResult | null> {
-  if (USE_MOCK_SCHEDULE_ANALYSIS) {
-    return null;
-  }
-
   try {
     const setup = await getMySetup();
     const hasSavedSetup =
@@ -122,7 +111,7 @@ function normalizeScheduleAnalysisResult(
 
   return {
     classes,
-    scheduleItems: analysis.scheduleItems ?? mapClassesToScheduleItems(classes),
+    scheduleItems: mapClassesToScheduleItems(classes),
     freeTimeSlots,
     recommendedKeywords: TIMETABLE_KEYWORD_OPTIONS,
   };
@@ -158,71 +147,6 @@ function formatApiTime(time: ApiLocalTime) {
   const minute = String(time.minute ?? 0).padStart(2, '0');
 
   return `${hour}:${minute}`;
-}
-
-async function getMockScheduleAnalysisResult(): Promise<ScheduleAnalysisResult> {
-  await new Promise((resolve) => setTimeout(resolve, 2200));
-
-  return {
-    classes: [
-      {
-        dayOfWeek: 'MONDAY',
-        subjectName: '골프',
-        startTime: '12:00:00',
-        endTime: '15:00:00',
-      },
-      {
-        dayOfWeek: 'TUESDAY',
-        subjectName: '서비스리빙디자인',
-        startTime: '12:00:00',
-        endTime: '14:00:00',
-      },
-      {
-        dayOfWeek: 'TUESDAY',
-        subjectName: '서비스디자인',
-        startTime: '15:00:00',
-        endTime: '17:00:00',
-      },
-      {
-        dayOfWeek: 'WEDNESDAY',
-        subjectName: '비주얼콘텐츠디자인',
-        startTime: '12:00:00',
-        endTime: '14:00:00',
-      },
-      {
-        dayOfWeek: 'THURSDAY',
-        subjectName: '국제비즈니스영어',
-        startTime: '09:00:00',
-        endTime: '11:50:00',
-      },
-      {
-        dayOfWeek: 'THURSDAY',
-        subjectName: '알바',
-        startTime: '12:00:00',
-        endTime: '17:00:00',
-      },
-      {
-        dayOfWeek: 'FRIDAY',
-        subjectName: '알바',
-        startTime: '09:00:00',
-        endTime: '17:00:00',
-      },
-      {
-        dayOfWeek: 'SATURDAY',
-        subjectName: '알바',
-        startTime: '09:00:00',
-        endTime: '17:00:00',
-      },
-    ],
-    scheduleItems: [
-      { time: '09:00 - 11:50', title: '국제비즈니스영어' },
-      { time: '15:30 - 16:30', title: '인성과 학문 III' },
-    ],
-    freeTimeSlots: [
-      { dayOfWeek: 'MONDAY', startTime: '11:50:00', endTime: '15:30:00' },
-    ],
-    recommendedKeywords: TIMETABLE_KEYWORD_OPTIONS,
-  };
 }
 
 function getEmptyScheduleAnalysisResult(): ScheduleAnalysisResult {

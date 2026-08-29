@@ -35,10 +35,6 @@ export type TimetableAnalysisResponse = {
   freeTimeSlots?: FreeTimeSlot[];
   classes?: ClassSlot[];
   keywords?: string[];
-  scheduleItems?: TimetableScheduleItem[];
-  interestKeywords?: string[];
-  recommendedKeywords?: string[];
-  selectedRecommendationKeywords?: string[];
 };
 
 export type UserSetupPayload = {
@@ -62,18 +58,4 @@ export function saveUserSetup(payload: UserSetupPayload) {
 
 export function getMySetup() {
   return apiRequest<TimetableSetupResponse>('/api/v1/users/me/setup');
-}
-
-export function reanalyzeMyTimetable(formData: FormData) {
-  return apiRequest<TimetableAnalysisResponse>('/api/v1/users/me/timetables/re-ocr', {
-    method: 'POST',
-    body: formData,
-  });
-}
-
-export function updateMyKeywords(keywords: string[]) {
-  return apiRequest<void>('/api/v1/users/me/keywords', {
-    method: 'PATCH',
-    body: JSON.stringify({ keywords }),
-  });
 }
