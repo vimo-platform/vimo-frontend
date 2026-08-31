@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AllLine, TopBar } from '@/components/common';
+import { AllLine, HeartImage, TopBar } from '@/components/common';
 import { UserGnb } from '@/components/navigation/user-gnb';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
 
@@ -105,6 +105,7 @@ export function ApplicationStatusScreen() {
           showsVerticalScrollIndicator={false}>
           <StatusSection
             count={appliedCards.length}
+            icon="dot"
             items={appliedCards}
             title="지원"
             onCancelPress={setCancelTarget}
@@ -115,6 +116,7 @@ export function ApplicationStatusScreen() {
 
           <StatusSection
             count={favoriteCards.length}
+            icon="heart"
             items={favoriteCards}
             title="찜"
             onCancelPress={setCancelTarget}
@@ -273,6 +275,7 @@ function formatDate(date: string) {
 
 function StatusSection({
   count,
+  icon,
   items,
   title,
   onCancelPress,
@@ -280,6 +283,7 @@ function StatusSection({
   onToggleLike,
 }: {
   count: number;
+  icon: 'dot' | 'heart';
   items: ApplicationVolunteerCardType[];
   title: string;
   onCancelPress: (item: ApplicationVolunteerCardType) => void;
@@ -289,7 +293,11 @@ function StatusSection({
   return (
     <View style={styles.section}>
       <View style={styles.sectionTitleRow}>
-        <View style={styles.sectionDot} />
+        {icon === 'heart' ? (
+          <HeartImage filled style={styles.sectionHeart} />
+        ) : (
+          <View style={styles.sectionDot} />
+        )}
         <Text style={styles.sectionTitle}>
           {title} {count}
         </Text>
@@ -346,6 +354,10 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: '#111111',
+  },
+  sectionHeart: {
+    width: 10,
+    height: 9,
   },
   sectionTitle: {
     color: '#111111',

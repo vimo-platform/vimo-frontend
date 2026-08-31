@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AllLine, Button, HeartImage } from '@/components/common';
 import { BackIcon } from '@/components/common/icons';
-import { PostingInfoIcon } from '@/components/common/posting-info-icon';
+import { VolunteerInfoIcon } from '@/components/common/volunteer-info-icon';
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
 
 import { createVolunteerApplication, getVolunteerPostById, updateVolunteerFavorite } from './api';
@@ -224,7 +224,7 @@ function DetailRow({ icon, text }: { icon: 'calendar' | 'clock' | 'location'; te
   return (
     <View style={styles.detailRow}>
       <View style={styles.detailIconSlot}>
-        <PostingInfoIcon type={icon} />
+        <VolunteerInfoIcon type={icon} />
       </View>
       <Text style={styles.detailText}>{text}</Text>
     </View>

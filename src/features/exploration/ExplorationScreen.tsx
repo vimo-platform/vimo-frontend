@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, SvgUri } from 'react-native-svg';
 
 import { AllLine, HeartImage } from '@/components/common';
+import { VolunteerInfoIcon } from '@/components/common/volunteer-info-icon';
 import { UserGnb } from '@/components/navigation/user-gnb';
 import { isUserAuthenticatedInCurrentSession } from '@/storage/auth-storage';
 import type { ApiLocalTime, FreeTimeSlot } from '@/api/user-setup';
@@ -25,11 +26,11 @@ const HEART_TAB_ICON_ACTIVE = require('../../../assets/icons/Huge-icon2.svg');
 
 type StatusFilter = 'all' | 'recruiting' | 'closed' | 'favorite';
 
-const STATUS_TABS: { key: StatusFilter; label: string; width: number }[] = [
-  { key: 'all', label: '전체', width: 46 },
-  { key: 'recruiting', label: '모집 중', width: 61 },
-  { key: 'closed', label: '모집 마감', width: 73 },
-  { key: 'favorite', label: '찜', width: 46 },
+const STATUS_TABS: { key: StatusFilter; label: string }[] = [
+  { key: 'all', label: '전체' },
+  { key: 'recruiting', label: '모집 중' },
+  { key: 'closed', label: '모집 마감' },
+  { key: 'favorite', label: '찜' },
 ];
 
 export function ExplorationScreen() {
@@ -233,7 +234,6 @@ function StatusTabs({ value, onChange }: { value: StatusFilter; onChange: (value
             accessibilityState={{ selected: active }}
             style={({ pressed }) => [
               styles.tabItem,
-              { width: tab.width },
               active && styles.tabItemActive,
               pressed && styles.pressed,
             ]}
@@ -561,7 +561,7 @@ function VolunteerPostCard({
 function DetailRow({ icon, text }: { icon: 'calendar' | 'clock' | 'location'; text: string }) {
   return (
     <View style={styles.detailRow}>
-      <InfoIcon type={icon} />
+      <VolunteerInfoIcon type={icon} />
       <Text numberOfLines={1} style={styles.detailText}>
         {text}
       </Text>
@@ -620,37 +620,6 @@ function TinyChevronIcon() {
         strokeLinejoin="round"
         strokeWidth={0.6}
       />
-    </Svg>
-  );
-}
-
-function InfoIcon({ type }: { type: 'calendar' | 'clock' | 'location' }) {
-  if (type === 'location') {
-    return (
-      <Svg height={11} viewBox="0 0 12 14" width={9}>
-        <Path d="M6 13s4-4.16 4-7A4 4 0 1 0 2 6c0 2.84 4 7 4 7Z" fill="#818181" />
-        <Circle cx={6} cy={6} fill="#FFFFFF" r={1.5} />
-      </Svg>
-    );
-  }
-
-  if (type === 'calendar') {
-    return (
-      <Svg height={10} viewBox="0 0 14 14" width={9}>
-        <Path
-          d="M2 3h10v9H2V3Zm2-2v3m6-3v3M2 6h10"
-          fill="none"
-          stroke="#818181"
-          strokeWidth={1.5}
-        />
-      </Svg>
-    );
-  }
-
-  return (
-    <Svg height={9} viewBox="0 0 14 14" width={9}>
-      <Circle cx={7} cy={7} fill="#818181" r={6} />
-      <Path d="M7 3.5V7l2.5 1.5" fill="none" stroke="#FFFFFF" strokeLinecap="round" strokeWidth={1.3} />
     </Svg>
   );
 }
@@ -916,18 +885,26 @@ const styles = StyleSheet.create({
     paddingBottom: 34,
     backgroundColor: '#F9F9FB',
   },
-  tabBar: { width: 316, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
+  tabBar: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 20,
+  },
   tabItem: {
-    height: 32,
+    minHeight: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 11,
+    paddingVertical: 6,
     borderRadius: 12,
     backgroundColor: '#E8E8E8',
   },
   tabItemActive: { backgroundColor: '#222222' },
-  tabLabel: { color: '#818181', fontFamily: 'Pretendard', fontSize: 13, fontWeight: '600' },
+  tabLabel: { color: '#818181', fontFamily: 'Pretendard', fontSize: 14, fontWeight: '600', lineHeight: 20 },
   tabLabelActive: { color: '#F5F5F5' },
-  heartTabIcon: { width: 22, height: 22 },
+  heartTabIcon: { width: 24, height: 24 },
   cardList: {
     gap: 16,
     alignItems: 'center',
@@ -941,11 +918,11 @@ const styles = StyleSheet.create({
     paddingLeft: 31,
     borderRadius: 25,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#F5F5F5',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowColor: '#000000',
+    shadowOffset: { width: 5, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 19,
+    elevation: 6,
   },
   cardPressed: {
     opacity: 0.94,

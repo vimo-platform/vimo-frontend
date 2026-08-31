@@ -1,5 +1,6 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   Pressable,
@@ -12,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AllLine } from '@/components/common';
+import { MonthPickerModal } from '@/components/calendar/MonthPickerModal';
 import { UserGnb } from '@/components/navigation/user-gnb';
 import {
   getCurrentUser,
@@ -40,7 +42,7 @@ import {
   toDateKey,
 } from './utils/date';
 
-const WEEK_COUNT = 53;
+const WEEK_COUNT = 157;
 const INITIAL_WEEK_INDEX = Math.floor(WEEK_COUNT / 2);
 const WEEKDAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 
@@ -48,6 +50,7 @@ export function JoinScreen() {
   const today = useMemo(() => startOfDay(new Date()), []);
   const [selectedDate, setSelectedDate] = useState(today);
   const [displayedMonth, setDisplayedMonth] = useState(today);
+  const [isMonthPickerVisible, setIsMonthPickerVisible] = useState(false);
   const [userName, setUserName] = useState('사용자');
   const [schedules, setSchedules] = useState<VolunteerSchedule[]>([]);
   const { qrSuccess, time, postId, startTime } = useLocalSearchParams<{
@@ -91,6 +94,35 @@ export function JoinScreen() {
   const qrSuccessTime = typeof time === 'string' && time ? time : '11:30';
   const qrActivityStartTime =
     typeof startTime === 'string' && startTime ? startTime : '11:30';
+  const loadSchedules = useCallback(() => {
+    getMyVolunteerSchedules()
+      .then(setSchedules)
+      .catch(() => {
+        setSchedules([]);
+      });
+  }, []);
+  const scrollToDate = useCallback(
+    (date: Date) => {
+      const targetKey = toDateKey(date);
+      const weekIndex = weeks.findIndex((week) =>
+        week.some((day) => toDateKey(day) === targetKey),
+      );
+
+      if (weekIndex >= 0) {
+        weekListRef.current?.scrollToIndex({ index: weekIndex, animated: true });
+      }
+    },
+    [weeks],
+  );
+  const selectMonth = useCallback(
+    (date: Date) => {
+      const nextDate = startOfDay(date);
+      setSelectedDate(nextDate);
+      setDisplayedMonth(nextDate);
+      scrollToDate(nextDate);
+    },
+    [scrollToDate],
+  );
 
   useEffect(() => {
     if (!isUserAuthenticatedInCurrentSession()) {
@@ -104,12 +136,14 @@ export function JoinScreen() {
       }
     });
 
-    getMyVolunteerSchedules()
-      .then(setSchedules)
-      .catch(() => {
-        setSchedules([]);
-      });
-  }, []);
+    loadSchedules();
+  }, [loadSchedules]);
+
+  useEffect(() => {
+    if (qrSuccess === 'start' || qrSuccess === 'end') {
+      loadSchedules();
+    }
+  }, [loadSchedules, qrSuccess]);
 
   useEffect(() => {
     if (qrSuccess !== 'end') {
@@ -174,9 +208,17 @@ export function JoinScreen() {
               </Text>
               <JoinStatusButton onPress={() => router.push('/application-status')} />
             </View>
-            <Text style={styles.month}>
-              {displayedMonth.getFullYear()}년 {displayedMonth.getMonth() + 1}월
-            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="월 선택"
+              hitSlop={8}
+              style={styles.monthRow}
+              onPress={() => setIsMonthPickerVisible(true)}>
+              <Text style={styles.month}>
+                {displayedMonth.getFullYear()}년 {displayedMonth.getMonth() + 1}월
+              </Text>
+              <Ionicons name="caret-down" size={14} color="#111111" />
+            </Pressable>
           </View>
 
           <FlatList
@@ -229,6 +271,14 @@ export function JoinScreen() {
             )}
             showsHorizontalScrollIndicator={false}
             style={styles.calendarList}
+            onScrollToIndexFailed={(info) => {
+              setTimeout(() => {
+                weekListRef.current?.scrollToIndex({
+                  index: info.index,
+                  animated: true,
+                });
+              }, 50);
+            }}
             onMomentumScrollEnd={(event) => {
               const pageIndex = Math.round(event.nativeEvent.contentOffset.x / contentWidth);
               const visibleWeek = weeks[pageIndex];
@@ -265,6 +315,12 @@ export function JoinScreen() {
             onConfirm={() => router.replace('/explore')}
           />
         ) : null}
+        <MonthPickerModal
+          selectedDate={selectedDate}
+          visible={isMonthPickerVisible}
+          onClose={() => setIsMonthPickerVisible(false)}
+          onSelectMonth={selectMonth}
+        />
       </View>
     </SafeAreaView>
   );
@@ -306,8 +362,14 @@ const styles = StyleSheet.create({
   userName: {
     fontWeight: '500',
   },
-  month: {
+  monthRow: {
     marginTop: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 8,
+  },
+  month: {
     color: '#111111',
     fontFamily: 'Pretendard',
     fontSize: 20,

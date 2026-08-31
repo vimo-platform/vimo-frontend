@@ -1,10 +1,12 @@
-import { useMemo, useRef } from "react";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
+import { MonthPickerModal } from "@/components/calendar/MonthPickerModal";
 import { Colors } from "@/features/admin/constants/theme";
 
 const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
-const WEEK_COUNT = 53;
+const WEEK_COUNT = 157;
 const INITIAL_WEEK_INDEX = Math.floor(WEEK_COUNT / 2);
 
 /** Date -> "YYYY-MM-DD" */
@@ -27,6 +29,10 @@ function startOfWeek(date: Date) {
   return start;
 }
 
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
 type Props = {
   selected: Date;
   onSelect: (date: Date) => void;
@@ -37,6 +43,7 @@ type Props = {
 export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
   const { width } = useWindowDimensions();
   const calendarWidth = Math.max(320, width - 40);
+  const [isMonthPickerVisible, setIsMonthPickerVisible] = useState(false);
   const listRef = useRef<FlatList<Date[]>>(null);
   const weeks = useMemo(() => {
     const currentWeekStart = startOfWeek(new Date());
@@ -46,12 +53,42 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
       ),
     );
   }, []);
+  const scrollToDate = useCallback(
+    (date: Date) => {
+      const targetKey = dateKey(date);
+      const weekIndex = weeks.findIndex((week) =>
+        week.some((day) => dateKey(day) === targetKey),
+      );
+
+      if (weekIndex >= 0) {
+        listRef.current?.scrollToIndex({ index: weekIndex, animated: true });
+      }
+    },
+    [weeks],
+  );
+  const selectMonth = useCallback(
+    (date: Date) => {
+      const nextDate = startOfDay(date);
+      onSelect(nextDate);
+      scrollToDate(nextDate);
+    },
+    [onSelect, scrollToDate],
+  );
 
   return (
     <View>
-      <Text style={styles.month}>
-        {selected.getFullYear()}년 {selected.getMonth() + 1}월
-      </Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="월 선택"
+        hitSlop={8}
+        style={styles.monthRow}
+        onPress={() => setIsMonthPickerVisible(true)}
+      >
+        <Text style={styles.month}>
+          {selected.getFullYear()}년 {selected.getMonth() + 1}월
+        </Text>
+        <Ionicons name="caret-down" size={14} color={Colors.text} />
+      </Pressable>
       <FlatList
         ref={listRef}
         data={weeks}
@@ -86,6 +123,14 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
         )}
         showsHorizontalScrollIndicator={false}
         style={styles.weekList}
+        onScrollToIndexFailed={(info) => {
+          setTimeout(() => {
+            listRef.current?.scrollToIndex({
+              index: info.index,
+              animated: true,
+            });
+          }, 50);
+        }}
         onMomentumScrollEnd={(event) => {
           const pageIndex = Math.round(event.nativeEvent.contentOffset.x / calendarWidth);
           const visibleWeek = weeks[pageIndex];
@@ -97,16 +142,28 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
           onSelect(visibleWeek[selectedWeekdayIndex] ?? visibleWeek[3]);
         }}
       />
+      <MonthPickerModal
+        selectedDate={selected}
+        visible={isMonthPickerVisible}
+        onClose={() => setIsMonthPickerVisible(false)}
+        onSelectMonth={selectMonth}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  monthRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 8,
+    marginBottom: 16,
+  },
   month: {
     fontSize: 22,
     fontWeight: "800",
     color: Colors.text,
-    marginBottom: 16,
   },
   weekList: {
     flexGrow: 0,

@@ -1,8 +1,8 @@
 import { Href, router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
 
 import { ParticipationButton, StatusBadge } from '@/components/common';
+import { VolunteerInfoIcon } from '@/components/common/volunteer-info-icon';
 
 import type { VolunteerSchedule } from '../types';
 import {
@@ -114,52 +114,12 @@ function DetailRow({
   text: string;
 }) {
   return (
-    <View style={styles.detailRow}>
-      <InfoIcon type={icon} />
+      <View style={styles.detailRow}>
+      <VolunteerInfoIcon type={icon} />
       <Text numberOfLines={1} style={styles.detailText}>
         {text}
       </Text>
     </View>
-  );
-}
-
-function InfoIcon({ type }: { type: 'calendar' | 'clock' | 'location' }) {
-  if (type === 'location') {
-    return (
-      <Svg height={12} viewBox="0 0 12 14" width={12}>
-        <Path
-          d="M6 13s4-4.16 4-7A4 4 0 1 0 2 6c0 2.84 4 7 4 7Z"
-          fill="#818181"
-        />
-        <Circle cx={6} cy={6} fill="#FFFFFF" r={1.5} />
-      </Svg>
-    );
-  }
-
-  if (type === 'calendar') {
-    return (
-      <Svg height={12} viewBox="0 0 14 14" width={12}>
-        <Path
-          d="M2 3h10v9H2V3Zm2-2v3m6-3v3M2 6h10"
-          fill="none"
-          stroke="#818181"
-          strokeWidth={1.5}
-        />
-      </Svg>
-    );
-  }
-
-  return (
-    <Svg height={12} viewBox="0 0 14 14" width={12}>
-      <Circle cx={7} cy={7} fill="#818181" r={6} />
-      <Path
-        d="M7 3.5V7l2.5 1.5"
-        fill="none"
-        stroke="#FFFFFF"
-        strokeLinecap="round"
-        strokeWidth={1.3}
-      />
-    </Svg>
   );
 }
 
@@ -202,6 +162,11 @@ const styles = StyleSheet.create({
     borderColor: '#9C9C9C',
     borderRadius: 21,
     backgroundColor: '#FFFFFF',
+    shadowColor: '#000000',
+    shadowOffset: { width: 5, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 19,
+    elevation: 6,
   },
   cardContent: {
     marginHorizontal: -26,

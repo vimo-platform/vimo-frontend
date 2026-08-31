@@ -9,7 +9,6 @@ import { Button } from '@/components/common';
 const VECTOR_BACK = require('../../../../assets/images/explorationimg/Vector 8.svg');
 const LEFT_LOOP = require('../../../../assets/images/explorationimg/image 79.svg');
 const RIGHT_LOOP = require('../../../../assets/images/explorationimg/image 78.svg');
-const WITH_FRIEND = require('../../../../assets/images/explorationimg/withfriend.png');
 
 type VolunteerResultTone = 'light' | 'dark';
 
@@ -54,7 +53,7 @@ export function VolunteerResultScreen({
         </View>
 
         <Pressable accessibilityRole="button" hitSlop={8} style={styles.friendButton}>
-          <Image resizeMode="stretch" source={WITH_FRIEND} style={styles.friendImage} />
+          <Text style={styles.friendText}>친구에게 같이하자고 하기</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -178,11 +177,17 @@ const styles = StyleSheet.create({
     left: 109,
     width: 175,
     height: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
     zIndex: 3,
   },
-  friendImage: {
-    width: 175,
-    height: 16.3,
+  friendText: {
+    color: '#818181',
+    fontFamily: 'Pretendard',
+    fontSize: 15,
+    fontWeight: '600',
+    lineHeight: 22,
+    textAlign: 'center',
     opacity: 0.6,
   },
 });

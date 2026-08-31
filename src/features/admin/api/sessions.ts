@@ -18,10 +18,19 @@ export async function generateSessionQr(
 }
 
 export async function fetchSessions(date: string): Promise<Session[]> {
+  const data = await fetchSessionCalendar(date);
+
+  return data.sessions;
+}
+
+export async function fetchSessionCalendar(
+  date: string,
+): Promise<{ sessions: Session[]; markedDates: string[] }> {
   try {
     const postings = await fetchMyPostings();
-    const sessionsForDate = postings.filter(
-      (posting) => posting.status !== 'draft' && isDateWithinPeriod(date, posting.period),
+    const activePostings = postings.filter((posting) => posting.status !== 'draft');
+    const sessionsForDate = activePostings.filter((posting) =>
+      isDateWithinPeriod(date, posting.period),
     );
     const detailedPostings = await Promise.all(
       sessionsForDate.map(async (posting) => {
@@ -31,9 +40,12 @@ export async function fetchSessions(date: string): Promise<Session[]> {
       }),
     );
 
-    return detailedPostings.map(postingToSession);
+    return {
+      sessions: detailedPostings.map(postingToSession),
+      markedDates: getMarkedDates(activePostings),
+    };
   } catch {
-    return [];
+    return { sessions: [], markedDates: [] };
   }
 }
 
@@ -65,4 +77,57 @@ function isDateWithinPeriod(date: string, period: string): boolean {
   const end = endRaw || start;
 
   return start <= date && date <= end;
+}
+
+function getMarkedDates(postings: Posting[]) {
+  const keys = new Set<string>();
+
+  postings.forEach((posting) => {
+    getPeriodDateKeys(posting.period).forEach((key) => keys.add(key));
+  });
+
+  return [...keys];
+}
+
+function getPeriodDateKeys(period: string) {
+  const [start = '', endRaw = ''] = period.split('~').map((part) => part.trim());
+
+  if (!start) {
+    return [];
+  }
+
+  const end = endRaw || start;
+  const startDate = parseDateKey(start);
+  const endDate = parseDateKey(end);
+
+  if (!startDate || !endDate || startDate > endDate) {
+    return [];
+  }
+
+  const keys: string[] = [];
+  const cursor = new Date(startDate);
+
+  while (cursor <= endDate && keys.length < 370) {
+    keys.push(toDateKey(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return keys;
+}
+
+function parseDateKey(value: string) {
+  const [year, month, day] = value.match(/\d+/g) ?? [];
+
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  return new Date(Number(year), Number(month) - 1, Number(day));
+}
+
+function toDateKey(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${date.getFullYear()}-${month}-${day}`;
 }

@@ -4,7 +4,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 
-import { fetchSessions } from "@/features/admin/api/sessions";
+import { fetchSessionCalendar } from "@/features/admin/api/sessions";
 import { SessionStatusBadge } from "@/features/admin/components/figma";
 import { SessionCard } from "@/features/admin/components/session-card";
 import { WeekCalendar, dateKey } from "@/features/admin/components/week-calendar";
@@ -16,10 +16,14 @@ export default function FieldQrScreen() {
   const { user } = useAuth();
   const [selected, setSelected] = useState(new Date());
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [markedDates, setMarkedDates] = useState<string[]>([]);
 
   useFocusEffect(
     useCallback(() => {
-      fetchSessions(dateKey(selected)).then(setSessions);
+      fetchSessionCalendar(dateKey(selected)).then((data) => {
+        setSessions(data.sessions);
+        setMarkedDates(data.markedDates);
+      });
     }, [selected]),
   );
 
@@ -42,7 +46,7 @@ export default function FieldQrScreen() {
         <WeekCalendar
           selected={selected}
           onSelect={setSelected}
-          marked={[dateKey(new Date())]}
+          marked={markedDates}
         />
 
         <View style={styles.divider} />

@@ -32,7 +32,7 @@ export function getScheduleOccurrenceKeys(schedule: VolunteerSchedule) {
   let cursor = parseDateKey(schedule.startDate);
 
   while (cursor <= endDate) {
-    if (cursor.getDay() === schedule.repeatWeekday) {
+    if (schedule.repeatWeekday === undefined || cursor.getDay() === schedule.repeatWeekday) {
       keys.push(toDateKey(cursor));
     }
 
@@ -47,7 +47,11 @@ export function isScheduleOnDate(schedule: VolunteerSchedule, date: Date) {
   const startDate = parseDateKey(schedule.startDate);
   const endDate = parseDateKey(schedule.endDate);
 
-  return target >= startDate && target <= endDate && target.getDay() === schedule.repeatWeekday;
+  if (target < startDate || target > endDate) {
+    return false;
+  }
+
+  return schedule.repeatWeekday === undefined || target.getDay() === schedule.repeatWeekday;
 }
 
 export function formatTimeRange(startTime: string, endTime: string, withSpaces: boolean) {

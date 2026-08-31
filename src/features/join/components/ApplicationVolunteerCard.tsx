@@ -1,7 +1,6 @@
 ﻿import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
-
 import { HeartImage } from '@/components/common';
+import { VolunteerInfoIcon } from '@/components/common/volunteer-info-icon';
 
 import type { ApplicationVolunteerCard as ApplicationVolunteerCardType } from '../application-status-types';
 
@@ -161,51 +160,11 @@ function DetailRow({
 }) {
   return (
     <View style={styles.detailRow}>
-      <InfoIcon type={icon} />
+      <VolunteerInfoIcon type={icon} />
       <Text numberOfLines={1} style={styles.detailText}>
         {text}
       </Text>
     </View>
-  );
-}
-
-function InfoIcon({ type }: { type: 'calendar' | 'clock' | 'location' }) {
-  if (type === 'location') {
-    return (
-      <Svg height={11} viewBox="0 0 12 14" width={9}>
-        <Path
-          d="M6 13s4-4.16 4-7A4 4 0 1 0 2 6c0 2.84 4 7 4 7Z"
-          fill="#818181"
-        />
-        <Circle cx={6} cy={6} fill="#FFFFFF" r={1.5} />
-      </Svg>
-    );
-  }
-
-  if (type === 'calendar') {
-    return (
-      <Svg height={10} viewBox="0 0 14 14" width={9}>
-        <Path
-          d="M2 3h10v9H2V3Zm2-2v3m6-3v3M2 6h10"
-          fill="none"
-          stroke="#818181"
-          strokeWidth={1.5}
-        />
-      </Svg>
-    );
-  }
-
-  return (
-    <Svg height={9} viewBox="0 0 14 14" width={9}>
-      <Circle cx={7} cy={7} fill="#818181" r={6} />
-      <Path
-        d="M7 3.5V7l2.5 1.5"
-        fill="none"
-        stroke="#FFFFFF"
-        strokeLinecap="round"
-        strokeWidth={1.3}
-      />
-    </Svg>
   );
 }
 
@@ -222,14 +181,14 @@ const styles = StyleSheet.create({
     paddingLeft: 31,
     borderRadius: 25,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#F5F5F5',
+    shadowColor: '#000000',
     shadowOffset: {
-      width: 0,
-      height: 0,
+      width: 5,
+      height: 6,
     },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 19,
+    elevation: 6,
   },
   cardHeader: {
     minHeight: 19,

@@ -2,6 +2,7 @@ import { Asset } from 'expo-asset';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import {
@@ -24,6 +25,7 @@ import Svg, {
 // 이보다 노치/다이내믹 아일랜드가 큰 기기에서 상단이 상태바에 겹쳐 잘리므로,
 // 디자인 기준(59)을 초과하는 만큼만 콘텐츠를 아래로 내린다.
 const DESIGN_TOP_INSET = 59;
+const ONBOARDING_BACKGROUND = '#F9F9FB';
 
 import {
   isUserAuthenticatedInCurrentSession,
@@ -101,6 +103,10 @@ export default function OnboardingScreen() {
     }
   }, []);
 
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(ONBOARDING_BACKGROUND);
+  }, []);
+
   const handleNext = async () => {
     if (!isLastPage) {
       setPageIndex((current) => current + 1);
@@ -117,8 +123,8 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.safeArea}>
-      <StatusBar style="dark" />
-      <LinearGradient colors={['#F8F8FA', '#FFFFFF', '#F5F5F7']} style={styles.screen}>
+      <StatusBar backgroundColor="transparent" style="dark" translucent />
+      <LinearGradient colors={[ONBOARDING_BACKGROUND, '#FFFFFF', '#F5F5F7']} style={styles.screen}>
         <View style={[styles.content, { paddingTop: extraTopInset }]}>
           {currentPage.visual === 'welcome' ? <WelcomeBackground /> : null}
           {currentPage.visual === 'volunteer-management' ? <ManagementBackground /> : null}
@@ -390,7 +396,7 @@ function ChartIcon() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8F8FA',
+    backgroundColor: ONBOARDING_BACKGROUND,
   },
   screen: {
     flex: 1,
@@ -405,7 +411,7 @@ const styles = StyleSheet.create({
   copyGroup: {
     left: 40,
     position: 'absolute',
-    top: 70,
+    top: 114,
     width: 313,
   },
   title: {
@@ -431,7 +437,7 @@ const styles = StyleSheet.create({
   welcomeCopy: {
     left: 40,
     position: 'absolute',
-    top: 70,
+    top: 114,
     width: 260,
   },
   backgroundRightAsset: {
@@ -439,14 +445,14 @@ const styles = StyleSheet.create({
     height: 335,
     position: 'absolute',
     right: 0,
-    top: 135,
+    top: 179,
   },
   backgroundLeftAsset: {
     width: 234,
     height: 334,
     left: 0,
     position: 'absolute',
-    top: 72,
+    top: 20,
   },
   backgroundGlowFullAsset: {
     width: 393,
@@ -484,21 +490,21 @@ const styles = StyleSheet.create({
     height: 359,
     left: 0,
     position: 'absolute',
-    top: 233,
+    top: 277,
     width: '100%',
   },
   managementStage: {
     height: 383,
     left: 0,
     position: 'absolute',
-    top: 222,
+    top: 266,
     width: '100%',
   },
   participationStage: {
     height: 331,
     left: 0,
     position: 'absolute',
-    top: 216,
+    top: 260,
     width: '100%',
   },
   participationOuterOrbit: {
@@ -652,7 +658,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     maxWidth: 393,
     position: 'absolute',
-    top: 656,
+    top: 700,
     width: '100%',
   },
   pagination: {

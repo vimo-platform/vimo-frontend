@@ -25,6 +25,7 @@ import { setScheduleRecommendationFromAnalysis } from './customized-recommendati
 const EXPLORATION_STAR = require('../../../assets/images/explorationimg/explorationstar.png');
 
 type AnalysisPhase = 'loading' | 'complete';
+const PENDING_PROGRESS_LIMIT = 92;
 
 export function ScheduleAnalysisScreen() {
   useUserSessionGuard();
@@ -72,7 +73,11 @@ export function ScheduleAnalysisScreen() {
 
     const timer = setInterval(() => {
       setProgress((current) => {
-        const next = Math.min(100, current + (analysis ? 8 : 4));
+        const step =
+          current < 45 ? 2.2 : current < 70 ? 1.15 : current < 86 ? 0.55 : 0.18;
+        const next = analysis
+          ? Math.min(100, current + 7)
+          : Math.min(PENDING_PROGRESS_LIMIT, current + step);
 
         if (next >= 100 && analysis) {
           clearInterval(timer);
@@ -81,7 +86,7 @@ export function ScheduleAnalysisScreen() {
 
         return next;
       });
-    }, 120);
+    }, 160);
 
     return () => {
       clearInterval(timer);
