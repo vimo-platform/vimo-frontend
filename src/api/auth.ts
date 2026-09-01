@@ -12,6 +12,13 @@ type UserProfileResponse = {
   name: string;
 };
 
+// 관리자 전용 프로필. 소속(organization)은 여기에만 내려온다. (ADMIN 토큰 필요)
+type AdminProfileResponse = {
+  adminId: string;
+  name: string;
+  organization: string | null;
+};
+
 type JwtPayload = {
   sub?: string;
   role?: string;
@@ -50,6 +57,41 @@ export function login(requestBody: LoginRequest): Promise<LoginResponse> {
   ).then(async (loginResponse) => {
     const tokenPayload = decodeJwtPayload(loginResponse.accessToken);
     const tokenRole = tokenPayload?.role;
+
+    // 관리자 소속은 학생용 프로필이 아니라 /api/v1/admin/profile 에만 있다.
+    if (tokenRole === 'ADMIN') {
+      try {
+        const adminProfile = await apiRequest<AdminProfileResponse>(
+          '/api/v1/admin/profile',
+          undefined,
+          loginResponse.accessToken,
+        );
+
+        return {
+          ...loginResponse,
+          user: {
+            id: 0,
+            studentId: adminProfile.adminId,
+            name: adminProfile.name,
+            role: 'ADMIN',
+            organization: adminProfile.organization,
+          },
+        };
+      } catch {
+        const adminId = tokenPayload?.sub ?? requestBody.studentId;
+
+        return {
+          ...loginResponse,
+          user: {
+            id: 0,
+            studentId: adminId,
+            name: adminId,
+            role: 'ADMIN',
+            organization: null,
+          },
+        };
+      }
+    }
 
     try {
       const profile = await apiRequest<UserProfileResponse>(

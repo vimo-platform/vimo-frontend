@@ -9,6 +9,8 @@ export type AuthUser = {
   email?: string;
   name?: string;
   role?: 'USER' | 'STUDENT' | 'ADMIN' | string;
+  // 관리자 소속. /api/v1/admin/profile 의 organization. 미지정 계정은 null.
+  organization?: string | null;
 };
 
 export type LoginResponse = {

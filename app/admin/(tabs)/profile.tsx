@@ -72,11 +72,13 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
-        <View style={styles.chipWrap}>
-          <View style={styles.chip}>
-            <Text style={styles.chipText}>{user.department}</Text>
+        {user.organization ? (
+          <View style={styles.chipWrap}>
+            <View style={styles.chip}>
+              <Text style={styles.chipText}>{user.organization}</Text>
+            </View>
           </View>
-        </View>
+        ) : null}
       </View>
 
       {/* 내 정보 */}

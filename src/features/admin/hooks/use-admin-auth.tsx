@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+ import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 import type { User } from '@/features/admin/types';
 import { getCurrentUser } from '@/storage/auth-storage';
@@ -7,7 +7,7 @@ const fallbackUser: User = {
   id: 'admin',
   name: '관리자',
   email: '',
-  department: '',
+  organization: null,
 };
 
 const AuthContext = createContext<{ user: User }>({ user: fallbackUser });
@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: String(currentUser.id),
         name: currentUser.name?.trim() || currentUser.studentId || '관리자',
         email: currentUser.email ?? '',
-        department: '',
+        organization: currentUser.organization ?? null,
       });
     });
 

@@ -2,7 +2,8 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  department: string;
+  // 관리자 소속. 미지정 계정은 null (칩 숨김 처리).
+  organization: string | null;
 };
 
 export type PostingStatus = 'open' | 'closed' | 'draft';
