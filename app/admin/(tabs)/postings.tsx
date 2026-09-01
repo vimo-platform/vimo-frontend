@@ -1,7 +1,9 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import Svg, { Path } from "react-native-svg";
 
 import { deletePosting, fetchMyPostings, setWorkingPosting } from "@/features/admin/api/postings";
 import { ActivityCard } from "@/features/admin/components/activity-card";
@@ -22,6 +24,18 @@ const STATUS_LABEL: Record<PostingStatus, string> = {
   closed: "모집 마감",
   draft: "임시저장",
 };
+
+// assets/icons/delete.svg 를 옮긴 삭제 경고(삼각형 느낌표) 아이콘
+function DeleteWarningIcon({ size = 54 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 54 54" fill="none">
+      <Path
+        d="M19.6424 7.67813C22.8689 1.94062 31.1309 1.94062 34.3574 7.67813L49.5314 34.6916C52.6904 40.3178 48.6235 47.2635 42.1739 47.2635H11.8225C5.3729 47.2635 1.30939 40.3178 4.4684 34.6916L19.6424 7.67813ZM31.4144 9.33188C30.9743 8.54793 30.3334 7.89531 29.5576 7.44111C28.7817 6.98691 27.8989 6.7475 26.9999 6.7475C26.1009 6.7475 25.2181 6.98691 24.4422 7.44111C23.6664 7.89531 23.0255 8.54793 22.5854 9.33188L7.40802 36.3488C6.97577 37.1191 6.75262 37.9892 6.76073 38.8725C6.76884 39.7558 7.00793 40.6216 7.45425 41.3839C7.90057 42.1462 8.53859 42.7785 9.30491 43.2178C10.0712 43.6572 10.9392 43.8884 11.8225 43.8885H42.1739C43.0573 43.8884 43.9252 43.6572 44.6915 43.2178C45.4578 42.7785 46.0959 42.1462 46.5422 41.3839C46.9885 40.6216 47.2276 39.7558 47.2357 38.8725C47.2438 37.9892 47.0207 37.1191 46.5884 36.3488L31.4144 9.33188ZM26.9999 32.0625C27.6712 32.0625 28.3151 32.3292 28.7898 32.8039C29.2645 33.2786 29.5312 33.9224 29.5312 34.5938C29.5312 35.2651 29.2645 35.9089 28.7898 36.3836C28.3151 36.8583 27.6712 37.125 26.9999 37.125C26.3286 37.125 25.6847 36.8583 25.21 36.3836C24.7353 35.9089 24.4687 35.2651 24.4687 34.5938C24.4687 33.9224 24.7353 33.2786 25.21 32.8039C25.6847 32.3292 26.3286 32.0625 26.9999 32.0625ZM26.9999 16.875C27.4475 16.875 27.8767 17.0528 28.1931 17.3693C28.5096 17.6857 28.6874 18.115 28.6874 18.5625V27C28.6874 27.4476 28.5096 27.8768 28.1931 28.1933C27.8767 28.5097 27.4475 28.6875 26.9999 28.6875C26.5524 28.6875 26.1231 28.5097 25.8067 28.1933C25.4902 27.8768 25.3124 27.4476 25.3124 27V18.5625C25.3124 18.115 25.4902 17.6857 25.8067 17.3693C26.1231 17.0528 26.5524 16.875 26.9999 16.875Z"
+        fill="#E78483"
+      />
+    </Svg>
+  );
+}
 
 export default function PostingsScreen() {
   const params = useLocalSearchParams<{ filter?: FilterKey }>();
@@ -84,16 +98,24 @@ export default function PostingsScreen() {
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View style={styles.header}>
-            <View style={styles.searchBar}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="어떤 봉사를 찾으시나요?"
-                placeholderTextColor={Colors.textSecondary}
-                value={query}
-                onChangeText={setQuery}
-              />
-              <Ionicons name="search" size={20} color={Colors.textSecondary} />
-            </View>
+            <LinearGradient
+              colors={["#C1C1C1", "#FFFFFF", "#222222", "#EFEFEF"]}
+              locations={[0.15, 0.42, 0.73, 1]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.searchGradient}
+            >
+              <View style={styles.searchBar}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="어떤 봉사를 찾으시나요?"
+                  placeholderTextColor={Colors.textSecondary}
+                  value={query}
+                  onChangeText={setQuery}
+                />
+                <Ionicons name="search" size={20} color={Colors.textSecondary} />
+              </View>
+            </LinearGradient>
             <View style={styles.chips}>
               {FILTERS.map((f) => (
                 <Pressable
@@ -191,7 +213,7 @@ export default function PostingsScreen() {
       >
         <View style={styles.sheetOverlay}>
           <View style={styles.sheetCard}>
-            <Ionicons name="warning-outline" size={54} color="#E78483" />
+            <DeleteWarningIcon size={54} />
             <Text style={styles.dialogTitle}>공고를 삭제하시겠어요?</Text>
             <Text style={styles.dialogDesc}>삭제 후에는 복구할 수 없습니다.</Text>
             <View style={styles.dialogButtons}>
@@ -260,30 +282,37 @@ const styles = StyleSheet.create({
     gap: 14,
     marginBottom: 4,
   },
+  // 유저 공고페이지 검색창과 동일한 그라데이션 테두리
+  searchGradient: {
+    height: 52,
+    borderRadius: 26,
+    padding: 1.4,
+  },
   searchBar: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 24,
+    borderRadius: 25,
     paddingHorizontal: 18,
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 13,
+    height: "100%",
+    paddingVertical: 0,
     fontSize: 15,
     color: Colors.text,
   },
   chips: {
     flexDirection: "row",
-    gap: 8,
+    gap: 10,
   },
   chip: {
-    backgroundColor: "#EDEDED",
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    height: 34,
+    justifyContent: "center",
+    backgroundColor: "#E8E8E8",
+    borderRadius: 12,
+    paddingHorizontal: 16,
   },
   chipOn: {
     backgroundColor: "#222222",
@@ -291,7 +320,7 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.textSecondary,
+    color: "#818181",
   },
   chipTextOn: {
     color: Colors.white,

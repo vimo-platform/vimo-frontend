@@ -54,11 +54,16 @@ function InfoRow({ icon, text }: { icon: PostingInfoIconType; text: string }) {
 
 const styles = StyleSheet.create({
   card: {
+    // 유저 봉사카드(VolunteerPostCard)와 동일한 테두리/사이즈: 라운드 25 + 부드러운 그림자
     backgroundColor: Colors.card,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 20,
+    borderRadius: 25,
+    paddingVertical: 24,
+    paddingHorizontal: 22,
+    shadowColor: "#D9DCE1",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 3,
   },
   titleRow: {
     flexDirection: "row",
