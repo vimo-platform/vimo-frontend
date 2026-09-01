@@ -1,3 +1,4 @@
+import { LinearGradient as ProgressGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
@@ -35,24 +36,57 @@ function VimoLogo({ size = 120 }: { size?: number }) {
 }
 
 export function LoadingOverlay({ message }: { message: string }) {
-  const spin = useRef(new Animated.Value(0)).current;
+  // 로고를 살짝 좌우로 흔드는 sway 애니메이션.
+  const sway = useRef(new Animated.Value(0)).current;
+  // 진행률 값이 따로 없으므로 게이지 바를 자체적으로 채워지도록 애니메이션.
+  const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const animation = Animated.loop(
-      Animated.timing(spin, {
-        toValue: 1,
-        duration: 1400,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
+    const swayAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(sway, {
+          toValue: 1,
+          duration: 620,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(sway, {
+          toValue: -1,
+          duration: 1240,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(sway, {
+          toValue: 0,
+          duration: 620,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
     );
-    animation.start();
-    return () => animation.stop();
-  }, [spin]);
+    swayAnimation.start();
+    return () => swayAnimation.stop();
+  }, [sway]);
 
-  const rotate = spin.interpolate({
+  useEffect(() => {
+    const progressAnimation = Animated.timing(progress, {
+      toValue: 1,
+      duration: 3200,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    });
+    progressAnimation.start();
+    return () => progressAnimation.stop();
+  }, [progress]);
+
+  const rotate = sway.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ["-8deg", "8deg"],
+  });
+
+  const fillWidth = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
+    outputRange: ["8%", "90%"],
   });
 
   return (
@@ -61,6 +95,16 @@ export function LoadingOverlay({ message }: { message: string }) {
         <VimoLogo size={120} />
       </Animated.View>
       <Text style={styles.message}>{message}</Text>
+      <View style={styles.progressTrack}>
+        <Animated.View style={[styles.progressFillMask, { width: fillWidth }]}>
+          <ProgressGradient
+            colors={["#4D4D4D", "#BDBDBD"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.progressGradient}
+          />
+        </Animated.View>
+      </View>
     </View>
   );
 }
@@ -77,5 +121,22 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
     color: Colors.text,
+  },
+  progressTrack: {
+    width: 192,
+    height: 7,
+    borderRadius: 9,
+    backgroundColor: "#D9D9D9",
+    overflow: "hidden",
+  },
+  progressFillMask: {
+    height: 7,
+    borderTopLeftRadius: 9,
+    borderBottomLeftRadius: 9,
+    overflow: "hidden",
+  },
+  progressGradient: {
+    width: 192,
+    height: 7,
   },
 });

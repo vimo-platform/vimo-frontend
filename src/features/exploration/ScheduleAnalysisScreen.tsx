@@ -1,6 +1,9 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Animated,
+  Easing,
   Image,
   ScrollView,
   StyleSheet,
@@ -40,6 +43,44 @@ export function ScheduleAnalysisScreen() {
   const [analysis, setAnalysis] = useState<ScheduleAnalysisResult | null>(null);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [showKeywordError, setShowKeywordError] = useState(false);
+  // 로딩 중 별 로고를 살짝 좌우로 흔드는 sway 애니메이션.
+  const sway = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (phase !== 'loading') {
+      return;
+    }
+
+    const swayAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(sway, {
+          toValue: 1,
+          duration: 620,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(sway, {
+          toValue: -1,
+          duration: 1240,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(sway, {
+          toValue: 0,
+          duration: 620,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    swayAnimation.start();
+    return () => swayAnimation.stop();
+  }, [phase, sway]);
+
+  const starRotate = sway.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ['-8deg', '8deg'],
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -112,10 +153,21 @@ export function ScheduleAnalysisScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={[styles.loadingScreen, { width: contentWidth }]}>
           <View style={styles.loadingContent}>
-            <Image resizeMode="contain" source={EXPLORATION_STAR} style={styles.loadingStar} />
+            <Animated.Image
+              resizeMode="contain"
+              source={EXPLORATION_STAR}
+              style={[styles.loadingStar, { transform: [{ rotate: starRotate }] }]}
+            />
             <Text style={styles.loadingText}>시간표를 읽고 있어요...</Text>
             <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${progress}%` }]} />
+              <View style={[styles.progressFillMask, { width: `${progress}%` }]}>
+                <LinearGradient
+                  colors={['#4D4D4D', '#BDBDBD']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.progressGradient}
+                />
+              </View>
             </View>
           </View>
           <View style={styles.homeIndicator} />
@@ -440,11 +492,15 @@ const styles = StyleSheet.create({
     borderRadius: 9,
     backgroundColor: '#D9D9D9',
   },
-  progressFill: {
+  progressFillMask: {
     height: 7,
     borderTopLeftRadius: 9,
     borderBottomLeftRadius: 9,
-    backgroundColor: '#6C6C6C',
+    overflow: 'hidden',
+  },
+  progressGradient: {
+    width: 192,
+    height: 7,
   },
   homeIndicator: {
     position: 'absolute',
