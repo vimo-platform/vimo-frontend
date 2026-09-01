@@ -1,6 +1,16 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
-import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useFocusEffect } from "expo-router";
 
 import { fetchApprovals, setApprovalStatus } from "@/features/admin/api/approvals";
@@ -127,7 +137,10 @@ export default function ApprovalsScreen() {
       />
 
       <Modal visible={!!rejectId} transparent animationType="slide" onRequestClose={() => setRejectId(null)}>
-        <View style={styles.sheetBackdrop}>
+        <KeyboardAvoidingView
+          style={styles.sheetBackdrop}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
           <View style={styles.sheet}>
             <View style={styles.sheetHead}>
               <Text style={styles.sheetTitle}>
@@ -154,7 +167,7 @@ export default function ApprovalsScreen() {
               </Pressable>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={!!result} transparent animationType="fade" onRequestClose={() => setResult(null)}>
@@ -344,7 +357,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   reasonInput: {
-    minHeight: 150,
+    height: 150,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 12,
