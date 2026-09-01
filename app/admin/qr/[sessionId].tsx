@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import QRCode from "react-native-qrcode-svg";
 
@@ -72,6 +73,20 @@ export default function QrScreen() {
         options={{
           title: isStart ? "시작 QR 생성" : "종료 QR 생성",
           headerTitleAlign: "center",
+          // 기본 헤더 백버튼이 웹/일부 상황에서 동작하지 않아 명시적으로 뒤로가기 버튼을 지정
+          headerLeft: () => (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="뒤로 가기"
+              hitSlop={12}
+              style={({ pressed }) => [styles.headerBack, pressed && styles.pressed]}
+              onPress={() =>
+                router.canGoBack() ? router.back() : router.replace("/admin/(tabs)")
+              }
+            >
+              <Ionicons name="chevron-back" size={26} color={Colors.text} />
+            </Pressable>
+          ),
         }}
       />
       <View style={styles.notice}>{renewed && !isExpired && <Figma name="qrCreated" />}</View>
@@ -173,5 +188,9 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
+  },
+  headerBack: {
+    paddingHorizontal: 4,
+    paddingVertical: 4,
   },
 });

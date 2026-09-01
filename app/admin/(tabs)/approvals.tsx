@@ -199,15 +199,16 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   tab: {
-    backgroundColor: "#EDEDED",
-    borderRadius: 18,
+    height: 34,
+    justifyContent: "center",
+    backgroundColor: "#E8E8E8",
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 8,
   },
   tabText: {
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.textSecondary,
+    color: "#818181",
   },
   tabTextOn: {
     color: Colors.white,
@@ -289,25 +290,25 @@ const styles = StyleSheet.create({
   rejectBtn: {
     flex: 1,
     backgroundColor: "#818181",
-    borderRadius: 12,
-    paddingVertical: 14,
+    borderRadius: 14,
+    paddingVertical: 16,
     alignItems: "center",
   },
   rejectText: {
     color: Colors.white,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
   },
   approveBtn: {
     flex: 1,
     backgroundColor: "#222222",
-    borderRadius: 12,
-    paddingVertical: 14,
+    borderRadius: 14,
+    paddingVertical: 16,
     alignItems: "center",
   },
   approveText: {
     color: Colors.white,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
   },
   pressed: {

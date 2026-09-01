@@ -32,6 +32,10 @@ export default function RootLayout() {
           name="activity/[id]"
           options={{ title: "상세보기", headerTitleAlign: "center" }}
         />
+        <Stack.Screen
+          name="qr/[sessionId]"
+          options={{ headerTitleAlign: "center" }}
+        />
       </Stack>
     </AuthProvider>
   );
