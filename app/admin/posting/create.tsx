@@ -163,19 +163,28 @@ export default function CreatePostingScreen() {
         <View
           style={[
             styles.memoBox,
-            memo ? styles.filled : null,
             showErrors && missing.memo ? styles.fieldError : null,
           ]}
         >
-          <TextInput
-            multiline
-            placeholder={'봉사 모집 내용을 간단히 작성해주세요.\n예: 장애학우 수업 도우미 모집'}
-            placeholderTextColor={Colors.textSecondary}
-            style={[styles.memoInput, memo ? styles.textWhite : null, webOutlineReset]}
-            value={memo}
-            onChangeText={setMemo}
-          />
-          <Ionicons name="pencil" size={16} color={memo ? Colors.white : Colors.textSecondary} />
+          <View style={styles.memoInputWrap}>
+            {/* 실제로 보이는 글자는 색이 항상 적용되는 Text로 렌더한다. */}
+            <Text style={[styles.memoText, memo.length === 0 && styles.memoPlaceholderText]}>
+              {memo.length === 0
+                ? '봉사 모집 내용을 간단히 작성해주세요.\n예: 장애학우 수업 도우미 모집'
+                : memo}
+            </Text>
+            {/* TextInput은 그 위에 투명하게 올려 입력/커서만 담당한다.
+                (iOS 멀티라인+한글 조합에서 color가 안 먹는 버그 우회) */}
+            <TextInput
+              multiline
+              placeholder=""
+              selectionColor="#FFFFFF"
+              style={[styles.memoText, styles.memoTextInput, webOutlineReset]}
+              value={memo}
+              onChangeText={setMemo}
+            />
+          </View>
+          <Ionicons name="pencil" size={16} color={Colors.white} />
         </View>
         <RequiredMessage visible={showErrors && missing.memo} />
 
@@ -698,16 +707,28 @@ const styles = StyleSheet.create({
   },
   memoBox: {
     flexDirection: 'row',
-    backgroundColor: '#F1F1F1',
+    backgroundColor: '#222222',
     borderRadius: 16,
     padding: 16,
   },
-  memoInput: {
+  memoInputWrap: {
     flex: 1,
     minHeight: 130,
-    color: Colors.text,
+  },
+  memoText: {
     fontSize: 14,
+    lineHeight: 20,
+    color: Colors.white,
+    padding: 0,
     textAlignVertical: 'top',
+  },
+  memoPlaceholderText: {
+    color: '#9AA0A6',
+  },
+  // 투명 입력 레이어: 보이는 글자는 위 Text가 담당하고, 여기선 커서/입력만.
+  memoTextInput: {
+    ...StyleSheet.absoluteFillObject,
+    color: 'transparent',
   },
   label: {
     marginTop: 24,
@@ -723,10 +744,6 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     color: Colors.text,
     fontSize: 14,
-  },
-  filled: {
-    backgroundColor: '#222222',
-    color: Colors.white,
   },
   fieldError: {
     borderWidth: 1,
@@ -744,9 +761,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     textAlign: 'center',
-  },
-  textWhite: {
-    color: Colors.white,
   },
   stepper: {
     flexDirection: 'row',
