@@ -138,13 +138,19 @@ function VerificationStepper({ variant }: { variant: CertificationDetailVariant 
       <StepMark done={isComplete} number={2} style={styles.secondStepCircle} />
       <StepMark done={false} isCurrent={isComplete} number={3} style={styles.thirdStepCircle} />
 
-      <Text style={[styles.stepLabel, styles.firstStepLabel, isComplete && styles.doneStepLabel]}>
+      <Text
+        numberOfLines={1}
+        style={[styles.stepLabel, styles.firstStepLabel, isComplete && styles.doneStepLabel]}>
         담당자 확인 중
       </Text>
-      <Text style={[styles.stepLabel, styles.secondStepLabel, isComplete && styles.doneStepLabel]}>
+      <Text
+        numberOfLines={1}
+        style={[styles.stepLabel, styles.secondStepLabel, isComplete && styles.doneStepLabel]}>
         학사 시스템 연동
       </Text>
-      <Text style={[styles.stepLabel, styles.thirdStepLabel, isComplete && styles.doneStepLabel]}>
+      <Text
+        numberOfLines={1}
+        style={[styles.stepLabel, styles.thirdStepLabel, isComplete && styles.doneStepLabel]}>
         자동 연동 완료
       </Text>
     </View>
@@ -488,19 +494,20 @@ const styles = StyleSheet.create({
     color: '#444444',
   },
   firstStepLabel: {
-    left: 0,
-    width: 57,
+    left: -12,
+    width: 82,
     color: '#444444',
+    textAlign: 'center',
   },
   secondStepLabel: {
-    left: 118,
-    width: 66,
+    left: 104,
+    width: 94,
     textAlign: 'center',
   },
   thirdStepLabel: {
-    left: 254,
-    width: 57,
-    textAlign: 'right',
+    left: 236,
+    width: 84,
+    textAlign: 'center',
   },
   volunteerCard: {
     position: 'absolute',

@@ -1,6 +1,6 @@
 <svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 102 102" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="Capture CTA">
-<circle id="Circle" cx="51" cy="51" r="40" fill="var(--fill-0, #F5F5F5)"/>
+<circle id="Circle" cx="51" cy="51" r="40" fill="#F5F5F5"/>
 <g id="Circle_2">
 <mask id="path-2-outside-1_0_75" maskUnits="userSpaceOnUse" x="0" y="0" width="102" height="102" fill="black">
 <rect fill="white" width="102" height="102"/>

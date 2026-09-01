@@ -21,7 +21,7 @@ import { UserGnb } from '@/components/navigation/user-gnb';
 
 import { verifyQrCapture } from './qr-verification-api';
 
-const QR_EXAMPLE = require('../../../assets/images/joinimg/QRCODEex.png');
+const QR_EXAMPLE = require('../../../assets/images/joinimg/QRCODEex.svg');
 const CAPTURE_CTA = require('../../../assets/images/joinimg/Capture CTA.svg');
 const SCAN_EXAMPLE_BACKGROUND = require('../../../assets/images/joinimg/QRScanExampleBackground.png');
 
@@ -125,10 +125,10 @@ export function QrActivityScanScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
       <View style={[styles.screen, { width: contentWidth }]}>
         {step === 'loading' ? (
-          <LoadingQrView onClose={close} />
+          <LoadingQrView onClose={close} onStartScan={() => setStep('camera')} />
         ) : (
           <CameraQrView
             cameraRef={cameraRef}
@@ -151,7 +151,13 @@ export function QrActivityScanScreen() {
   );
 }
 
-function LoadingQrView({ onClose }: { onClose: () => void }) {
+function LoadingQrView({
+  onClose,
+  onStartScan,
+}: {
+  onClose: () => void;
+  onStartScan: () => void;
+}) {
   const qrUri = Asset.fromModule(QR_EXAMPLE).uri;
 
   return (
@@ -161,7 +167,7 @@ function LoadingQrView({ onClose }: { onClose: () => void }) {
       <Text style={styles.loadingText}>
         QR 코드를 촬영하여{'\n'}인증을 시작해 주세요
       </Text>
-      <CaptureButton disabled onPress={() => {}} style={styles.loadingCaptureButton} />
+      <CaptureButton onPress={onStartScan} style={styles.loadingCaptureButton} />
     </View>
   );
 }
@@ -200,7 +206,6 @@ function CameraQrView({
       ) : (
         <Image resizeMode="cover" source={SCAN_EXAMPLE_BACKGROUND} style={styles.cameraPreview} />
       )}
-      <View style={styles.cameraDim} />
       <CloseButton onPress={onClose} />
       <ScannerFrame />
       <CaptureButton disabled={verifying} onPress={onCapture} style={styles.cameraCaptureButton} />
@@ -226,11 +231,7 @@ function CaptureButton({
       disabled={disabled}
       style={({ pressed }) => [styles.captureButton, pressed && !disabled && styles.pressed, style]}
       onPress={onPress}>
-      {Platform.OS === 'web' ? (
-        <Image resizeMode="contain" source={{ uri }} style={styles.captureImage} />
-      ) : (
-        <SvgUri height={102} uri={uri} width={102} />
-      )}
+      <SvgUri height={102} uri={uri} width={102} />
     </Pressable>
   );
 }
@@ -341,8 +342,8 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 22,
-    right: 16,
+    top: 55,
+    right: 28,
     zIndex: 5,
     width: 48,
     height: 48,
@@ -351,14 +352,14 @@ const styles = StyleSheet.create({
   },
   qrExample: {
     position: 'absolute',
-    top: 210,
+    top: 262,
     alignSelf: 'center',
     width: 125,
     height: 107,
   },
   loadingText: {
     position: 'absolute',
-    top: 381,
+    top: 436,
     alignSelf: 'center',
     color: '#FFFFFF',
     fontFamily: 'Pretendard',
@@ -373,30 +374,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  captureImage: {
-    width: 102,
-    height: 102,
-  },
   loadingCaptureButton: {
     position: 'absolute',
-    top: 523,
+    top: 575,
     alignSelf: 'center',
   },
   cameraPreview: {
     position: 'absolute',
-    top: -30,
-    left: -203,
-    width: 780,
-    height: 780,
-    opacity: 0.82,
-  },
-  cameraDim: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
     left: 0,
-    backgroundColor: 'rgba(17, 17, 17, 0.36)',
+    top: 0,
+    width: '100%',
+    height: '100%',
   },
   scannerFrame: {
     position: 'absolute',
@@ -465,7 +453,7 @@ const styles = StyleSheet.create({
   },
   cameraCaptureButton: {
     position: 'absolute',
-    top: 523,
+    top: 575,
     alignSelf: 'center',
   },
   failureOverlay: {
