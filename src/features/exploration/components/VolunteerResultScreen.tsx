@@ -1,6 +1,6 @@
 import { Asset } from 'expo-asset';
 import type { ReactNode } from 'react';
-import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, Share, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgUri } from 'react-native-svg';
 
@@ -17,6 +17,7 @@ type VolunteerResultScreenProps = {
   characterStyle?: object;
   description: ReactNode;
   onConfirm: () => void;
+  postId?: number;
   title: string;
   tone?: VolunteerResultTone;
 };
@@ -26,6 +27,7 @@ export function VolunteerResultScreen({
   characterStyle,
   description,
   onConfirm,
+  postId,
   title,
   tone = 'light',
 }: VolunteerResultScreenProps) {
@@ -33,12 +35,23 @@ export function VolunteerResultScreen({
   const contentWidth = Math.min(width, 393);
   const isDark = tone === 'dark';
 
+  const handleShare = () => {
+    const shareUrl = Number.isFinite(postId) ? `vimo://volunteer-post/${postId}` : 'vimo://search';
+
+    Share.share({
+      title: 'VIMO \uBD09\uC0AC \uACF5\uACE0',
+      message: `VIMO\uC5D0\uC11C \uBD09\uC0AC \uACF5\uACE0\uB97C \uAC19\uC774 \uD655\uC778\uD574\uBCF4\uC138\uC694.\n${shareUrl}`,
+      url: shareUrl,
+    }).catch(() => undefined);
+  };
+
   return (
-    <SafeAreaView style={[styles.safeArea, isDark && styles.darkBackground]}>
+    <SafeAreaView edges={['left', 'right']} style={[styles.safeArea, isDark && styles.darkBackground]}>
       <View style={[styles.screen, isDark && styles.darkBackground, { width: contentWidth }]}>
         <SvgAsset asset={VECTOR_BACK} height={852} style={[styles.vectorBack, isDark && styles.darkVector]} width={393} />
         <SvgAsset asset={LEFT_LOOP} height={334} style={[styles.leftLoop, isDark && styles.darkLeftLoop]} width={234} />
         <SvgAsset asset={RIGHT_LOOP} height={335} style={[styles.rightLoop, isDark && styles.darkRightLoop]} width={206} />
+
         <Image
           resizeMode="contain"
           source={characterSource}
@@ -49,11 +62,17 @@ export function VolunteerResultScreen({
         <Text style={[styles.description, isDark && styles.darkDescription]}>{description}</Text>
 
         <View style={styles.buttonArea}>
-          <Button label="확인" style={styles.confirmButton} onPress={onConfirm} />
+          <Button label={'\uD655\uC778'} style={styles.confirmButton} onPress={onConfirm} />
         </View>
 
-        <Pressable accessibilityRole="button" hitSlop={8} style={styles.friendButton}>
-          <Text style={styles.friendText}>친구에게 같이하자고 하기</Text>
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={8}
+          style={({ pressed }) => [styles.friendButton, pressed && styles.pressed]}
+          onPress={handleShare}>
+          <Text style={[styles.friendText, isDark && styles.darkFriendText]}>
+            {'\uCE5C\uAD6C\uC5D0\uAC8C \uAC19\uC774\uD558\uC790\uACE0 \uD558\uAE30'}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -180,14 +199,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 3,
+    elevation: 3,
   },
   friendText: {
-    color: '#818181',
+    color: 'rgba(129,129,129,0.6)',
     fontFamily: 'Pretendard',
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: '600',
-    lineHeight: 22,
+    lineHeight: 26,
     textAlign: 'center',
-    opacity: 0.6,
+  },
+  darkFriendText: {
+    color: 'rgba(208,208,208,0.6)',
+  },
+  pressed: {
+    opacity: 0.7,
   },
 });

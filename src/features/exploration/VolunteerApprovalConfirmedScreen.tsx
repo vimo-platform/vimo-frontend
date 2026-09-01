@@ -39,6 +39,7 @@ export function VolunteerApprovalConfirmedScreen() {
     <VolunteerResultScreen
       characterSource={CONFIRMED_CHARACTER}
       characterStyle={styles.confirmedCharacter}
+      postId={postId}
       description={
         '봉사 참여가 최종 확정되었습니다!\n봉사 일정 및 안내사항을 확인해 주세요.'
       }

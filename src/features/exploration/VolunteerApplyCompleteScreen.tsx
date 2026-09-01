@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import { useUserSessionGuard } from '@/hooks/use-user-session-guard';
 
@@ -8,6 +8,8 @@ const COMPLETE_CHARACTER = require('../../../assets/images/explorationimg/15.png
 
 export function VolunteerApplyCompleteScreen() {
   useUserSessionGuard();
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const postId = Number(id);
 
   const handleConfirm = () => {
     router.replace('/search');
@@ -16,6 +18,7 @@ export function VolunteerApplyCompleteScreen() {
   return (
     <VolunteerResultScreen
       characterSource={COMPLETE_CHARACTER}
+      postId={Number.isFinite(postId) ? postId : undefined}
       description={
         <>
           봉사를 지원해주셔서 감사합니다!
