@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { Platform, useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AnimatedSplashOverlay } from '@/features/auth/components/AnimatedSplashOverlay';
+import { AnimatedSplashOverlay } from '@/components/auth/AnimatedSplashOverlay';
 
 SplashScreen.preventAutoHideAsync();
 

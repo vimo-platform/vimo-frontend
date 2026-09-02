@@ -1,4 +1,4 @@
-import { ApplicationStatusScreen } from '@/features/join';
+import { ApplicationStatusScreen } from '@/screens/join';
 
 export default ApplicationStatusScreen;
 

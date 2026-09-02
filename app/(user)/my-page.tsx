@@ -1,4 +1,4 @@
-import { MyPageScreen } from '@/features/mypage';
+import { MyPageScreen } from '@/screens/mypage';
 
 export default MyPageScreen;
 

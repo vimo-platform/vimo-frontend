@@ -1,4 +1,4 @@
-import { CertificationScreen } from '@/features/certification';
+import { CertificationScreen } from '@/screens/certification';
 
 export default CertificationScreen;
 

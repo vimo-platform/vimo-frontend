@@ -1,3 +1,3 @@
-import { VolunteerApprovalConfirmedScreen } from '@/features/exploration';
+import { VolunteerApprovalConfirmedScreen } from '@/screens/exploration';
 
 export default VolunteerApprovalConfirmedScreen;

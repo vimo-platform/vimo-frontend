@@ -1,91 +1,90 @@
 # VIMO Frontend Project Structure
 
-VIMO는 Expo Router 기반의 단일 Expo 앱입니다. 유저 화면과 관리자 화면은 하나의 앱 안에 있지만, 라우트와 기능 코드는 역할별로 분리합니다.
+VIMO는 Expo Router 기반의 **단일 Expo 앱**입니다. 유저 화면과 관리자 화면은 하나의 앱 안에 있지만, 라우트와 코드는 역할·기능별로 분리합니다.
+
+`src/`는 **"타입(역할) → 기능"** 2단계 구조입니다. 즉 먼저 `screens / components / services / hooks / types / utils / styles`처럼 **코드의 역할**로 나누고, 그 안을 다시 `common / exploration / join / certification / mypage / auth / onboarding / admin`처럼 **기능 도메인**으로 나눕니다.
 
 ## Root
 
 ```txt
 vimo_frontend/
-├─ app/
-├─ src/
-├─ assets/
+├─ app/      # Expo Router 라우트 전용 (URL = 파일 경로)
+├─ src/      # 실제 화면·컴포넌트·로직
+├─ assets/   # 이미지/아이콘/폰트
 ├─ docs/
 ├─ package.json
 ├─ app.json
-├─ tsconfig.json
-└─ metro.config.js
+└─ tsconfig.json
 ```
 
-## Routing
+## Routing (`app/`)
 
-`app/`은 Expo Router 라우트 전용 폴더입니다. 화면 구현 로직이나 공통 컴포넌트는 이곳에 두지 않습니다.
+`app/`은 **라우팅 전용**입니다. 화면 구현은 두지 않고, `src/screens`의 화면을 얇게 연결(re-export)하거나 `_layout.tsx`만 둡니다.
 
 ```txt
 app/
 ├─ _layout.tsx
-├─ (user)/
-└─ admin/
+├─ (user)/          # 유저 라우트 그룹 (URL에 user 안 붙음)
+│  ├─ _layout.tsx
+│  ├─ index.tsx     →  @/screens/auth/EntryScreen
+│  ├─ my-page.tsx   →  @/screens/mypage
+│  └─ ...
+└─ admin/           # 관리자 라우트 그룹
+   ├─ _layout.tsx
+   ├─ (tabs)/
+   └─ posting/, qr/, activity/
 ```
 
-- `app/(user)`: 유저용 라우트 그룹입니다. 괄호가 있으므로 URL/deep link 경로에 `user`가 붙지 않습니다.
-- `app/admin`: 관리자용 라우트 그룹입니다.
-- 라우트 파일은 각 feature screen을 얇게 연결하는 역할만 맡습니다.
+- 라우트 파일 예시: `export { default } from '@/screens/admin/PostingsScreen';`
+- `_layout.tsx`(라우팅 설정)만 예외적으로 `app/`에 구현을 둡니다.
 
-## Source Code
+## Source Code (`src/`)
 
 ```txt
 src/
-├─ api/
-├─ components/
-├─ features/
-├─ hooks/
-├─ storage/
-└─ types/
+├─ screens/       # 화면 컴포넌트 (app/ 라우트가 연결하는 대상)
+│  ├─ exploration/ join/ certification/ mypage/ auth/ onboarding/ admin/
+├─ components/    # 재사용 UI 컴포넌트
+│  ├─ common/     # 유저·관리자 공용 (Button, Tag, MenuSection, StatusBadge ...)
+│  ├─ exploration/ join/ auth/ admin/ calendar/ navigation/
+├─ services/      # API 클라이언트 · 서버 통신 · 상태 store
+│  ├─ common/     # client, auth, auth-storage, volunteers, user-setup
+│  ├─ exploration/ join/ admin/
+├─ hooks/         # 재사용 훅
+│  ├─ common/ admin/
+├─ types/         # 공유 타입
+│  ├─ common/ exploration/ join/ admin/
+├─ utils/         # 순수 유틸 함수
+│  └─ join/
+└─ styles/        # 테마·디자인 토큰
+   └─ admin/
 ```
 
-- `src/api`: 여러 기능에서 공유하는 API 클라이언트와 API 래퍼를 둡니다.
-- `src/components`: 여러 기능에서 재사용하는 공통 UI만 둡니다.
-- `src/features`: 실제 화면과 기능별 로직을 둡니다.
-- `src/hooks`: 앱 전역에서 재사용하는 훅을 둡니다.
-- `src/storage`: 토큰, 로그인 유저 정보 같은 로컬 저장소 코드를 둡니다.
-- `src/types`: 여러 기능에서 공유하는 타입을 둡니다.
+### 각 폴더의 역할
 
-## Features
+- `screens`: 한 화면 전체를 그리는 컴포넌트. `app/` 라우트가 이걸 연결합니다.
+- `components`: 화면 안에서 재사용하는 UI 조각. **유저·관리자가 공통으로 쓰는 건 `components/common`.**
+- `services`: API 호출, 서버 통신 래퍼, 클라이언트 상태 store(예: `volunteer-interaction-store`).
+- `hooks` / `types` / `utils` / `styles`: 이름 그대로. 공용이면 `common`, 특정 기능 전용이면 해당 기능 폴더에 둡니다.
 
-```txt
-src/features/
-├─ auth/
-├─ exploration/
-├─ join/
-├─ certification/
-├─ mypage/
-└─ admin/
-```
+## Naming Convention
 
-- 유저 기능은 `exploration`, `join`, `certification`, `mypage`로 나눕니다.
-- 관리자 기능은 `admin` 아래에 모읍니다.
-- 특정 기능에서만 쓰는 컴포넌트/API/타입은 해당 feature 내부에 둡니다.
-- 두 기능 이상에서 쓰이면 `src/components`, `src/api`, `src/types`로 올립니다.
+| 종류 | 규칙 | 예시 |
+| --- | --- | --- |
+| 컴포넌트·화면 파일 | **PascalCase** | `Button.tsx`, `MyPageScreen.tsx`, `ActivityCard.tsx` |
+| 그 외 파일 (services/types/utils/styles) | **kebab-case** | `auth-storage.ts`, `application-status-types.ts` |
+| 훅 파일 | `use-` kebab-case | `use-admin-auth.tsx` |
 
-## Assets
+## Import Rules
 
-```txt
-assets/
-├─ icons/
-├─ images/
-└─ admin/
-```
-
-- `assets/icons`: 앱 공통 아이콘을 둡니다.
-- `assets/images`: 유저 화면 중심의 이미지 에셋을 둡니다.
-- `assets/admin`: 관리자 화면 전용 에셋을 둡니다.
-- 사용하지 않는 Expo 예제 이미지와 백업용 에셋은 보관하지 않습니다.
+- 다른 폴더의 코드는 항상 `@/` 절대경로로 가져옵니다. 예: `import { Button } from '@/components/common';`
+- 같은 폴더 안의 형제 파일만 상대경로(`./`, `../`)를 씁니다.
+- 에셋은 `@/assets/...` alias로 가져옵니다. 예: `require('@/assets/images/mypageimg/basicprofile.png')`
 
 ## Rules
 
-1. `app/`에는 라우트 파일과 `_layout.tsx`만 둡니다.
-2. 화면 구현은 `src/features/*`에 둡니다.
-3. 기능 전용 코드는 해당 feature 내부에 둡니다.
-4. 공통 코드는 `src/components`, `src/api`, `src/types`, `src/hooks`로 분리합니다.
+1. `app/`에는 라우트 파일과 `_layout.tsx`만 둡니다. 화면 구현은 `src/screens/*`.
+2. 코드는 먼저 **역할**(screens/components/services/...), 그 다음 **기능**으로 분류합니다.
+3. **유저·관리자가 같은 결과를 렌더링하는 코드만** `components/common` 등으로 공유합니다. 결과가 다르면 억지로 합치지 않습니다.
+4. 특정 기능 전용 코드는 해당 기능 폴더(`.../exploration`, `.../admin` 등)에 둡니다.
 5. 목업 데이터는 API 전환 이후 기본 실행 경로에 남기지 않습니다.
-6. 보존용 앱 폴더는 루트 앱 실행에 필요하지 않으므로 유지하지 않습니다.

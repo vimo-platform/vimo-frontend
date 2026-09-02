@@ -1,3 +1,3 @@
-import { VolunteerApplyCompleteScreen } from '@/features/exploration';
+import { VolunteerApplyCompleteScreen } from '@/screens/exploration';
 
 export default VolunteerApplyCompleteScreen;

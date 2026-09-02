@@ -1,3 +1,3 @@
-import { CertificationPendingDetailScreen } from '@/features/certification/CertificationPendingDetailScreen';
+import { CertificationPendingDetailScreen } from '@/screens/certification/CertificationPendingDetailScreen';
 
 export default CertificationPendingDetailScreen;

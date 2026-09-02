@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-import { AuthProvider } from "@/features/admin/hooks/use-admin-auth";
+import { AuthProvider } from "@/hooks/admin/use-admin-auth";
 
 export default function RootLayout() {
   return (

@@ -1,3 +1,3 @@
-import { QrActivityScanScreen } from '@/features/join/QrActivityScanScreen';
+import { QrActivityScanScreen } from '@/screens/join/QrActivityScanScreen';
 
 export default QrActivityScanScreen;

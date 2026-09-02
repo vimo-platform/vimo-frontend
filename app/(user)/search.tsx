@@ -1,4 +1,4 @@
-import { ExplorationScreen } from '@/features/exploration';
+import { ExplorationScreen } from '@/screens/exploration';
 
 export default ExplorationScreen;
 

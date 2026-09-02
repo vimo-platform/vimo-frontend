@@ -1,4 +1,4 @@
-import { JoinScreen } from '@/features/join';
+import { JoinScreen } from '@/screens/join';
 
 export default JoinScreen;
 
