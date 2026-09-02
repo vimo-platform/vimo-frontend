@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -25,8 +25,13 @@ export function SyncOverlay({
   onCancel: () => void;
 }) {
   const [step, setStep] = useState(0);
-  // 진행 바 채움 비율 (0~1). 단계가 넘어갈 때마다 900ms 동안 다음 구간까지 부드럽게 채움
+  // 진행 바 채움 비율 (0~1). 단계가 넘어갈 때마다 다음 구간까지 부드럽게 채움
   const [progress, setProgress] = useState(0);
+
+  // onComplete는 부모에서 매 렌더마다 새로 생성되므로 ref로 고정한다.
+  // (effect 의존성에 넣으면 progress 갱신 리렌더마다 타이머가 리셋되어 단계가 멈춘다)
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     if (!visible) {
@@ -34,26 +39,31 @@ export function SyncOverlay({
       setProgress(0);
       return;
     }
-    let fill: ReturnType<typeof setInterval> | undefined;
-    if (step < STEPS.length) {
-      const from = step / STEPS.length;
-      const to = (step + 1) / STEPS.length;
-      const start = Date.now();
-      fill = setInterval(() => {
-        const f = Math.min(1, (Date.now() - start) / 900);
-        setProgress(from + (to - from) * f);
-        if (f >= 1) clearInterval(fill);
-      }, 50);
+
+    // 모든 단계 완료 → 잠시 "인증 완료!"를 보여준 뒤 콜백
+    if (step >= STEPS.length) {
+      const done = setTimeout(() => onCompleteRef.current(), 700);
+      return () => clearTimeout(done);
     }
-    const t = setTimeout(() => {
-      if (step >= STEPS.length) onComplete();
-      else setStep(step + 1);
-    }, 1000);
+
+    // 현재 구간을 900ms 동안 부드럽게 채운다
+    const from = step / STEPS.length;
+    const to = (step + 1) / STEPS.length;
+    const start = Date.now();
+    const fill = setInterval(() => {
+      const f = Math.min(1, (Date.now() - start) / 900);
+      setProgress(from + (to - from) * f);
+      if (f >= 1) clearInterval(fill);
+    }, 30);
+
+    // 1초마다 다음 단계(아이콘/문구)로 전환
+    const next = setTimeout(() => setStep((s) => s + 1), 1000);
+
     return () => {
       clearInterval(fill);
-      clearTimeout(t);
+      clearTimeout(next);
     };
-  }, [visible, step, onComplete]);
+  }, [visible, step]);
 
   const done = step >= STEPS.length;
   const current = STEPS[step];

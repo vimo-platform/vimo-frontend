@@ -2,8 +2,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Tabs } from "expo-router";
 import { SvgXml } from "react-native-svg";
 
-import { Colors } from "@/features/admin/constants/theme";
-
 type GnbProps = {
   state: { index: number; routes: { key: string; name: string }[] };
   navigation: { navigate: (name: string) => void };
@@ -101,15 +99,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: "현장 QR", headerShown: false }} />
       <Tabs.Screen name="postings" options={{ title: "공고" }} />
       <Tabs.Screen name="approvals" options={{ title: "승인" }} />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "마이페이지",
-          headerTitleAlign: "center",
-          headerShadowVisible: false,
-          headerStyle: { backgroundColor: Colors.white },
-        }}
-      />
+      <Tabs.Screen name="profile" options={{ title: "마이페이지", headerShown: false }} />
     </Tabs>
   );
 }
