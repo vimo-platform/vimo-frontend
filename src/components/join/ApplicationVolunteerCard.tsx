@@ -1,4 +1,4 @@
-﻿import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { HeartImage } from '@/components/common';
 import { VolunteerInfoIcon } from '@/components/common/VolunteerInfoIcon';
 

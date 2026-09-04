@@ -271,35 +271,6 @@ function SectionTitle({
   );
 }
 
-function MockTimetable() {
-  const classes = [
-    { label: '국제비즈\n니스영어\n실801', style: styles.classOrange },
-    { label: '골프\n전409', style: styles.classRed },
-    { label: '서비스리\n빙디자인\n예404', style: styles.classGreen },
-    { label: '비주얼콘\n텐츠디자\n인\n예406', style: styles.classBlue },
-    { label: 'UX/UI디\n자인\n전302', style: styles.classYellow },
-    { label: '서비스디\n자인\n특강', style: styles.classMint },
-    { label: '알바', style: styles.classPurpleTall },
-    { label: '알바', style: styles.classPurpleRight },
-  ];
-
-  return (
-    <View style={styles.timetablePreview}>
-      {Array.from({ length: 8 }).map((_, index) => (
-        <View key={`row-${index}`} style={[styles.gridLineHorizontal, { top: 34 + index * 37 }]} />
-      ))}
-      {Array.from({ length: 6 }).map((_, index) => (
-        <View key={`column-${index}`} style={[styles.gridLineVertical, { left: 34 + index * 35 }]} />
-      ))}
-      {classes.map((item, index) => (
-        <View key={`${item.label}-${index}`} style={[styles.classBlock, item.style]}>
-          <Text style={styles.classText}>{item.label}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
 const TIMETABLE_DAYS = ['월', '화', '수', '목', '금', '토'];
 const TIMETABLE_START_MINUTES = 9 * 60;
 const TIMETABLE_END_MINUTES = 19 * 60;
@@ -598,10 +569,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  timetablePreview: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-  },
   gridLineHorizontal: {
     position: 'absolute',
     left: TIMETABLE_TIME_GUTTER,
@@ -630,62 +597,6 @@ const styles = StyleSheet.create({
     fontSize: 6,
     fontWeight: '700',
     lineHeight: 8,
-  },
-  classOrange: {
-    top: 31,
-    left: 179,
-    width: 49,
-    height: 75,
-    backgroundColor: '#E29958',
-  },
-  classRed: {
-    top: 123,
-    left: 68,
-    width: 43,
-    height: 74,
-    backgroundColor: '#D57063',
-  },
-  classGreen: {
-    top: 123,
-    left: 111,
-    width: 46,
-    height: 74,
-    backgroundColor: '#A6CD70',
-  },
-  classBlue: {
-    top: 123,
-    left: 157,
-    width: 43,
-    height: 74,
-    backgroundColor: '#6F95CF',
-  },
-  classYellow: {
-    top: 204,
-    left: 68,
-    width: 43,
-    height: 74,
-    backgroundColor: '#F0C356',
-  },
-  classMint: {
-    top: 204,
-    left: 111,
-    width: 46,
-    height: 74,
-    backgroundColor: '#7BD1C0',
-  },
-  classPurpleTall: {
-    top: 106,
-    left: 200,
-    width: 43,
-    height: 224,
-    backgroundColor: '#9A77DA',
-  },
-  classPurpleRight: {
-    top: 31,
-    left: 228,
-    width: 42,
-    height: 224,
-    backgroundColor: '#8D71C8',
   },
   sectionTitleGroup: {
     width: 301,

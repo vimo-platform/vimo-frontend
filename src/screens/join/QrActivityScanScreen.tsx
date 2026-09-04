@@ -14,8 +14,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Line } from 'react-native-svg';
-import { SvgUri } from 'react-native-svg';
+import Svg, { Line, SvgUri } from 'react-native-svg';
 
 import { UserGnb } from '@/components/navigation/UserGnb';
 
@@ -62,7 +61,7 @@ export function QrActivityScanScreen() {
     return () => {
       clearTimeout(timer);
     };
-  }, []);
+  }, [requestPermission]);
 
   const close = () => {
     router.replace('/explore');

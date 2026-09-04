@@ -241,7 +241,7 @@ async function enrichVolunteerDetails(data: ApiVolunteer[]) {
     data.map(async (item) => {
       const id = item.id ?? item.volunteerId;
 
-      if (typeof id !== 'number') {
+      if (typeof id !== 'number' || !shouldFetchVolunteerDetail(item)) {
         return item;
       }
 
@@ -253,6 +253,22 @@ async function enrichVolunteerDetails(data: ApiVolunteer[]) {
       }
     }),
   );
+}
+
+function shouldFetchVolunteerDetail(data: ApiVolunteer) {
+  const hasDateTime = Boolean(
+    (data.startAt && data.endAt) ||
+      ((data.volunteerDate ?? data.startDate) && data.startTime && data.endTime),
+  );
+  const hasCapacity =
+    data.capacity !== undefined ||
+    data.maxParticipants !== undefined ||
+    data.neededCount !== undefined;
+  const hasKeywords = Boolean(
+    data.selectedCategories?.length || data.summaryTags?.length || data.keywords?.length || data.category,
+  );
+
+  return !((data.content ?? data.description) && hasDateTime && hasCapacity && hasKeywords);
 }
 
 function normalizeRecruitType(type?: ApiVolunteer['recruitType']) {

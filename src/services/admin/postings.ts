@@ -66,7 +66,7 @@ export async function fetchMyPostings(): Promise<Posting[]> {
     const data = await apiRequest<ApiAdminVolunteer[]>('/api/v1/admin/volunteers');
     const detailedData = await Promise.all(
       data.map(async (item) => {
-        if (typeof item.id !== 'number') {
+        if (typeof item.id !== 'number' || !shouldFetchPostingDetail(item)) {
           return item;
         }
 
@@ -85,6 +85,16 @@ export async function fetchMyPostings(): Promise<Posting[]> {
   }
 
   return [...postings].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+}
+
+function shouldFetchPostingDetail(data: ApiAdminVolunteer) {
+  const hasDateTime = Boolean(
+    (data.startAt && data.endAt) ||
+      ((data.volunteerDate ?? data.startDate) && data.startTime && data.endTime),
+  );
+  const hasCapacity = data.maxParticipants !== undefined;
+
+  return !(data.content && data.location && hasDateTime && hasCapacity && data.rewardHours !== undefined);
 }
 
 export async function fetchPosting(id: string): Promise<Posting | undefined> {

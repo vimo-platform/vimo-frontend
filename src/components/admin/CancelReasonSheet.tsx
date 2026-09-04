@@ -4,7 +4,6 @@ import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "r
 import { Colors } from "@/styles/admin/theme";
 import type { Applicant } from "@/types/admin";
 
-const Pink = "#E0526E";
 const SoftPink = "#EF858B";
 
 // 지원을 취소한 학생의 취소 사유를 보여주는 바텀 시트

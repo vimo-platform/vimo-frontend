@@ -1,4 +1,4 @@
-﻿import { Asset } from 'expo-asset';
+import { Asset } from 'expo-asset';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
@@ -99,10 +99,7 @@ export function ExplorationScreen() {
       return matchesQuery && matchesStatus;
     });
   }, [posts, query, statusFilter, favoriteIds]);
-  const customizedPosts = useMemo(
-    () => getCustomizedVolunteerPosts(posts),
-    [posts, scheduleRecommendation],
-  );
+  const customizedPosts = getCustomizedVolunteerPosts(posts);
 
   const openPostDetail = (postId: number) => {
     router.push(`/volunteer-post/${postId}` as Href);

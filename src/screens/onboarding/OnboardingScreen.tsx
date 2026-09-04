@@ -21,16 +21,16 @@ import Svg, {
   SvgUri,
 } from 'react-native-svg';
 
+import {
+  isUserAuthenticatedInCurrentSession,
+  setUserOnboardingCompleted,
+} from '@/services/common/auth-storage';
+
 // 온보딩 화면은 393x852(상단 안전영역 59) 프레임 기준 고정 좌표로 배치되어 있다.
 // 이보다 노치/다이내믹 아일랜드가 큰 기기에서 상단이 상태바에 겹쳐 잘리므로,
 // 디자인 기준(59)을 초과하는 만큼만 콘텐츠를 아래로 내린다.
 const DESIGN_TOP_INSET = 59;
 const ONBOARDING_BACKGROUND = '#F9F9FB';
-
-import {
-  isUserAuthenticatedInCurrentSession,
-  setUserOnboardingCompleted,
-} from '@/services/common/auth-storage';
 
 const WELCOME_ASSETS = {
   object: require('@/assets/images/onboarding/onboarding1stpageimg/welcome-object.png'),
