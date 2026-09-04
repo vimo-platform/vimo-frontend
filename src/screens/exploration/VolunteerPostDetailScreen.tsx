@@ -37,7 +37,6 @@ export function VolunteerPostDetailScreen() {
     getVolunteerInteractionsSnapshot,
     getVolunteerInteractionsSnapshot,
   );
-  const { approvalNoticeSeenIds } = getVolunteerInteractionsSnapshot();
   const snapshotPost = useMemo(
     () => getVolunteerPostsSnapshot().find((item) => item.id === Number(id)) ?? null,
     [id],
@@ -133,11 +132,6 @@ export function VolunteerPostDetailScreen() {
     if (post.recruitType === 'fcfs') {
       submitVolunteerApplication(post.id);
       approveVolunteerApplication(post.id);
-
-      if (approvalNoticeSeenIds.includes(post.id)) {
-        router.replace('/explore');
-        return;
-      }
 
       router.push(`/volunteer-approval-confirmed?id=${post.id}&source=fcfs` as Href);
       return;
