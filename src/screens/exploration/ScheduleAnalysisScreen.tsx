@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -14,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Tag } from '@/components/common';
+import { LoadingOverlay, LOADING_FILL_DURATION_MS } from '@/components/common/LoadingOverlay';
 import { useUserSessionGuard } from '@/hooks/common/use-user-session-guard';
 import type { ApiLocalTime, ClassSlot } from '@/services/common/user-setup';
 
@@ -28,7 +28,6 @@ import { setScheduleRecommendationFromAnalysis } from '@/services/exploration/cu
 const EXPLORATION_STAR = require('@/assets/images/explorationimg/explorationstar.png');
 
 type AnalysisPhase = 'loading' | 'complete';
-const PENDING_PROGRESS_LIMIT = 92;
 
 export function ScheduleAnalysisScreen() {
   useUserSessionGuard();
@@ -39,48 +38,10 @@ export function ScheduleAnalysisScreen() {
   const uploadedImageUri = typeof imageUri === 'string' && imageUri ? imageUri : undefined;
   const isSavedScheduleView = source === 'saved';
   const [phase, setPhase] = useState<AnalysisPhase>('loading');
-  const [progress, setProgress] = useState(0);
   const [analysis, setAnalysis] = useState<ScheduleAnalysisResult | null>(null);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [showKeywordError, setShowKeywordError] = useState(false);
-  // 로딩 중 별 로고를 살짝 좌우로 흔드는 sway 애니메이션.
-  const sway = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (phase !== 'loading') {
-      return;
-    }
-
-    const swayAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(sway, {
-          toValue: 1,
-          duration: 620,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(sway, {
-          toValue: -1,
-          duration: 1240,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(sway, {
-          toValue: 0,
-          duration: 620,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    swayAnimation.start();
-    return () => swayAnimation.stop();
-  }, [phase, sway]);
-
-  const starRotate = sway.interpolate({
-    inputRange: [-1, 1],
-    outputRange: ['-8deg', '8deg'],
-  });
+  const completeOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     let mounted = true;
@@ -89,17 +50,19 @@ export function ScheduleAnalysisScreen() {
       ? getSavedScheduleAnalysis().then((savedAnalysis) => savedAnalysis ?? null)
       : analyzeScheduleImage(uploadedImageUri);
 
-    request.then((result) => {
+    Promise.all([
+      request,
+      isSavedScheduleView
+        ? Promise.resolve()
+        : new Promise((resolve) => setTimeout(resolve, LOADING_FILL_DURATION_MS)),
+    ]).then(([result]) => {
       if (!mounted) {
         return;
       }
 
       setAnalysis(result);
       setSelectedKeywords(isSavedScheduleView ? result?.recommendedKeywords ?? [] : []);
-      if (isSavedScheduleView) {
-        setProgress(100);
-        setPhase('complete');
-      }
+      setPhase('complete');
     });
 
     return () => {
@@ -108,32 +71,20 @@ export function ScheduleAnalysisScreen() {
   }, [isSavedScheduleView, uploadedImageUri]);
 
   useEffect(() => {
-    if (phase !== 'loading') {
+    if (phase !== 'complete') {
       return;
     }
 
-    const timer = setInterval(() => {
-      setProgress((current) => {
-        const step =
-          current < 45 ? 2.2 : current < 70 ? 1.15 : current < 86 ? 0.55 : 0.18;
-        const next = analysis
-          ? Math.min(100, current + 7)
-          : Math.min(PENDING_PROGRESS_LIMIT, current + step);
-
-        if (next >= 100 && analysis) {
-          clearInterval(timer);
-          setTimeout(() => setPhase('complete'), 180);
-        }
-
-        return next;
-      });
-    }, 160);
-
-    return () => {
-      clearInterval(timer);
-    };
-  }, [analysis, phase]);
-
+    completeOpacity.setValue(0);
+    const animation = Animated.timing(completeOpacity, {
+      toValue: 1,
+      duration: 420,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [completeOpacity, phase]);
   const keywordOptions = useMemo(
     () => analysis?.recommendedKeywords ?? [],
     [analysis],
@@ -151,34 +102,16 @@ export function ScheduleAnalysisScreen() {
   if (phase === 'loading') {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={[styles.loadingScreen, { width: contentWidth }]}>
-          <View style={styles.loadingContent}>
-            <Animated.Image
-              resizeMode="contain"
-              source={EXPLORATION_STAR}
-              style={[styles.loadingStar, { transform: [{ rotate: starRotate }] }]}
-            />
-            <Text style={styles.loadingText}>시간표를 읽고 있어요...</Text>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFillMask, { width: `${progress}%` }]}>
-                <LinearGradient
-                  colors={['#4D4D4D', '#BDBDBD']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.progressGradient}
-                />
-              </View>
-            </View>
-          </View>
+        <View style={[styles.loadingScreen, { width: contentWidth }]}> 
+          <LoadingOverlay message="시간표를 읽고 있어요" />
           <View style={styles.homeIndicator} />
         </View>
       </SafeAreaView>
     );
   }
-
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={[styles.screen, { width: contentWidth }]}>
+      <Animated.View style={[styles.screen, { width: contentWidth, opacity: completeOpacity }]}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
@@ -239,7 +172,7 @@ export function ScheduleAnalysisScreen() {
           />
         </View>
         <View style={styles.completeHomeIndicator} />
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -435,44 +368,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  loadingContent: {
-    position: 'absolute',
-    top: 220,
-    alignSelf: 'center',
-    width: 223,
-    alignItems: 'center',
-  },
-  loadingStar: {
-    width: 166,
-    height: 160,
-  },
-  loadingText: {
-    marginTop: 30,
-    color: '#222222',
-    fontFamily: 'Pretendard',
-    fontSize: 20,
-    fontWeight: '600',
-    lineHeight: 30,
-    textAlign: 'center',
-  },
-  progressTrack: {
-    width: 192,
-    height: 7,
-    overflow: 'hidden',
-    marginTop: 30,
-    borderRadius: 9,
-    backgroundColor: '#D9D9D9',
-  },
-  progressFillMask: {
-    height: 7,
-    borderTopLeftRadius: 9,
-    borderBottomLeftRadius: 9,
-    overflow: 'hidden',
-  },
-  progressGradient: {
-    width: 192,
-    height: 7,
-  },
   homeIndicator: {
     position: 'absolute',
     bottom: 8,
@@ -661,3 +556,4 @@ const styles = StyleSheet.create({
     opacity: 0.86,
   },
 });
+

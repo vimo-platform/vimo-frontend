@@ -94,7 +94,6 @@ export function QrActivityScanScreen() {
       });
 
       if (!verification.verified) {
-        // 서버가 내려준 구체적 실패 사유(QR 만료, 타입 불일치, 미승인, 이미 체크인 등)를 노출
         setFailureMessage(verification.message ?? null);
         setStep('failed');
         return;
@@ -138,6 +137,7 @@ export function QrActivityScanScreen() {
             onCapture={capture}
             onClose={close}
             onDismissFailure={() => {
+              setDetectedQrValue(null);
               setFailureMessage(null);
               setStep('camera');
             }}
@@ -264,7 +264,7 @@ function ScannerFrame() {
 function FailureDialog({ message, onClose }: { message?: string | null; onClose: () => void }) {
   const description = message?.trim()
     ? message.trim()
-    : 'QR 코드를 인식할 수 없어요.\n다시 시도하거나 관리자에게 문의해주세요.';
+    : 'QR 코드를 인식할 수 없어요.\n다시 촬영해 주세요.';
 
   return (
     <View style={styles.failureOverlay}>
@@ -299,13 +299,13 @@ export function QrSuccessDialog({
 }) {
   const message =
     type === 'end'
-      ? `${time} 봉사 활동이 종료되었습니다.`
-      : `${time} 봉사 활동을 시작합니다.`;
+      ? `${time} \uBD09\uC0AC \uD65C\uB3D9\uC774 \uC885\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4.`
+      : `${time} \uBD09\uC0AC \uD65C\uB3D9\uC744 \uC2DC\uC791\uD569\uB2C8\uB2E4.`;
 
   return (
     <View style={styles.successOverlay}>
       <View style={styles.successCard}>
-        <Pressable accessibilityLabel="닫기" hitSlop={10} style={styles.successClose} onPress={onConfirm}>
+        <Pressable accessibilityLabel="\uB2EB\uAE30" hitSlop={10} style={styles.successClose} onPress={onConfirm}>
           <Svg height={18} viewBox="0 0 18 18" width={18}>
             <Line stroke="#606060" strokeLinecap="round" strokeWidth={1.5} x1={4} x2={14} y1={4} y2={14} />
             <Line stroke="#606060" strokeLinecap="round" strokeWidth={1.5} x1={14} x2={4} y1={4} y2={14} />
@@ -313,7 +313,7 @@ export function QrSuccessDialog({
         </Pressable>
         <Text style={styles.successText}>{message}</Text>
         <Pressable style={({ pressed }) => [styles.successConfirm, pressed && styles.pressed]} onPress={onConfirm}>
-          <Text style={styles.successConfirmText}>확인</Text>
+          <Text style={styles.successConfirmText}>\uD655\uC778</Text>
         </Pressable>
       </View>
     </View>

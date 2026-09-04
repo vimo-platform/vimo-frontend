@@ -23,7 +23,6 @@ export async function verifyQrCapture({
   detectedQrValue,
 }: VerifyQrCaptureRequest): Promise<VerifyQrCaptureResponse> {
   const qrValue = normalizeQrToken(detectedQrValue ?? (await scanQrFromImage(imageUri)));
-
   const volunteerId = Number(postId);
 
   if (!Number.isFinite(volunteerId)) {
@@ -31,7 +30,7 @@ export async function verifyQrCapture({
   }
 
   if (!qrValue) {
-    return { verified: false, message: 'QR 코드를 인식할 수 없어요.' };
+    return { verified: false, message: 'QR 코드를 인식할 수 없어요. 다시 촬영해 주세요.' };
   }
 
   try {
@@ -68,29 +67,44 @@ function normalizeQrToken(value: string | null | undefined) {
 
 function normalizeQrErrorMessage(message: string) {
   const normalizedMessage = message.trim();
+  const lowerMessage = normalizedMessage.toLowerCase();
 
-  if (normalizedMessage.includes('QR token has expired')) {
-    return 'QR 코드가 만료되었어요. 관리자에게 새 QR 생성을 요청해주세요.';
+  if (lowerMessage.includes('expired') || normalizedMessage.includes('만료')) {
+    return 'QR 코드가 만료되었어요. 관리자에게 새 QR 생성을 요청해 주세요.';
   }
 
-  if (normalizedMessage.includes('QR token type mismatch')) {
+  if (lowerMessage.includes('type mismatch') || normalizedMessage.includes('타입')) {
     return '시작/종료 QR 코드가 맞지 않아요.';
   }
 
-  if (normalizedMessage.includes('Only approved applications can check in')) {
-    return '승인된 봉사만 시작 인증을 할 수 있어요.';
+  if (
+    lowerMessage.includes('only approved') ||
+    normalizedMessage.includes('승인') ||
+    normalizedMessage.includes('미승인')
+  ) {
+    return '승인된 봉사만 QR 인증할 수 있어요.';
   }
 
-  if (normalizedMessage.includes('Cannot check out before check-in')) {
-    return '시작 인증 후 종료 인증을 할 수 있어요.';
+  if (lowerMessage.includes('before check-in') || normalizedMessage.includes('체크인 전')) {
+    return '시작 인증 후 종료 인증할 수 있어요.';
   }
 
-  if (normalizedMessage.includes('already checked in')) {
+  if (lowerMessage.includes('already checked in') || normalizedMessage.includes('이미')) {
     return '이미 시작 인증이 완료되었어요.';
   }
 
-  if (normalizedMessage.includes('오늘 진행하는 봉사가 아닙니다')) {
+  if (
+    normalizedMessage.includes('오늘') ||
+    lowerMessage.includes('not today') ||
+    lowerMessage.includes('today') ||
+    lowerMessage.includes('not scheduled') ||
+    lowerMessage.includes('different date')
+  ) {
     return '오늘 진행하는 봉사가 아니에요.';
+  }
+
+  if (lowerMessage.includes('invalid qr') || lowerMessage.includes('invalid token')) {
+    return '인식한 QR 코드가 이 봉사 공고의 QR과 일치하지 않아요.';
   }
 
   return normalizedMessage || 'QR 코드 인증에 실패했어요.';

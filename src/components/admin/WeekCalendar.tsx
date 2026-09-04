@@ -3,13 +3,13 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { MonthPickerModal } from "@/components/calendar/MonthPickerModal";
+import { CalendarCircle } from "@/components/join/CalendarCircle";
 import { Colors } from "@/styles/admin/theme";
 
 const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
 const WEEK_COUNT = 157;
 const INITIAL_WEEK_INDEX = Math.floor(WEEK_COUNT / 2);
 
-/** Date -> "YYYY-MM-DD" */
 export function dateKey(d: Date) {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
@@ -36,23 +36,25 @@ function startOfDay(date: Date) {
 type Props = {
   selected: Date;
   onSelect: (date: Date) => void;
-  /** 표시할 날짜 키("YYYY-MM-DD") */
   marked?: string[];
 };
 
 export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
   const { width } = useWindowDimensions();
   const calendarWidth = Math.max(320, width - 40);
+  const today = useMemo(() => startOfDay(new Date()), []);
   const [isMonthPickerVisible, setIsMonthPickerVisible] = useState(false);
   const listRef = useRef<FlatList<Date[]>>(null);
+
   const weeks = useMemo(() => {
-    const currentWeekStart = startOfWeek(new Date());
+    const currentWeekStart = startOfWeek(today);
     return Array.from({ length: WEEK_COUNT }, (_, weekIndex) =>
       Array.from({ length: 7 }, (__, dayIndex) =>
         addDays(currentWeekStart, (weekIndex - INITIAL_WEEK_INDEX) * 7 + dayIndex),
       ),
     );
-  }, []);
+  }, [today]);
+
   const scrollToDate = useCallback(
     (date: Date) => {
       const targetKey = dateKey(date);
@@ -66,6 +68,7 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
     },
     [weeks],
   );
+
   const selectMonth = useCallback(
     (date: Date) => {
       const nextDate = startOfDay(date);
@@ -89,6 +92,7 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
         </Text>
         <Ionicons name="caret-down" size={14} color={Colors.text} />
       </Pressable>
+
       <FlatList
         ref={listRef}
         data={weeks}
@@ -103,17 +107,26 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
         pagingEnabled
         renderItem={({ item: week }) => (
           <View style={[styles.week, { width: calendarWidth }]}>
-            {week.map((d, i) => {
-              const isSelected = dateKey(d) === dateKey(selected);
+            {week.map((day, index) => {
+              const dayKey = dateKey(day);
+              const isSelected = dayKey === dateKey(selected);
+              const isToday = dayKey === dateKey(today);
+              const hasEvent = marked.includes(dayKey);
+
               return (
-                <Pressable key={dateKey(d)} style={styles.day} onPress={() => onSelect(d)}>
-                  <View style={[styles.dot, marked.includes(dateKey(d)) && styles.dotOn]} />
-                  <Text style={[styles.dayLabel, isSelected && styles.dayLabelSelected]}>
-                    {DAY_LABELS[i]}
+                <Pressable key={dayKey} style={styles.day} onPress={() => onSelect(day)}>
+                  <View style={styles.eventDotSlot}>
+                    {hasEvent ? (
+                      <View style={[styles.eventDot, isToday && styles.todayEventDot]} />
+                    ) : null}
+                  </View>
+                  <Text style={[styles.weekday, isToday && styles.todayText]}>
+                    {DAY_LABELS[index]}
                   </Text>
-                  <View style={[styles.dateCircle, isSelected && styles.dateCircleSelected]}>
-                    <Text style={[styles.dateText, isSelected && styles.dateTextSelected]}>
-                      {d.getDate()}
+                  <View style={styles.dateSlot}>
+                    {isSelected ? <CalendarCircle /> : null}
+                    <Text style={[styles.date, isToday && styles.todayText]}>
+                      {day.getDate()}
                     </Text>
                   </View>
                 </Pressable>
@@ -125,10 +138,7 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
         style={styles.weekList}
         onScrollToIndexFailed={(info) => {
           setTimeout(() => {
-            listRef.current?.scrollToIndex({
-              index: info.index,
-              animated: true,
-            });
+            listRef.current?.scrollToIndex({ index: info.index, animated: true });
           }, 50);
         }}
         onMomentumScrollEnd={(event) => {
@@ -142,6 +152,7 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
           onSelect(visibleWeek[selectedWeekdayIndex] ?? visibleWeek[3]);
         }}
       />
+
       <MonthPickerModal
         selectedDate={selected}
         visible={isMonthPickerVisible}
@@ -166,52 +177,61 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   weekList: {
+    height: 143,
     flexGrow: 0,
     flexShrink: 0,
   },
   week: {
+    height: 143,
     flexDirection: "row",
-    justifyContent: "space-between",
+    paddingHorizontal: 22,
+    paddingTop: 30,
   },
   day: {
+    flex: 1,
     alignItems: "center",
-    gap: 6,
-    width: 36,
   },
-  dot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: "transparent",
+  eventDotSlot: {
+    height: 12,
+    justifyContent: "flex-start",
   },
-  dotOn: {
-    backgroundColor: Colors.text,
+  eventDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: "#C7C7C7",
   },
-  dayLabel: {
-    fontSize: 14,
-    color: Colors.textSecondary,
+  todayEventDot: {
+    backgroundColor: "#222222",
   },
-  dayLabelSelected: {
-    color: Colors.text,
-    fontWeight: "700",
+  weekday: {
+    color: "#818181",
+    opacity: 0.5,
+    fontFamily: "Pretendard",
+    fontSize: 17,
+    fontWeight: "600",
+    lineHeight: 24,
+    letterSpacing: -0.425,
   },
-  dateCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  dateSlot: {
+    width: 43,
+    height: 43,
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 6,
   },
-  dateCircleSelected: {
-    borderWidth: 1.5,
-    borderColor: Colors.text,
+  date: {
+    color: "#818181",
+    opacity: 0.5,
+    fontFamily: "Pretendard",
+    fontSize: 17,
+    fontWeight: "600",
+    lineHeight: 24,
+    letterSpacing: -0.425,
   },
-  dateText: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-  },
-  dateTextSelected: {
-    color: Colors.text,
+  todayText: {
+    color: "#222222",
+    opacity: 1,
     fontWeight: "700",
   },
 });

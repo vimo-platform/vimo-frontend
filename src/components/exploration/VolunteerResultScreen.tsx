@@ -192,10 +192,11 @@ const styles = StyleSheet.create({
   },
   friendButton: {
     position: 'absolute',
-    top: 772,
-    left: 109,
-    width: 175,
-    height: 26,
+    top: 770,
+    left: '50%',
+    width: 230,
+    height: 34,
+    marginLeft: -115,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 3,
@@ -208,6 +209,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 26,
     textAlign: 'center',
+    includeFontPadding: false,
   },
   darkFriendText: {
     color: 'rgba(208,208,208,0.6)',
