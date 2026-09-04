@@ -19,7 +19,7 @@ import {
   newPostingId,
   setWorkingPosting,
 } from '@/services/admin/postings';
-import { LoadingOverlay } from '@/components/admin/LoadingOverlay';
+import { LoadingOverlay, LOADING_FILL_DURATION_MS } from '@/components/admin/LoadingOverlay';
 import { Colors } from '@/styles/admin/theme';
 import type { Gender, RecruitType } from '@/types/admin';
 
@@ -107,7 +107,12 @@ export default function CreatePostingScreen() {
     try {
       const normalizedCreditHours = Math.max(1, creditHours);
       const normalizedCount = Math.max(1, count);
-      const draft = await generatePostingDraft(memo);
+      // 게이지 바가 100%까지 다 차기 전에 페이지가 넘어가지 않도록,
+      // 초안 생성과 게이지 최소 재생 시간이 둘 다 끝날 때까지 기다린다.
+      const [draft] = await Promise.all([
+        generatePostingDraft(memo),
+        new Promise((resolve) => setTimeout(resolve, LOADING_FILL_DURATION_MS)),
+      ]);
       setWorkingPosting({
         id: newPostingId(),
         title: draft.title,

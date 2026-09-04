@@ -22,7 +22,14 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="posting/preview"
-          options={{ title: "공고 작성", headerTitleAlign: "center" }}
+          options={{
+            title: "공고 작성",
+            headerTitleAlign: "center",
+            // 로딩 화면(작성 화면 내부)에서 미리보기로 넘어올 때
+            // 딱 끊기지 않고 서서히 크로스페이드되도록.
+            animation: "fade",
+            animationDuration: 500,
+          }}
         />
         <Stack.Screen
           name="posting/edit"

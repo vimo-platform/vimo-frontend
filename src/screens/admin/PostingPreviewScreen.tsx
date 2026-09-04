@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useCallback, useState } from "react";
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Stack, router, useFocusEffect } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 
@@ -15,12 +15,29 @@ export default function PostingPreviewScreen() {
   const [confirming, setConfirming] = useState(false);
   const [done, setDone] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  // 로딩 화면에서 넘어온 미리보기 내용이 자연스럽게 떠오르도록 하는 페이드인.
+  const appear = useRef(new Animated.Value(0)).current;
 
   useFocusEffect(
     useCallback(() => {
       setPosting(getWorkingPosting());
     }, []),
   );
+
+  useEffect(() => {
+    if (!posting) {
+      return;
+    }
+
+    const appearAnimation = Animated.timing(appear, {
+      toValue: 1,
+      duration: 500,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    });
+    appearAnimation.start();
+    return () => appearAnimation.stop();
+  }, [appear, posting]);
 
   if (!posting) {
     return null;
@@ -91,7 +108,7 @@ export default function PostingPreviewScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { opacity: appear }]}>
       <Stack.Screen
         options={{
           title: "공고 작성",
@@ -210,7 +227,7 @@ export default function PostingPreviewScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </Animated.View>
   );
 }
 

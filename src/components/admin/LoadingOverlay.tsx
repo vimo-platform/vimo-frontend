@@ -35,43 +35,31 @@ function VimoLogo({ size = 120 }: { size?: number }) {
   );
 }
 
+// 게이지 바가 다 차는 데 걸리는 시간(ms). 여기 값 하나만 바꾸면
+// 게이지 속도와 "다음 페이지로 넘어가기까지 최소 대기 시간"이 함께 조정됩니다.
+export const LOADING_FILL_DURATION_MS = 5500;
+
 export function LoadingOverlay({ message }: { message: string }) {
-  // 로고를 살짝 좌우로 흔드는 sway 애니메이션.
-  const sway = useRef(new Animated.Value(0)).current;
+  // 화면이 딱 나타나지 않고 서서히 떠오르도록 하는 페이드인.
+  const appear = useRef(new Animated.Value(0)).current;
   // 진행률 값이 따로 없으므로 게이지 바를 자체적으로 채워지도록 애니메이션.
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const swayAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(sway, {
-          toValue: 1,
-          duration: 620,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(sway, {
-          toValue: -1,
-          duration: 1240,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(sway, {
-          toValue: 0,
-          duration: 620,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    swayAnimation.start();
-    return () => swayAnimation.stop();
-  }, [sway]);
+    const appearAnimation = Animated.timing(appear, {
+      toValue: 1,
+      duration: 450,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    });
+    appearAnimation.start();
+    return () => appearAnimation.stop();
+  }, [appear]);
 
   useEffect(() => {
     const progressAnimation = Animated.timing(progress, {
       toValue: 1,
-      duration: 3200,
+      duration: LOADING_FILL_DURATION_MS,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     });
@@ -79,21 +67,14 @@ export function LoadingOverlay({ message }: { message: string }) {
     return () => progressAnimation.stop();
   }, [progress]);
 
-  const rotate = sway.interpolate({
-    inputRange: [-1, 1],
-    outputRange: ["-8deg", "8deg"],
-  });
-
   const fillWidth = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: ["8%", "90%"],
+    outputRange: ["8%", "100%"],
   });
 
   return (
-    <View style={styles.overlay}>
-      <Animated.View style={{ transform: [{ rotate }] }}>
-        <VimoLogo size={120} />
-      </Animated.View>
+    <Animated.View style={[styles.overlay, { opacity: appear }]}>
+      <VimoLogo size={120} />
       <Text style={styles.message}>{message}</Text>
       <View style={styles.progressTrack}>
         <Animated.View style={[styles.progressFillMask, { width: fillWidth }]}>
@@ -105,7 +86,7 @@ export function LoadingOverlay({ message }: { message: string }) {
           />
         </Animated.View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
