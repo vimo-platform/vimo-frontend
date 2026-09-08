@@ -49,7 +49,8 @@ export default function QrScreen() {
   );
 
   useEffect(() => {
-    fetchQr(false);
+    const load = setTimeout(() => fetchQr(false), 0);
+    return () => clearTimeout(load);
   }, [fetchQr]);
 
   // 발급된 토큰 만료 카운트다운 (새 토큰마다 리셋)

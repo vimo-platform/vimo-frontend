@@ -123,7 +123,7 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.safeArea}>
-      <StatusBar backgroundColor="transparent" style="dark" translucent />
+      <StatusBar style="dark" />
       <LinearGradient colors={[ONBOARDING_BACKGROUND, '#FFFFFF', '#F5F5F7']} style={styles.screen}>
         <View style={[styles.content, { paddingTop: extraTopInset }]}>
           {currentPage.visual === 'welcome' ? <WelcomeBackground /> : null}

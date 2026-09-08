@@ -81,9 +81,14 @@ export default function PostingsScreen() {
   };
 
   useEffect(() => {
-    if (params.filter) {
-      setFilter(params.filter);
+    const nextFilter = params.filter;
+
+    if (!nextFilter) {
+      return;
     }
+
+    const sync = setTimeout(() => setFilter(nextFilter), 0);
+    return () => clearTimeout(sync);
   }, [params.filter]);
 
   const visible = postings.filter(

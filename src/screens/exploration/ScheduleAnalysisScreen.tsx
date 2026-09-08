@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -41,7 +41,7 @@ export function ScheduleAnalysisScreen() {
   const [analysis, setAnalysis] = useState<ScheduleAnalysisResult | null>(null);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [showKeywordError, setShowKeywordError] = useState(false);
-  const completeOpacity = useRef(new Animated.Value(0)).current;
+  const [completeOpacity] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     let mounted = true;

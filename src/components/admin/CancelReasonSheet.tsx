@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.45)",
   },

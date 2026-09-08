@@ -31,13 +31,18 @@ export function SyncOverlay({
   // onComplete는 부모에서 매 렌더마다 새로 생성되므로 ref로 고정한다.
   // (effect 의존성에 넣으면 progress 갱신 리렌더마다 타이머가 리셋되어 단계가 멈춘다)
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     if (!visible) {
-      setStep(0);
-      setProgress(0);
-      return;
+      const reset = setTimeout(() => {
+        setStep(0);
+        setProgress(0);
+      }, 0);
+      return () => clearTimeout(reset);
     }
 
     // 모든 단계 완료 → 잠시 "인증 완료!"를 보여준 뒤 콜백

@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
   },
   // 투명 입력 레이어: 보이는 글자는 위 Text가 담당하고, 여기선 커서/입력만.
   memoTextInput: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     color: 'transparent',
   },
   label: {

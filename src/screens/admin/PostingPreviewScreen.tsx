@@ -1,5 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Stack, router, useFocusEffect } from "expo-router";
 import Svg, { Path } from "react-native-svg";
@@ -16,7 +16,7 @@ export default function PostingPreviewScreen() {
   const [done, setDone] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   // 로딩 화면에서 넘어온 미리보기 내용이 자연스럽게 떠오르도록 하는 페이드인.
-  const appear = useRef(new Animated.Value(0)).current;
+  const [appear] = useState(() => new Animated.Value(0));
 
   useFocusEffect(
     useCallback(() => {

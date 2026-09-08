@@ -20,9 +20,12 @@ export function MonthPickerModal({
   const [year, setYear] = useState(selectedDate.getFullYear());
 
   useEffect(() => {
-    if (visible) {
-      setYear(selectedDate.getFullYear());
+    if (!visible) {
+      return;
     }
+
+    const sync = setTimeout(() => setYear(selectedDate.getFullYear()), 0);
+    return () => clearTimeout(sync);
   }, [selectedDate, visible]);
 
   const selectMonth = (monthIndex: number) => {

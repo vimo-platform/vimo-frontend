@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dimmed: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(34, 34, 34, 0.5)',
   },
   dialog: {

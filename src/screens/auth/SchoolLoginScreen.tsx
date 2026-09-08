@@ -46,11 +46,13 @@ export default function SchoolLoginScreen({
   const [localErrorMessage, setLocalErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    setStudentId(initialStudentId);
+    const sync = setTimeout(() => setStudentId(initialStudentId), 0);
+    return () => clearTimeout(sync);
   }, [initialStudentId]);
 
   useEffect(() => {
-    setSaveId(initialSaveId);
+    const sync = setTimeout(() => setSaveId(initialSaveId), 0);
+    return () => clearTimeout(sync);
   }, [initialSaveId]);
 
   const visibleErrorMessage = errorMessage ?? localErrorMessage;

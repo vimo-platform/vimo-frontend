@@ -1,5 +1,5 @@
 import { LinearGradient as ProgressGradient } from "expo-linear-gradient";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
 
@@ -36,8 +36,8 @@ function VimoLoadingLogo({ size = 120 }: { size?: number }) {
 export const LOADING_FILL_DURATION_MS = 5500;
 
 export function LoadingOverlay({ message }: { message: string }) {
-  const appear = useRef(new Animated.Value(0)).current;
-  const progress = useRef(new Animated.Value(0)).current;
+  const [appear] = useState(() => new Animated.Value(0));
+  const [progress] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     const appearAnimation = Animated.timing(appear, {
@@ -61,10 +61,10 @@ export function LoadingOverlay({ message }: { message: string }) {
     return () => progressAnimation.stop();
   }, [progress]);
 
-  const fillWidth = progress.interpolate({
+  const fillWidth = useMemo(() => progress.interpolate({
     inputRange: [0, 1],
     outputRange: ["8%", "100%"],
-  });
+  }), [progress]);
 
   return (
     <Animated.View style={[styles.overlay, { opacity: appear }]}>
