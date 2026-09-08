@@ -313,7 +313,7 @@ export function QrSuccessDialog({
         </Pressable>
         <Text style={styles.successText}>{message}</Text>
         <Pressable style={({ pressed }) => [styles.successConfirm, pressed && styles.pressed]} onPress={onConfirm}>
-          <Text style={styles.successConfirmText}>\uD655\uC778</Text>
+          <Text style={styles.successConfirmText}>확인</Text>
         </Pressable>
       </View>
     </View>
