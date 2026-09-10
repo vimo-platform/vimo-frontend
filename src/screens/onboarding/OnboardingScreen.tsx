@@ -9,6 +9,7 @@ import {
   Image,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -30,6 +31,9 @@ import {
 // 이보다 노치/다이내믹 아일랜드가 큰 기기에서 상단이 상태바에 겹쳐 잘리므로,
 // 디자인 기준(59)을 초과하는 만큼만 콘텐츠를 아래로 내린다.
 const DESIGN_TOP_INSET = 59;
+// 하단 버튼(top 700)까지 모두 담기는 디자인 프레임 높이. 실제 화면이 이보다 작으면
+// 스크롤로 나머지 콘텐츠를 볼 수 있도록 콘텐츠 최소 높이로 사용한다.
+const DESIGN_FRAME_HEIGHT = 852;
 const ONBOARDING_BACKGROUND = '#F9F9FB';
 
 const WELCOME_ASSETS = {
@@ -125,48 +129,55 @@ export default function OnboardingScreen() {
     <View style={styles.safeArea}>
       <StatusBar style="dark" />
       <LinearGradient colors={[ONBOARDING_BACKGROUND, '#FFFFFF', '#F5F5F7']} style={styles.screen}>
-        <View style={[styles.content, { paddingTop: extraTopInset }]}>
-          {currentPage.visual === 'welcome' ? <WelcomeBackground /> : null}
-          {currentPage.visual === 'volunteer-management' ? <ManagementBackground /> : null}
-          {currentPage.visual === 'participation' ? <ParticipationBackground /> : null}
-          {currentPage.visual === 'welcome' ? (
-            <WelcomeCopy description={currentPage.description} />
-          ) : (
-            <View style={styles.copyGroup}>
-              <Text style={styles.title}>{currentPage.title}</Text>
-              <Text
-                style={[
-                  styles.description,
-                  currentPage.visual === 'volunteer-management' &&
-                    styles.descriptionWithoutEyebrow,
-                ]}>
-                {currentPage.description}
-              </Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          style={styles.scrollView}>
+          <View style={[styles.frame, { minHeight: DESIGN_FRAME_HEIGHT + extraTopInset }]}>
+            <View style={[styles.content, { paddingTop: extraTopInset }]}>
+              {currentPage.visual === 'welcome' ? <WelcomeBackground /> : null}
+              {currentPage.visual === 'volunteer-management' ? <ManagementBackground /> : null}
+              {currentPage.visual === 'participation' ? <ParticipationBackground /> : null}
+              {currentPage.visual === 'welcome' ? (
+                <WelcomeCopy description={currentPage.description} />
+              ) : (
+                <View style={styles.copyGroup}>
+                  <Text style={styles.title}>{currentPage.title}</Text>
+                  <Text
+                    style={[
+                      styles.description,
+                      currentPage.visual === 'volunteer-management' &&
+                        styles.descriptionWithoutEyebrow,
+                    ]}>
+                    {currentPage.description}
+                  </Text>
+                </View>
+              )}
+
+              <VisualArea variant={currentPage.visual} />
             </View>
-          )}
 
-          <VisualArea variant={currentPage.visual} />
-        </View>
+            <View style={[styles.bottomArea, { paddingBottom: insets.bottom }]}>
+              <View accessibilityRole="tablist" style={styles.pagination}>
+                {ONBOARDING_PAGES.map((page, index) => (
+                  <View
+                    accessibilityLabel={`${index + 1}번째 온보딩 화면`}
+                    accessibilityState={{ selected: index === pageIndex }}
+                    key={page.visual}
+                    style={[styles.pageDot, index === pageIndex && styles.pageDotActive]}
+                  />
+                ))}
+              </View>
 
-        <View style={styles.bottomArea}>
-          <View accessibilityRole="tablist" style={styles.pagination}>
-            {ONBOARDING_PAGES.map((page, index) => (
-              <View
-                accessibilityLabel={`${index + 1}번째 온보딩 화면`}
-                accessibilityState={{ selected: index === pageIndex }}
-                key={page.visual}
-                style={[styles.pageDot, index === pageIndex && styles.pageDotActive]}
-              />
-            ))}
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleNext}
+                style={({ pressed }) => [styles.nextButton, pressed && styles.nextButtonPressed]}>
+                <Text style={styles.nextButtonLabel}>{buttonLabel}</Text>
+              </Pressable>
+            </View>
           </View>
-
-          <Pressable
-            accessibilityRole="button"
-            onPress={handleNext}
-            style={({ pressed }) => [styles.nextButton, pressed && styles.nextButtonPressed]}>
-            <Text style={styles.nextButtonLabel}>{buttonLabel}</Text>
-          </Pressable>
-        </View>
+        </ScrollView>
       </LinearGradient>
     </View>
   );
@@ -400,12 +411,21 @@ const styles = StyleSheet.create({
   },
   screen: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     alignItems: 'center',
+  },
+  frame: {
+    width: '100%',
+    maxWidth: 393,
+    position: 'relative',
   },
   content: {
     width: '100%',
-    maxWidth: 393,
-    flex: 1,
     position: 'relative',
   },
   copyGroup: {
@@ -656,7 +676,6 @@ const styles = StyleSheet.create({
   },
   bottomArea: {
     alignItems: 'center',
-    maxWidth: 393,
     position: 'absolute',
     top: 700,
     width: '100%',
