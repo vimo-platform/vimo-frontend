@@ -1,0 +1,14 @@
+{
+  "buildCommand": "npx expo export --platform web",
+  "outputDirectory": "dist",
+  "installCommand": "npm ci",
+  "rewrites": [
+    { "source": "/admin/posting/fcfs/:id", "destination": "/admin/posting/fcfs/[id].html" },
+    { "source": "/admin/posting/:id", "destination": "/admin/posting/[id].html" },
+    { "source": "/admin/qr/:sessionId", "destination": "/admin/qr/[sessionId].html" },
+    { "source": "/admin/activity/:id", "destination": "/admin/activity/[id].html" },
+    { "source": "/volunteer-post/:id", "destination": "/volunteer-post/[id].html" },
+    { "source": "/verification-pending/:id", "destination": "/verification-pending/[id].html" },
+    { "source": "/verification-complete/:id", "destination": "/verification-complete/[id].html" }
+  ]
+}
