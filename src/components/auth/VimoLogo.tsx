@@ -1,4 +1,5 @@
-import { Platform, StyleSheet, Text } from 'react-native';
+import { View } from 'react-native';
+import Svg, { Text as SvgText } from 'react-native-svg';
 
 type VimoLogoProps = {
   accessibilityRole?: 'header';
@@ -6,31 +7,20 @@ type VimoLogoProps = {
 
 export function VimoLogo({ accessibilityRole }: VimoLogoProps) {
   return (
-    <Text accessibilityRole={accessibilityRole} style={styles.logo}>
-      VIMO
-    </Text>
+    <View accessibilityRole={accessibilityRole} accessibilityLabel="VIMO">
+      <Svg width={200} height={72} viewBox="0 0 200 72">
+        <SvgText
+          x={100}
+          y={54}
+          textAnchor="middle"
+          fontSize={50}
+          fontWeight="bold"
+          fill="#333333"
+          stroke="#000000"
+          strokeWidth={1}>
+          VIMO
+        </SvgText>
+      </Svg>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  logo: {
-    color: '#333333',
-    fontSize: 42,
-    fontWeight: '900',
-    letterSpacing: 0,
-    lineHeight: 48,
-    ...Platform.select({
-      web: {
-        textShadow: '0px 8px 8px rgba(0, 0, 0, 0.34)',
-      },
-      default: {
-        textShadowColor: 'rgba(0, 0, 0, 0.34)',
-        textShadowOffset: {
-          width: 0,
-          height: 8,
-        },
-        textShadowRadius: 8,
-      },
-    }),
-  },
-});
