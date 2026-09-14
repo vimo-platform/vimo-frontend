@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Tabs } from "expo-router";
 import { SvgXml } from "react-native-svg";
+import { pretendard } from '@/styles/common/fonts';
 
 type GnbProps = {
   state: { index: number; routes: { key: string; name: string }[] };
@@ -148,7 +149,7 @@ const styles = StyleSheet.create({
   },
   label: {
     color: "#000000",
-    fontFamily: "Pretendard",
+    fontFamily: pretendard(400),
     fontSize: 10,
     fontWeight: "400",
     textAlign: "center",
