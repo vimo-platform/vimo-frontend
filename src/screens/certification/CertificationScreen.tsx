@@ -21,6 +21,7 @@ import { useUserSessionGuard } from '@/hooks/common/use-user-session-guard';
 
 import type { VolunteerPost } from '@/types/exploration/types';
 import { getMyCertificationStatusRecords, getVolunteerPosts } from '@/services/exploration/api';
+import { pretendard } from '@/styles/common/fonts';
 import {
   type CertificationRejectedRecord,
   getVolunteerInteractionsSnapshot,
@@ -603,7 +604,7 @@ const styles = StyleSheet.create({
   title: {
     alignSelf: 'center',
     color: '#111111',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 20,
     fontWeight: '500',
     lineHeight: 28,
@@ -632,7 +633,7 @@ const styles = StyleSheet.create({
     left: 31.63,
     width: 130,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 16,
     fontWeight: '600',
     lineHeight: 25,
@@ -662,7 +663,7 @@ const styles = StyleSheet.create({
   progressHours: {
     width: 58,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 20,
     fontWeight: '800',
   },
@@ -701,14 +702,14 @@ const styles = StyleSheet.create({
   filterChipText: {
     flex: 1,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 10,
     fontWeight: '600',
     lineHeight: 14,
   },
   filterChipCount: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(900),
     fontSize: 10,
     fontWeight: '900',
     lineHeight: 14,
@@ -732,7 +733,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     marginLeft: 20,
     color: '#000000',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 18,
@@ -757,7 +758,7 @@ const styles = StyleSheet.create({
   summaryLabel: {
     marginTop: 7,
     color: '#000000',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 11,
     fontWeight: '500',
     lineHeight: 15,
@@ -766,7 +767,7 @@ const styles = StyleSheet.create({
   summaryCount: {
     marginTop: 2,
     color: '#000000',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(400),
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 17,
@@ -801,7 +802,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: '#FFFFFF',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,
@@ -863,7 +864,7 @@ const styles = StyleSheet.create({
   },
   statusPillText: {
     color: '#FFFFFF',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 10,
     fontWeight: '600',
     lineHeight: 14,
@@ -915,7 +916,7 @@ const styles = StyleSheet.create({
   },
   rejectedAlertText: {
     color: '#E78483',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 43,
     fontWeight: '700',
     lineHeight: 48,
@@ -923,7 +924,7 @@ const styles = StyleSheet.create({
   rejectedModalTitle: {
     marginTop: 18,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 20,
     fontWeight: '700',
     lineHeight: 28,
@@ -932,7 +933,7 @@ const styles = StyleSheet.create({
   rejectedDateText: {
     marginTop: 18,
     color: '#E78483',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(400),
     fontSize: 13,
     fontWeight: '400',
     lineHeight: 18,
@@ -952,7 +953,7 @@ const styles = StyleSheet.create({
   },
   rejectedReasonTitle: {
     color: '#E78483',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,
@@ -960,7 +961,7 @@ const styles = StyleSheet.create({
   rejectedReasonText: {
     marginTop: 9,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
     lineHeight: 23,
@@ -976,7 +977,7 @@ const styles = StyleSheet.create({
   },
   rejectedInquiryText: {
     color: '#FFFFFF',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 18,
     fontWeight: '600',
     lineHeight: 26,
@@ -988,14 +989,14 @@ const styles = StyleSheet.create({
   cardTitle: {
     width: 164,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 15,
     fontWeight: '800',
   },
   cardCredit: {
     minWidth: 210,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 12,
     fontWeight: '500',
   },

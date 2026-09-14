@@ -17,6 +17,7 @@ import { getCustomizedVolunteerPosts, getScheduleRecommendationSnapshot, setSche
 import { getSavedScheduleAnalysis } from '@/services/exploration/schedule-analysis-api';
 import type { VolunteerPost } from '@/types/exploration/types';
 import { getSearchableVolunteerText, getVolunteerInteractionsSnapshot, mergeVolunteerInteractionsFromPosts, setVolunteerFavorite, setVolunteerPostsSnapshot, subscribeVolunteerInteractions } from '@/services/exploration/volunteer-interaction-store';
+import { pretendard } from '@/styles/common/fonts';
 
 const EXPLORATION_STAR = require('@/assets/images/explorationimg/explorationstar.png');
 const PARTICIPATION_COMPLETED_BUTTON = require('@/assets/images/common/participationcompletedbutton.png');
@@ -690,7 +691,7 @@ const styles = StyleSheet.create({
     paddingRight: 60,
     paddingLeft: 24,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 17,
     fontWeight: '600',
   },
@@ -708,7 +709,7 @@ const styles = StyleSheet.create({
   scheduleTitle: {
     flex: 1,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 19,
     fontWeight: '800',
     lineHeight: 27,
@@ -731,7 +732,7 @@ const styles = StyleSheet.create({
   },
   scheduleRegisterText: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 10,
     fontWeight: '600',
     lineHeight: 15,
@@ -751,7 +752,7 @@ const styles = StyleSheet.create({
   customTitle: {
     flex: 1,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 18,
     fontWeight: '700',
     lineHeight: 30,
@@ -777,14 +778,14 @@ const styles = StyleSheet.create({
   },
   todayScheduleTitle: {
     color: '#606060',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 9,
     fontWeight: '700',
     lineHeight: 14,
   },
   todayScheduleText: {
     color: '#606060',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 9,
     fontWeight: '500',
     lineHeight: 14,
@@ -797,7 +798,7 @@ const styles = StyleSheet.create({
   },
   scheduleEditText: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 8,
     fontWeight: '500',
     textAlign: 'center',
@@ -827,14 +828,14 @@ const styles = StyleSheet.create({
   },
   customMiniTitle: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 9,
     fontWeight: '700',
     lineHeight: 14,
   },
   customMiniTime: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 9,
     fontWeight: '500',
     lineHeight: 14,
@@ -849,7 +850,7 @@ const styles = StyleSheet.create({
   },
   customMiniMoreText: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 6,
     fontWeight: '500',
   },
@@ -867,7 +868,7 @@ const styles = StyleSheet.create({
   },
   noCustomText: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 10,
     fontWeight: '500',
     lineHeight: 14,
@@ -899,7 +900,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8E8E8',
   },
   tabItemActive: { backgroundColor: '#222222' },
-  tabLabel: { color: '#818181', fontFamily: 'Pretendard', fontSize: 14, fontWeight: '600', lineHeight: 20 },
+  tabLabel: { color: '#818181', fontFamily: pretendard(600), fontSize: 14, fontWeight: '600', lineHeight: 20 },
   tabLabelActive: { color: '#F5F5F5' },
   heartTabIcon: { width: 24, height: 24 },
   cardList: {
@@ -937,7 +938,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     flex: 1,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 15,
     fontWeight: '800',
     lineHeight: 18,
@@ -962,7 +963,7 @@ const styles = StyleSheet.create({
   credit: {
     marginTop: 11,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 12,
     fontWeight: '500',
   },
@@ -978,7 +979,7 @@ const styles = StyleSheet.create({
   detailText: {
     flex: 1,
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
   },
@@ -991,7 +992,7 @@ const styles = StyleSheet.create({
   },
   counts: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
   },
@@ -1016,7 +1017,7 @@ const styles = StyleSheet.create({
   },
   applyText: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
   },
@@ -1031,7 +1032,7 @@ const styles = StyleSheet.create({
   },
   feedbackTitle: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 16,
     fontWeight: '800',
     textAlign: 'center',
@@ -1039,7 +1040,7 @@ const styles = StyleSheet.create({
   feedbackText: {
     marginTop: 10,
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',

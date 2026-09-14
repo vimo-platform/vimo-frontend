@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
 import { ScheduleEditIcon } from './Icons';
+import { pretendard } from '@/styles/common/fonts';
 
 type ScheduleItem = {
   time: string;
@@ -69,14 +70,14 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#606060',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 9,
     fontWeight: '700',
     lineHeight: 14,
   },
   scheduleText: {
     color: '#606060',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 9,
     fontWeight: '500',
     lineHeight: 14,
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 8,
     fontWeight: '500',
     textAlign: 'center',

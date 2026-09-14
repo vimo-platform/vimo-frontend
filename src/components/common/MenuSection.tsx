@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { pretendard } from '@/styles/common/fonts';
 
 /**
  * 마이페이지(유저) / 프로필(관리자)에서 공통으로 쓰는 설정 메뉴 섹션.
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 16,
     fontWeight: '800',
     lineHeight: 22,
@@ -78,7 +79,7 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 15,
     fontWeight: '500',
     lineHeight: 21,

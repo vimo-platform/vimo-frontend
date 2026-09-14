@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { pretendard } from '@/styles/common/fonts';
 
 const MAX_REASON_LENGTH = 100;
 
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 15,
     fontWeight: '800',
     textAlign: 'center',
@@ -163,14 +164,14 @@ const styles = StyleSheet.create({
   },
   confirmTitle: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 20,
     fontWeight: '700',
     textAlign: 'center',
   },
   description: {
     color: '#606060',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(300),
     fontSize: 15,
     fontWeight: '300',
     lineHeight: 22,
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
   },
   reasonLabel: {
     color: '#606060',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 12,
     fontWeight: '700',
   },
@@ -199,7 +200,7 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingHorizontal: 17,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 12,
     fontWeight: '600',
   },
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
     right: 17,
     bottom: 18,
     color: '#D2D2D2',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 12,
     fontWeight: '600',
   },
@@ -236,14 +237,14 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 18,
     fontWeight: '600',
     letterSpacing: -0.45,
   },
   confirmButtonText: {
     color: '#FCE8E8',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 18,
     fontWeight: '600',
     letterSpacing: -0.45,

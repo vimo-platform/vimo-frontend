@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { pretendard } from '@/styles/common/fonts';
 
 const MONTHS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
 
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
   },
   year: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 20,
     fontWeight: '800',
   },
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
   },
   monthText: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 14,
     fontWeight: '700',
   },

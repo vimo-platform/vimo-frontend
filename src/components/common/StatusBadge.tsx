@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { VerificationCompleteIcon, VerificationPendingIcon } from './Icons';
+import { pretendard } from '@/styles/common/fonts';
 
 type StatusBadgeStatus = 'before' | 'active';
 type VerificationBadgeStatus = 'pending' | 'completeWithCount' | 'syncing' | 'complete';
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#818181',
   },
   statusLabel: {
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 19.6,
@@ -110,7 +111,7 @@ const styles = StyleSheet.create({
   },
   outlineVerificationLabel: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 10,
     fontWeight: '600',
     lineHeight: 14,
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
   },
   solidVerificationLabel: {
     color: '#FFFFFF',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 10,
     fontWeight: '600',
     lineHeight: 14,

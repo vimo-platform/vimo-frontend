@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgUri } from 'react-native-svg';
 
 import { Button } from '@/components/common';
+import { pretendard } from '@/styles/common/fonts';
 
 const VECTOR_BACK = require('@/assets/images/explorationimg/Vector 8.svg');
 const LEFT_LOOP = require('@/assets/images/explorationimg/image 79.svg');
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: '100%',
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 27,
     fontWeight: '800',
     lineHeight: 34,
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: '100%',
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 20,
     fontWeight: '600',
     lineHeight: 32,
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
   },
   friendText: {
     color: 'rgba(129,129,129,0.6)',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 18,
     fontWeight: '600',
     lineHeight: 26,

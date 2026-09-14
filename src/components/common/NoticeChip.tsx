@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { pretendard } from '@/styles/common/fonts';
 
 type NoticeChipProps = {
   label: string;
@@ -24,7 +25,7 @@ const styles = StyleSheet.create({
   },
   label: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 12,
     fontWeight: '600',
     lineHeight: 16.8,

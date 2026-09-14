@@ -1,5 +1,6 @@
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { pretendard } from '@/styles/common/fonts';
 
 type CancelCompleteModalProps = {
   visible: boolean;
@@ -122,14 +123,14 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 21,
     fontWeight: '800',
     textAlign: 'center',
   },
   description: {
     color: '#606060',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 26,
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 18,
     fontWeight: '600',
     letterSpacing: -0.45,

@@ -32,6 +32,7 @@ import {
 } from '@/services/join/manager-notification-service';
 import { QrSuccessDialog } from './QrActivityScanScreen';
 import type { VolunteerSchedule } from '@/types/join/types';
+import { pretendard } from '@/styles/common/fonts';
 import {
   addDays,
   getScheduleOccurrenceKeys,
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
   greeting: {
     flex: 1,
     color: '#111111',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(400),
     fontSize: 20,
     fontWeight: '400',
     lineHeight: 28,
@@ -371,7 +372,7 @@ const styles = StyleSheet.create({
   },
   month: {
     color: '#111111',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 20,
     fontWeight: '700',
   },
@@ -406,7 +407,7 @@ const styles = StyleSheet.create({
   weekday: {
     color: '#818181',
     opacity: 0.5,
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 17,
     fontWeight: '600',
     lineHeight: 24,
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
   date: {
     color: '#818181',
     opacity: 0.5,
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 17,
     fontWeight: '600',
     lineHeight: 24,

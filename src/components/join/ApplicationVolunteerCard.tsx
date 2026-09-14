@@ -3,6 +3,7 @@ import { HeartImage } from '@/components/common';
 import { VolunteerInfoIcon } from '@/components/common/VolunteerInfoIcon';
 
 import type { ApplicationVolunteerCard as ApplicationVolunteerCardType } from '@/types/join/application-status-types';
+import { pretendard } from '@/styles/common/fonts';
 
 const GLASS_CIRCLE = require('@/assets/images/joinimg/joinglasscircle.png');
 
@@ -200,7 +201,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 15,
     fontWeight: '800',
     lineHeight: 18,
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
   credit: {
     marginTop: 11,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 12,
     fontWeight: '500',
   },
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
   detailText: {
     flex: 1,
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
   },
@@ -254,7 +255,7 @@ const styles = StyleSheet.create({
   },
   counts: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
   },
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#CECECE',
   },
   actionText: {
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(400),
     fontSize: 13,
   },
   cancelText: {
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
   },
   applyText: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
   },
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
   },
   stepNumber: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(400),
     fontSize: 15,
     fontWeight: '400',
     lineHeight: 21,
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
   stepLabel: {
     marginTop: 4,
     color: '#444444',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 10,
     fontWeight: '700',
   },

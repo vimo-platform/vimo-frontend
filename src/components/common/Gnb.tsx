@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { pretendard } from '@/styles/common/fonts';
 
 import {
   GnbMyPageIcon,
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
   },
   label: {
     color: '#000000',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(400),
     fontSize: 10,
     fontWeight: '400',
     textAlign: 'center',

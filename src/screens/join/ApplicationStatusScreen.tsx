@@ -27,6 +27,7 @@ import type { ApplicationVolunteerCard as ApplicationVolunteerCardType } from '@
 import { ApplicationVolunteerCard } from '@/components/join/ApplicationVolunteerCard';
 import { CancelApplicationSheet } from '@/components/join/CancelApplicationSheet';
 import { CancelCompleteModal } from '@/components/join/CancelCompleteModal';
+import { pretendard } from '@/styles/common/fonts';
 
 export function ApplicationStatusScreen() {
   useUserSessionGuard();
@@ -361,7 +362,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: '#111111',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 13,
     fontWeight: '700',
   },
@@ -382,7 +383,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
   },

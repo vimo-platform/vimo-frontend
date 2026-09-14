@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { pretendard } from '@/styles/common/fonts';
 
 type ButtonVariant = 'primary' | 'secondary' | 'scheduleCancel' | 'scheduleSubmit';
 
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
   },
   label: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 18,
     fontWeight: '600',
     lineHeight: 26,

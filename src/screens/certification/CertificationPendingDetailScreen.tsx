@@ -12,6 +12,7 @@ import { useUserSessionGuard } from '@/hooks/common/use-user-session-guard';
 
 import type { VolunteerPost } from '@/types/exploration/types';
 import { getVolunteerPostsSnapshot } from '@/services/exploration/volunteer-interaction-store';
+import { pretendard } from '@/styles/common/fonts';
 
 type CertificationDetailVariant = 'pending' | 'complete';
 
@@ -332,7 +333,7 @@ const styles = StyleSheet.create({
   },
   topTitle: {
     color: '#111111',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 20,
     fontWeight: '500',
   },
@@ -413,7 +414,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#222222',
     opacity: 0.8,
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 17,
     fontWeight: '700',
   },
@@ -475,7 +476,7 @@ const styles = StyleSheet.create({
   },
   stepNumber: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(400),
     fontSize: 15,
     fontWeight: '400',
     lineHeight: 21,
@@ -485,7 +486,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 47,
     color: '#D2D2D2',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 10,
     fontWeight: '700',
     lineHeight: 12,
@@ -550,7 +551,7 @@ const styles = StyleSheet.create({
   },
   activityBadgeText: {
     color: '#FFFFFF',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 9,
     fontWeight: '600',
     lineHeight: 13,
@@ -558,7 +559,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     width: 190,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 15,
     fontWeight: '800',
     lineHeight: 20,
@@ -566,7 +567,7 @@ const styles = StyleSheet.create({
   credit: {
     marginTop: 15,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,
@@ -583,7 +584,7 @@ const styles = StyleSheet.create({
   detailText: {
     flex: 1,
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
     lineHeight: 18,
@@ -591,7 +592,7 @@ const styles = StyleSheet.create({
   counts: {
     marginTop: 19,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
     lineHeight: 18,
@@ -631,7 +632,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 14,
     fontWeight: '600',
   },

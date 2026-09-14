@@ -7,6 +7,7 @@ import { MenuSection } from "@/components/common";
 import { logout as requestLogout } from "@/services/common/auth";
 import { useAuth } from "@/hooks/admin/use-admin-auth";
 import { clearUserSession } from "@/services/common/auth-storage";
+import { pretendard } from '@/styles/common/fonts';
 
 const PROFILE_IMAGE = require("@/assets/admin/profile.png");
 
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
   title: {
     marginTop: 39,
     color: "#222222",
-    fontFamily: "Pretendard",
+    fontFamily: pretendard(500),
     fontSize: 25,
     fontWeight: "500",
     lineHeight: 35,
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
   },
   name: {
     color: "#222222",
-    fontFamily: "Pretendard",
+    fontFamily: pretendard(800),
     fontSize: 19,
     fontWeight: "800",
     lineHeight: 23,
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
   email: {
     marginTop: 2,
     color: "#222222",
-    fontFamily: "Pretendard",
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: "500",
     lineHeight: 18,
@@ -149,14 +150,14 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: "#FF8B8B",
-    fontFamily: "Pretendard",
+    fontFamily: pretendard(500),
     fontSize: 11,
     fontWeight: "500",
     lineHeight: 15,
   },
   authText: {
     color: "#818181",
-    fontFamily: "Pretendard",
+    fontFamily: pretendard(500),
     fontSize: 11,
     fontWeight: "500",
     lineHeight: 15,
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     color: "#222222",
-    fontFamily: "Pretendard",
+    fontFamily: pretendard(600),
     fontSize: 14,
     fontWeight: "600",
     lineHeight: 18,

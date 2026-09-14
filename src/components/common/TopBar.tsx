@@ -1,6 +1,7 @@
 import { Platform, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { BackIcon } from './Icons';
+import { pretendard } from '@/styles/common/fonts';
 
 type TopBarProps = {
   title?: string;
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#111111',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 20,
     fontWeight: '500',
     textAlign: 'center',

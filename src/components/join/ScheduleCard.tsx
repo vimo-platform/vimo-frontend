@@ -5,6 +5,7 @@ import { ParticipationButton, StatusBadge } from '@/components/common';
 import { VolunteerInfoIcon } from '@/components/common/VolunteerInfoIcon';
 
 import type { VolunteerSchedule } from '@/types/join/types';
+import { pretendard } from '@/styles/common/fonts';
 import {
   formatDateWithDots,
   formatTimeRange,
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
   },
   scheduleTime: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 18,
     fontWeight: '700',
     lineHeight: 25,
@@ -177,14 +178,14 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 15,
     fontWeight: '800',
   },
   credit: {
     marginTop: 10,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 12,
     fontWeight: '500',
   },
@@ -201,7 +202,7 @@ const styles = StyleSheet.create({
   detailText: {
     flex: 1,
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
   },

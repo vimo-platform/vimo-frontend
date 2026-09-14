@@ -17,6 +17,7 @@ import { useUserSessionGuard } from '@/hooks/common/use-user-session-guard';
 
 import { createVolunteerApplication, getVolunteerPostById, updateVolunteerFavorite } from '@/services/exploration/api';
 import type { VolunteerPost } from '@/types/exploration/types';
+import { pretendard } from '@/styles/common/fonts';
 import {
   approveVolunteerApplication,
   getVolunteerInteractionsSnapshot,
@@ -277,7 +278,7 @@ const styles = StyleSheet.create({
   },
   topTitle: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 18,
     fontWeight: '700',
     lineHeight: 25,
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 20,
     fontWeight: '800',
     lineHeight: 28,
@@ -320,7 +321,7 @@ const styles = StyleSheet.create({
   credit: {
     marginTop: 7,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 15,
     fontWeight: '600',
     lineHeight: 22,
@@ -338,7 +339,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#EAEAEA',
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 11,
     fontWeight: '700',
     lineHeight: 15,
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#F2F2F2',
     color: '#E97171',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 11,
     fontWeight: '800',
     lineHeight: 15,
@@ -378,7 +379,7 @@ const styles = StyleSheet.create({
   detailText: {
     flex: 1,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 16,
     fontWeight: '700',
     lineHeight: 25,
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
   },
   guideTitle: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 17,
     fontWeight: '800',
     lineHeight: 24,
@@ -399,7 +400,7 @@ const styles = StyleSheet.create({
   description: {
     marginTop: 12,
     color: '#606060',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 28,
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 15,
     fontWeight: '600',
   },

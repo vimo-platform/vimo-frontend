@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CheckIcon, LockIcon, LoginArrowIcon, SchoolIcon, WarningIcon } from '@/components/auth/LoginIcons';
+import { pretendard } from '@/styles/common/fonts';
 
 // 웹에서 TextInput 포커스 시 나타나는 브라우저 기본 아웃라인 제거
 const webOutlineReset: any =
@@ -198,7 +199,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 23,
     fontWeight: '800',
     letterSpacing: 0,
@@ -206,7 +207,7 @@ const styles = StyleSheet.create({
   },
   description: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 0,
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(300),
     fontSize: 16,
     fontWeight: '300',
     height: 56,
@@ -268,7 +269,7 @@ const styles = StyleSheet.create({
   },
   saveLabel: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
   },
@@ -304,7 +305,7 @@ const styles = StyleSheet.create({
   },
   loginLabel: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 18,
     fontWeight: '600',
     letterSpacing: -0.45,

@@ -16,6 +16,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Button } from '@/components/common';
 import { useUserSessionGuard } from '@/hooks/common/use-user-session-guard';
+import { pretendard } from '@/styles/common/fonts';
 
 const EXPLORATION_STAR = require('@/assets/images/explorationimg/explorationstar.png');
 const INPUT_TIMELINE_IMAGE = require('@/assets/images/explorationimg/inputtimelineimg.png');
@@ -198,7 +199,7 @@ const styles = StyleSheet.create({
   title: {
     marginTop: 22,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 20,
     fontWeight: '600',
     lineHeight: 30,
@@ -281,14 +282,14 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 21,
     fontWeight: '800',
   },
   modalDescription: {
     marginTop: 18,
     color: '#606060',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 15,
     fontWeight: '600',
     lineHeight: 22,
@@ -306,7 +307,7 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 17,
     fontWeight: '700',
   },

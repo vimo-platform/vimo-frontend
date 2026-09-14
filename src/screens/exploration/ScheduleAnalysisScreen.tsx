@@ -24,6 +24,7 @@ import {
   type ScheduleAnalysisResult,
 } from '@/services/exploration/schedule-analysis-api';
 import { setScheduleRecommendationFromAnalysis } from '@/services/exploration/customized-recommendation-store';
+import { pretendard } from '@/styles/common/fonts';
 
 const EXPLORATION_STAR = require('@/assets/images/explorationimg/explorationstar.png');
 
@@ -397,14 +398,14 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 23,
     fontWeight: '700',
     lineHeight: 31,
   },
   description: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 26,
@@ -442,7 +443,7 @@ const styles = StyleSheet.create({
   dayHeaderText: {
     width: TIMETABLE_GRID_WIDTH / TIMETABLE_DAYS.length,
     color: '#8F8F8F',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 7,
     fontWeight: '600',
     textAlign: 'center',
@@ -459,7 +460,7 @@ const styles = StyleSheet.create({
     left: 5,
     width: 17,
     color: '#8F8F8F',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 7,
     fontWeight: '500',
     textAlign: 'center',
@@ -488,7 +489,7 @@ const styles = StyleSheet.create({
   },
   classText: {
     color: '#FFFFFF',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 6,
     fontWeight: '700',
     lineHeight: 8,
@@ -501,7 +502,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 23,
     fontWeight: '700',
     lineHeight: 31,
@@ -509,7 +510,7 @@ const styles = StyleSheet.create({
   },
   sectionDescription: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 26,
@@ -535,7 +536,7 @@ const styles = StyleSheet.create({
   keywordErrorText: {
     marginBottom: 10,
     color: '#DC2626',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',

@@ -19,6 +19,7 @@ import Svg, { Line, SvgUri } from 'react-native-svg';
 import { UserGnb } from '@/components/navigation/UserGnb';
 
 import { verifyQrCapture } from '@/services/join/qr-verification-api';
+import { pretendard } from '@/styles/common/fonts';
 
 const QR_EXAMPLE = require('@/assets/images/joinimg/QRCODEex.svg');
 const CAPTURE_CTA = require('@/assets/images/joinimg/Capture CTA.svg');
@@ -361,7 +362,7 @@ const styles = StyleSheet.create({
     top: 436,
     alignSelf: 'center',
     color: '#FFFFFF',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 21,
     fontWeight: '500',
     lineHeight: 34,
@@ -500,14 +501,14 @@ const styles = StyleSheet.create({
   failureTitle: {
     marginTop: 20,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 20,
     fontWeight: '700',
   },
   failureDescription: {
     marginTop: 20,
     color: '#606060',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 26,
@@ -526,7 +527,7 @@ const styles = StyleSheet.create({
   },
   failureConfirmText: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 18,
     fontWeight: '600',
   },
@@ -561,7 +562,7 @@ const styles = StyleSheet.create({
   successText: {
     marginTop: 48,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 15,
     fontWeight: '600',
     textAlign: 'center',
@@ -578,7 +579,7 @@ const styles = StyleSheet.create({
   },
   successConfirmText: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
   },

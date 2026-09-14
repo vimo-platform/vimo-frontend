@@ -5,6 +5,7 @@ import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from
 import { MonthPickerModal } from "@/components/calendar/MonthPickerModal";
 import { CalendarCircle } from "@/components/join/CalendarCircle";
 import { Colors } from "@/styles/admin/theme";
+import { pretendard } from '@/styles/common/fonts';
 
 const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
 const WEEK_COUNT = 157;
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
   weekday: {
     color: "#818181",
     opacity: 0.5,
-    fontFamily: "Pretendard",
+    fontFamily: pretendard(600),
     fontSize: 17,
     fontWeight: "600",
     lineHeight: 24,
@@ -223,7 +224,7 @@ const styles = StyleSheet.create({
   date: {
     color: "#818181",
     opacity: 0.5,
-    fontFamily: "Pretendard",
+    fontFamily: pretendard(600),
     fontSize: 17,
     fontWeight: "600",
     lineHeight: 24,

@@ -15,6 +15,7 @@ import { MenuSection } from '@/components/common';
 import { logout as requestLogout } from '@/services/common/auth';
 import { UserGnb } from '@/components/navigation/UserGnb';
 import { resetVolunteerInteractions } from '@/services/exploration/volunteer-interaction-store';
+import { pretendard } from '@/styles/common/fonts';
 import {
   clearUserSession,
   getCurrentUser,
@@ -134,7 +135,7 @@ const styles = StyleSheet.create({
   title: {
     marginTop: 39,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 25,
     fontWeight: '500',
     lineHeight: 35,
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
   },
   name: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(800),
     fontSize: 19,
     fontWeight: '800',
     lineHeight: 23,
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
   studentId: {
     marginTop: 2,
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
     lineHeight: 18,
@@ -187,14 +188,14 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: '#FF8B8B',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 11,
     fontWeight: '500',
     lineHeight: 15,
   },
   authText: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 11,
     fontWeight: '500',
     lineHeight: 15,

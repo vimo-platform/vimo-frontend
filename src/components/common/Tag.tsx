@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { PencilDarkIcon, PencilLightIcon } from './Icons';
+import { pretendard } from '@/styles/common/fonts';
 
 type TagVariant = 'keyword' | 'editable';
 
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   label: {
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 19.6,

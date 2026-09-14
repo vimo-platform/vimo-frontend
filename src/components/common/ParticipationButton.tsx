@@ -1,4 +1,5 @@
-import {
+
+import { pretendard } from '@/styles/common/fonts';import {
   Pressable,
   StyleSheet,
   Text,
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
   },
   label: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 13,
     fontWeight: '500',
     textAlign: 'center',

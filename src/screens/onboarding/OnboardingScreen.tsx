@@ -15,6 +15,7 @@ import {
   type ImageSourcePropType,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { pretendard } from '@/styles/common/fonts';
 import Svg, {
   Circle,
   Path,
@@ -416,7 +417,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#222222',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 23,
     fontWeight: '700',
     letterSpacing: 0,
@@ -424,7 +425,7 @@ const styles = StyleSheet.create({
   },
   description: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 16,
     fontWeight: '500',
     letterSpacing: 0,
@@ -479,7 +480,7 @@ const styles = StyleSheet.create({
   },
   welcomeDescription: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(500),
     fontSize: 16,
     fontWeight: '500',
     letterSpacing: 0,
@@ -596,7 +597,7 @@ const styles = StyleSheet.create({
   },
   featureTitle: {
     color: '#606060',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(700),
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: 0,
@@ -604,7 +605,7 @@ const styles = StyleSheet.create({
   },
   featureSubtitle: {
     color: '#818181',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(400),
     fontSize: 12,
     fontWeight: '400',
     letterSpacing: 0,
@@ -698,7 +699,7 @@ const styles = StyleSheet.create({
   },
   nextButtonLabel: {
     color: '#F5F5F5',
-    fontFamily: 'Pretendard',
+    fontFamily: pretendard(600),
     fontSize: 18,
     fontWeight: '600',
     letterSpacing: 0,
