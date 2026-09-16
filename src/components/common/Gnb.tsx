@@ -64,10 +64,10 @@ const myPageInactiveXml = `<svg width="22" height="22" viewBox="0 0 22 22" fill=
 </svg>`;
 
 const iconByKey: Record<GnbTabKey, { active: string; inactive: string }> = {
-  participation: { active: participationActiveXml, inactive: participationInactiveXml },
-  search: { active: searchActiveXml, inactive: searchInactiveXml },
-  verification: { active: verificationActiveXml, inactive: verificationInactiveXml },
-  myPage: { active: myPageActiveXml, inactive: myPageInactiveXml },
+  participation: { active: participationInactiveXml, inactive: participationActiveXml },
+  search: { active: searchInactiveXml, inactive: searchActiveXml },
+  verification: { active: verificationInactiveXml, inactive: verificationActiveXml },
+  myPage: { active: myPageInactiveXml, inactive: myPageActiveXml },
 };
 
 const defaultItems: GnbItem[] = [

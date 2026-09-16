@@ -55,23 +55,23 @@ const adminTabMeta: Record<
   { activeIcon: string; inactiveIcon: string; label: string }
 > = {
   index: {
-    activeIcon: fieldQrActiveXml,
-    inactiveIcon: fieldQrInactiveXml,
+    activeIcon: fieldQrInactiveXml,
+    inactiveIcon: fieldQrActiveXml,
     label: "현장 QR",
   },
   postings: {
-    activeIcon: postingsActiveXml,
-    inactiveIcon: postingsInactiveXml,
+    activeIcon: postingsInactiveXml,
+    inactiveIcon: postingsActiveXml,
     label: "공고",
   },
   approvals: {
-    activeIcon: approvalsActiveXml,
-    inactiveIcon: approvalsInactiveXml,
+    activeIcon: approvalsInactiveXml,
+    inactiveIcon: approvalsActiveXml,
     label: "승인",
   },
   profile: {
-    activeIcon: mypageActiveXml,
-    inactiveIcon: mypageInactiveXml,
+    activeIcon: mypageInactiveXml,
+    inactiveIcon: mypageActiveXml,
     label: "마이페이지",
   },
 };

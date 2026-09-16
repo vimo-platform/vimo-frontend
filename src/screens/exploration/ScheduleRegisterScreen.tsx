@@ -15,11 +15,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Button } from '@/components/common';
+import { ScheduleEditIcon } from '@/components/common/Icons';
 import { useUserSessionGuard } from '@/hooks/common/use-user-session-guard';
 import { pretendard } from '@/styles/common/fonts';
 
 const EXPLORATION_STAR = require('@/assets/images/explorationimg/explorationstar.png');
-const INPUT_TIMELINE_IMAGE = require('@/assets/images/explorationimg/inputtimelineimg.png');
 
 export function ScheduleRegisterScreen() {
   useUserSessionGuard();
@@ -103,11 +103,10 @@ export function ScheduleRegisterScreen() {
               accessibilityRole="button"
               style={({ pressed }) => [styles.uploadBox, pressed && styles.pressed]}
               onPress={pickScheduleImage}>
-              <Image
-                resizeMode="contain"
-                source={INPUT_TIMELINE_IMAGE}
-                style={styles.uploadPlaceholderImage}
-              />
+              <ScheduleEditIcon width={56} height={56} />
+              <Text style={styles.uploadPlaceholderText}>
+                학교 시간표 사진을{'\n'}업로드해주세요
+              </Text>
             </Pressable>
           )}
         </View>
@@ -211,6 +210,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 14,
     overflow: 'hidden',
     marginTop: 76,
     borderWidth: 1.5,
@@ -218,9 +218,13 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     backgroundColor: '#F9F9F9',
   },
-  uploadPlaceholderImage: {
-    width: 190,
-    height: 144,
+  uploadPlaceholderText: {
+    color: '#818181',
+    fontFamily: pretendard(600),
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 24,
+    textAlign: 'center',
   },
   selectedScheduleGroup: {
     width: '100%',

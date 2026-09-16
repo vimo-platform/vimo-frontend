@@ -4,9 +4,10 @@ import { router, type Href } from 'expo-router';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { ActivityIndicator, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Path, SvgUri } from 'react-native-svg';
+import Svg, { Path, SvgUri } from 'react-native-svg';
 
 import { AllLine, HeartImage } from '@/components/common';
+import { ScheduleEditIcon } from '@/components/common/Icons';
 import { VolunteerInfoIcon } from '@/components/common/VolunteerInfoIcon';
 import { UserGnb } from '@/components/navigation/UserGnb';
 import { isUserAuthenticatedInCurrentSession } from '@/services/common/auth-storage';
@@ -21,7 +22,6 @@ import { pretendard } from '@/styles/common/fonts';
 
 const EXPLORATION_STAR = require('@/assets/images/explorationimg/explorationstar.png');
 const PARTICIPATION_COMPLETED_BUTTON = require('@/assets/images/common/participationcompletedbutton.png');
-const CUSTOMIZATION_VOLUNTEER_CARD = require('@/assets/images/explorationimg/Customizationvolunteercard.svg');
 const HEART_TAB_ICON = require('@/assets/icons/Huge-icon.svg');
 const HEART_TAB_ICON_ACTIVE = require('@/assets/icons/Huge-icon2.svg');
 
@@ -281,6 +281,7 @@ function CustomizedScheduleHero({
   scheduleItems: { dayOfWeek?: string; time: string; title: string }[];
 }) {
   const hasPosts = customizedPosts.length > 0;
+  const visibleCustomizedPosts = customizedPosts.slice(0, 2);
   const availableCopy = getAvailableScheduleCopy(freeTimeSlots);
   const todayScheduleItems = getTodayScheduleItems(scheduleItems);
 
@@ -322,11 +323,12 @@ function CustomizedScheduleHero({
 
       {hasPosts ? (
         <View style={styles.customMiniCardRow}>
-          {customizedPosts.slice(0, 2).map((post, index) => (
+          {visibleCustomizedPosts.map((post) => (
             <CustomizedVolunteerMiniCard
               key={post.id}
               post={post}
               subtitle={`${post.startTime} - ${post.endTime}`}
+              wide={visibleCustomizedPosts.length === 1}
             />
           ))}
         </View>
@@ -426,52 +428,39 @@ function formatMinutes(minutes: number) {
 function CustomizedVolunteerMiniCard({
   post,
   subtitle,
+  wide = false,
 }: {
   post: VolunteerPost;
   subtitle: string;
+  wide?: boolean;
 }) {
   const title = `${getCustomizedPostEmoji(post)} ${post.title}`;
 
   return (
     <Pressable
       accessibilityRole="button"
-      style={({ pressed }) => [styles.customMiniCard, pressed && styles.pressed]}
+      style={({ pressed }) => [pressed && styles.pressed]}
       onPress={() => router.push(`/volunteer-post/${post.id}` as Href)}>
-      <CustomizationVolunteerCardBackground />
-      <View style={styles.customMiniContent}>
-        <Text numberOfLines={1} style={styles.customMiniTitle}>
-          {title}
-        </Text>
-        <Text style={styles.customMiniTime}>{subtitle}</Text>
-        <View style={styles.customMiniMore}>
-          <Text style={styles.customMiniMoreText}>자세히 보기</Text>
-          <TinyChevronIcon />
+      <LinearGradient
+        colors={['#C1C1C1', '#FFFFFF', '#222222', '#EFEFEF']}
+        locations={[0.15, 0.42, 0.73, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.customMiniCard, wide && styles.customMiniCardWide]}>
+        <View style={styles.customMiniFill}>
+          <View style={styles.customMiniContent}>
+            <Text numberOfLines={1} style={styles.customMiniTitle}>
+              {title}
+            </Text>
+            <Text style={styles.customMiniTime}>{subtitle}</Text>
+            <View style={styles.customMiniMore}>
+              <Text style={styles.customMiniMoreText}>자세히 보기</Text>
+              <TinyChevronIcon />
+            </View>
+          </View>
         </View>
-      </View>
+      </LinearGradient>
     </Pressable>
-  );
-}
-
-function CustomizationVolunteerCardBackground() {
-  const uri = Asset.fromModule(CUSTOMIZATION_VOLUNTEER_CARD).uri;
-
-  if (Platform.OS === 'web') {
-    return (
-      <Image
-        resizeMode="stretch"
-        source={{ uri }}
-        style={styles.customMiniBackground}
-      />
-    );
-  }
-
-  return (
-    <SvgUri
-      height={61}
-      style={styles.customMiniBackground}
-      uri={uri}
-      width={152}
-    />
   );
 }
 
@@ -586,23 +575,6 @@ function SearchIcon() {
         strokeLinejoin="round"
         strokeWidth={2}
       />
-    </Svg>
-  );
-}
-
-function ScheduleEditIcon() {
-  return (
-    <Svg height={20} viewBox="0 0 24 24" width={20}>
-      <Path
-        d="M7 3v3M17 3v3M4.5 9h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v8"
-        fill="none"
-        stroke="#818181"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.6}
-      />
-      <Circle cx={17} cy={17} fill="none" r={4} stroke="#818181" strokeWidth={1.6} />
-      <Path d="M17 14.8V17l1.6 1" fill="none" stroke="#818181" strokeLinecap="round" strokeWidth={1.4} />
     </Svg>
   );
 }
@@ -813,11 +785,21 @@ const styles = StyleSheet.create({
   customMiniCard: {
     width: 152,
     height: 61,
+    padding: 1.2,
+    borderRadius: 18,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  customMiniBackground: {
-    position: 'absolute',
-    width: 152,
-    height: 61,
+  customMiniCardWide: {
+    width: 329,
+  },
+  customMiniFill: {
+    flex: 1,
+    borderRadius: 18,
+    backgroundColor: '#FAFAFA',
   },
   customMiniContent: {
     flex: 1,
