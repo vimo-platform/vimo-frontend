@@ -1,5 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { MonthPickerModal } from "@/components/calendar/MonthPickerModal";
@@ -42,10 +42,12 @@ type Props = {
 
 export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
   const { width } = useWindowDimensions();
-  const calendarWidth = Math.max(320, width - 40);
+  // 화면이 393 너비 앱 프레임 안에 갇혀 있으므로(웹) 실제 창 너비가 아닌 프레임 너비를 기준으로 계산한다.
+  const calendarWidth = Math.max(280, Math.min(width, 393) - 40);
   const today = useMemo(() => startOfDay(new Date()), []);
   const [isMonthPickerVisible, setIsMonthPickerVisible] = useState(false);
   const listRef = useRef<FlatList<Date[]>>(null);
+  const weekScrollEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const weeks = useMemo(() => {
     const currentWeekStart = startOfWeek(today);
@@ -78,6 +80,39 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
     },
     [onSelect, scrollToDate],
   );
+  const settleOnVisibleWeek = useCallback(
+    (offsetX: number) => {
+      const pageIndex = Math.round(offsetX / calendarWidth);
+      const visibleWeek = weeks[pageIndex];
+      if (visibleWeek) {
+        const selectedWeekdayIndex = (selected.getDay() + 6) % 7;
+        onSelect(visibleWeek[selectedWeekdayIndex] ?? visibleWeek[3]);
+      }
+    },
+    [calendarWidth, onSelect, selected, weeks],
+  );
+  // react-native-web never fires onMomentumScrollEnd for wheel/trackpad scrolling,
+  // so the selected week also settles from a debounced onScroll on web.
+  const handleWeekScroll = useCallback(
+    (event: { nativeEvent: { contentOffset: { x: number } } }) => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      if (weekScrollEndTimerRef.current) {
+        clearTimeout(weekScrollEndTimerRef.current);
+      }
+      weekScrollEndTimerRef.current = setTimeout(() => {
+        settleOnVisibleWeek(offsetX);
+      }, 120);
+    },
+    [settleOnVisibleWeek],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (weekScrollEndTimerRef.current) {
+        clearTimeout(weekScrollEndTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <View>
@@ -142,15 +177,13 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
             listRef.current?.scrollToIndex({ index: info.index, animated: true });
           }, 50);
         }}
+        onScroll={handleWeekScroll}
+        scrollEventThrottle={16}
         onMomentumScrollEnd={(event) => {
-          const pageIndex = Math.round(event.nativeEvent.contentOffset.x / calendarWidth);
-          const visibleWeek = weeks[pageIndex];
-          if (!visibleWeek) {
-            return;
+          if (weekScrollEndTimerRef.current) {
+            clearTimeout(weekScrollEndTimerRef.current);
           }
-
-          const selectedWeekdayIndex = (selected.getDay() + 6) % 7;
-          onSelect(visibleWeek[selectedWeekdayIndex] ?? visibleWeek[3]);
+          settleOnVisibleWeek(event.nativeEvent.contentOffset.x);
         }}
       />
 

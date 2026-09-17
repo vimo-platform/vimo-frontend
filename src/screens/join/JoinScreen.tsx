@@ -65,6 +65,7 @@ export function JoinScreen() {
   const weekListRef = useRef<FlatList<Date[]>>(null);
   const notifiedStartKeyRef = useRef<string | null>(null);
   const notifiedEndKeyRef = useRef<string | null>(null);
+  const weekScrollEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const weeks = useMemo(() => {
     const currentWeekStart = startOfWeek(today);
@@ -124,6 +125,41 @@ export function JoinScreen() {
     },
     [scrollToDate],
   );
+  const settleOnVisibleWeek = useCallback(
+    (offsetX: number) => {
+      const pageIndex = Math.round(offsetX / contentWidth);
+      const visibleWeek = weeks[pageIndex];
+      if (visibleWeek) {
+        const selectedWeekdayIndex = (selectedDate.getDay() + 6) % 7;
+        const nextSelectedDate = visibleWeek[selectedWeekdayIndex] ?? visibleWeek[3];
+        setSelectedDate(nextSelectedDate);
+        setDisplayedMonth(nextSelectedDate);
+      }
+    },
+    [contentWidth, selectedDate, weeks],
+  );
+  // react-native-web never fires onMomentumScrollEnd for wheel/trackpad scrolling,
+  // so the selected week also settles from a debounced onScroll on web.
+  const handleWeekScroll = useCallback(
+    (event: { nativeEvent: { contentOffset: { x: number } } }) => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      if (weekScrollEndTimerRef.current) {
+        clearTimeout(weekScrollEndTimerRef.current);
+      }
+      weekScrollEndTimerRef.current = setTimeout(() => {
+        settleOnVisibleWeek(offsetX);
+      }, 120);
+    },
+    [settleOnVisibleWeek],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (weekScrollEndTimerRef.current) {
+        clearTimeout(weekScrollEndTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isUserAuthenticatedInCurrentSession()) {
@@ -280,15 +316,13 @@ export function JoinScreen() {
                 });
               }, 50);
             }}
+            onScroll={handleWeekScroll}
+            scrollEventThrottle={16}
             onMomentumScrollEnd={(event) => {
-              const pageIndex = Math.round(event.nativeEvent.contentOffset.x / contentWidth);
-              const visibleWeek = weeks[pageIndex];
-              if (visibleWeek) {
-                const selectedWeekdayIndex = (selectedDate.getDay() + 6) % 7;
-                const nextSelectedDate = visibleWeek[selectedWeekdayIndex] ?? visibleWeek[3];
-                setSelectedDate(nextSelectedDate);
-                setDisplayedMonth(nextSelectedDate);
+              if (weekScrollEndTimerRef.current) {
+                clearTimeout(weekScrollEndTimerRef.current);
               }
+              settleOnVisibleWeek(event.nativeEvent.contentOffset.x);
             }}
           />
 

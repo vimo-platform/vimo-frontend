@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Tag } from '@/components/common';
-import { LoadingOverlay, LOADING_FILL_DURATION_MS } from '@/components/common/LoadingOverlay';
+import { LoadingOverlay } from '@/components/common/LoadingOverlay';
 import { useUserSessionGuard } from '@/hooks/common/use-user-session-guard';
 import type { ApiLocalTime, ClassSlot } from '@/services/common/user-setup';
 
@@ -27,6 +27,9 @@ import { setScheduleRecommendationFromAnalysis } from '@/services/exploration/cu
 import { pretendard } from '@/styles/common/fonts';
 
 const EXPLORATION_STAR = require('@/assets/images/explorationimg/explorationstar.png');
+
+// 분석이 끝난 뒤 결과 화면으로 넘어가기 전 잠깐 멈춘 느낌을 주는 최소 지연.
+const RESULT_TRANSITION_DELAY_MS = 500;
 
 type AnalysisPhase = 'loading' | 'complete';
 
@@ -46,28 +49,33 @@ export function ScheduleAnalysisScreen() {
 
   useEffect(() => {
     let mounted = true;
+    let transitionTimer: ReturnType<typeof setTimeout> | null = null;
 
     const request = isSavedScheduleView
       ? getSavedScheduleAnalysis().then((savedAnalysis) => savedAnalysis ?? null)
       : analyzeScheduleImage(uploadedImageUri);
 
-    Promise.all([
-      request,
-      isSavedScheduleView
-        ? Promise.resolve()
-        : new Promise((resolve) => setTimeout(resolve, LOADING_FILL_DURATION_MS)),
-    ]).then(([result]) => {
+    request.then((result) => {
       if (!mounted) {
         return;
       }
 
-      setAnalysis(result);
-      setSelectedKeywords(isSavedScheduleView ? result?.recommendedKeywords ?? [] : []);
-      setPhase('complete');
+      transitionTimer = setTimeout(() => {
+        if (!mounted) {
+          return;
+        }
+
+        setAnalysis(result);
+        setSelectedKeywords(isSavedScheduleView ? result?.recommendedKeywords ?? [] : []);
+        setPhase('complete');
+      }, RESULT_TRANSITION_DELAY_MS);
     });
 
     return () => {
       mounted = false;
+      if (transitionTimer) {
+        clearTimeout(transitionTimer);
+      }
     };
   }, [isSavedScheduleView, uploadedImageUri]);
 

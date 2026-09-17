@@ -1,13 +1,15 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useMemo, useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 
 import { fetchSessionCalendar } from "@/services/admin/sessions";
+import { AllLine } from "@/components/common";
 import { SessionStatusBadge } from "@/components/admin/Figma";
 import { SessionCard } from "@/components/admin/SessionCard";
 import { WeekCalendar, dateKey } from "@/components/admin/WeekCalendar";
+import { ParticipationLogo } from "@/components/join/ParticipationLogo";
 import { Colors } from "@/styles/admin/theme";
 import { useAuth } from "@/hooks/admin/use-admin-auth";
 import type { Session } from "@/types/admin";
@@ -40,7 +42,9 @@ export default function FieldQrScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Image source={require("@/assets/admin/icons/logo.png")} style={styles.logo} />
+        <View style={styles.logoRow}>
+          <ParticipationLogo />
+        </View>
         <Text style={styles.greeting}>{user?.name}님, 안녕하세요!</Text>
 
         <WeekCalendar
@@ -49,7 +53,7 @@ export default function FieldQrScreen() {
           marked={markedDates}
         />
 
-        <View style={styles.divider} />
+        <AllLine style={styles.divider} />
 
         {groups.map(([time, list]) => (
           <SessionGroup key={time} time={time} sessions={list} />
@@ -86,10 +90,8 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 40,
   },
-  logo: {
-    width: 44,
-    height: 44,
-    marginBottom: 20,
+  logoRow: {
+    marginBottom: 8,
   },
   greeting: {
     fontSize: 20,
@@ -98,10 +100,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   divider: {
-    height: 6,
-    backgroundColor: Colors.border,
     marginHorizontal: -20,
-    marginVertical: 24,
+    marginBottom: 30,
   },
   group: {
     marginBottom: 24,
