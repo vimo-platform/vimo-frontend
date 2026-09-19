@@ -131,7 +131,15 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{ title: "현장 QR", headerShown: false }} />
       <Tabs.Screen name="postings" options={{ title: "공고", headerShown: false }} />
-      <Tabs.Screen name="approvals" options={{ title: "승인" }} />
+      <Tabs.Screen
+        name="approvals"
+        options={{
+          title: "승인",
+          headerTitleAlign: "center",
+          headerStyle: { backgroundColor: "#F5F5F5" },
+          headerShadowVisible: false,
+        }}
+      />
       <Tabs.Screen name="profile" options={{ title: "마이페이지", headerShown: false }} />
     </Tabs>
   );

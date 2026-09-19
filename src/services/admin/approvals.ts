@@ -5,6 +5,7 @@ import type { Approval, ApprovalStatus, Posting } from '@/types/admin';
 type ApiApplicant = {
   applicationId?: number;
   studentId?: string;
+  studentName?: string;
   status?: string;
 };
 
@@ -24,9 +25,14 @@ export async function fetchApprovals(): Promise<Approval[]> {
             `/api/v1/admin/volunteers/${posting.id}/application`,
           ).catch(() => [] as ApiApplicant[]);
 
-          return applicants
-            .filter((applicant) => applicant.status && POST_CHECKOUT_STATUSES.has(applicant.status))
-            .map((applicant) => normalizeApproval(posting, applicant));
+          const approvalTargets = applicants.filter(
+            (applicant) => applicant.status && POST_CHECKOUT_STATUSES.has(applicant.status),
+          );
+          const applicantsWithNames = await Promise.all(
+            approvalTargets.map(fetchApplicantProfile),
+          );
+
+          return applicantsWithNames.map((applicant) => normalizeApproval(posting, applicant));
         }),
     );
 
@@ -36,6 +42,22 @@ export async function fetchApprovals(): Promise<Approval[]> {
   }
 
   return [...approvals];
+}
+
+async function fetchApplicantProfile(applicant: ApiApplicant): Promise<ApiApplicant> {
+  if (applicant.studentName?.trim() || typeof applicant.applicationId !== 'number') {
+    return applicant;
+  }
+
+  try {
+    const detail = await apiRequest<ApiApplicant>(
+      `/api/v1/admin/volunteers/applications/${applicant.applicationId}`,
+    );
+
+    return { ...applicant, ...detail };
+  } catch {
+    return applicant;
+  }
 }
 
 export async function setApprovalStatus(
@@ -73,7 +95,7 @@ function normalizeApproval(posting: Posting, applicant: ApiApplicant): Approval 
     period: posting.period,
     startTime: posting.startTime,
     endTime: posting.endTime,
-    studentName: applicant.studentId ?? '',
+    studentName: applicant.studentName?.trim() || applicant.studentId || '',
     status: normalizeApprovalStatus(applicant.status),
   };
 }

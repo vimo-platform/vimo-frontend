@@ -12,7 +12,7 @@ type ButtonProps = Omit<PressableProps, 'children'> & {
 const variantStyles: Record<ButtonVariant, StyleProp<ViewStyle>> = {
   primary: {
     width: 326,
-    backgroundColor: '#222222',
+    backgroundColor: '#111111',
   },
   secondary: {
     width: 326,

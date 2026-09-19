@@ -1,6 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { StyleProp, TextStyle, ViewStyle } from "react-native";
 
 import { PostingInfoIcon, type PostingInfoIconType } from "@/components/common/PostingInfoIcon";
 import { Colors } from "@/styles/admin/theme";
@@ -15,6 +16,11 @@ type Props = {
   onPress?: () => void;
   right?: ReactNode;
   children?: ReactNode;
+  cardStyle?: StyleProp<ViewStyle>;
+  titleRowStyle?: StyleProp<ViewStyle>;
+  hoursStyle?: StyleProp<TextStyle>;
+  infoRowStyle?: StyleProp<ViewStyle>;
+  infoIconSlotStyle?: StyleProp<ViewStyle>;
 };
 
 export function ActivityCard({
@@ -26,26 +32,56 @@ export function ActivityCard({
   onPress,
   right,
   children,
+  cardStyle,
+  titleRowStyle,
+  hoursStyle,
+  infoRowStyle,
+  infoIconSlotStyle,
 }: Props) {
   return (
-    <View style={styles.card}>
-      <Pressable style={styles.titleRow} onPress={onPress} disabled={!onPress}>
+    <View style={[styles.card, cardStyle]}>
+      <Pressable style={[styles.titleRow, titleRowStyle]} onPress={onPress} disabled={!onPress}>
         <Text style={styles.title}>{title}</Text>
         {right ?? (onPress ? <Ionicons name="chevron-forward" size={20} color={Colors.text} /> : null)}
       </Pressable>
-      <Text style={styles.hours}>봉사 인정 시간 : 회차당 {hoursPerSession}시간 인정</Text>
-      <InfoRow icon="location" text={location} />
-      <InfoRow icon="calendar" text={period} />
-      <InfoRow icon="clock" text={time} />
+      <Text style={[styles.hours, hoursStyle]}>봉사 인정 시간 : 회차당 {hoursPerSession}시간 인정</Text>
+      <InfoRow
+        icon="location"
+        text={location}
+        rowStyle={infoRowStyle}
+        iconSlotStyle={infoIconSlotStyle}
+      />
+      <InfoRow
+        icon="calendar"
+        text={period}
+        rowStyle={infoRowStyle}
+        iconSlotStyle={infoIconSlotStyle}
+      />
+      <InfoRow
+        icon="clock"
+        text={time}
+        rowStyle={infoRowStyle}
+        iconSlotStyle={infoIconSlotStyle}
+      />
       {children}
     </View>
   );
 }
 
-function InfoRow({ icon, text }: { icon: PostingInfoIconType; text: string }) {
+function InfoRow({
+  icon,
+  text,
+  rowStyle,
+  iconSlotStyle,
+}: {
+  icon: PostingInfoIconType;
+  text: string;
+  rowStyle?: StyleProp<ViewStyle>;
+  iconSlotStyle?: StyleProp<ViewStyle>;
+}) {
   return (
-    <View style={styles.infoRow}>
-      <View style={styles.infoIconSlot}>
+    <View style={[styles.infoRow, rowStyle]}>
+      <View style={[styles.infoIconSlot, iconSlotStyle]}>
         <PostingInfoIcon type={icon} color={Colors.textSecondary} />
       </View>
       <Text style={styles.infoText}>{text}</Text>

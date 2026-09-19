@@ -17,15 +17,44 @@ import { fetchApprovals, setApprovalStatus } from "@/services/admin/approvals";
 import { ActivityCard } from "@/components/admin/ActivityCard";
 import { SyncOverlay } from "@/components/admin/SyncOverlay";
 import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from "@/styles/admin/theme";
+import { pretendard } from "@/styles/common/fonts";
 import type { Approval, ApprovalStatus } from "@/types/admin";
 
 const STATUS: Record<
   ApprovalStatus,
-  { tab: string; badge: string; accent: string; soft: string }
+  {
+    tab: string;
+    badge: string;
+    accent: string;
+    bannerBorder: string;
+    countBackground: string;
+    badgeBackground: string;
+  }
 > = {
-  pending: { tab: "승인 대기", badge: "승인 대기", accent: "#5B6068", soft: "#EDEDED" },
-  approved: { tab: "승인 완료", badge: "승인 완료", accent: "#4C9E63", soft: "#E4F5E9" },
-  rejected: { tab: "반려", badge: "반려 처리", accent: "#C07777", soft: "#FBE3E3" },
+  pending: {
+    tab: "승인 대기",
+    badge: "승인 대기",
+    accent: "#222222",
+    bannerBorder: "#606060",
+    countBackground: "#F5F5F5",
+    badgeBackground: "#818181",
+  },
+  approved: {
+    tab: "승인 완료",
+    badge: "승인 완료",
+    accent: "#59A76A",
+    bannerBorder: "#B8DB82",
+    countBackground: "#ECFFC9",
+    badgeBackground: "#59A76A",
+  },
+  rejected: {
+    tab: "반려",
+    badge: "반려 처리",
+    accent: "#C07777",
+    bannerBorder: "#F1B29D",
+    countBackground: "#FFD5C7",
+    badgeBackground: "#C07777",
+  },
 };
 
 const ORDER: ApprovalStatus[] = ["pending", "approved", "rejected"];
@@ -82,9 +111,14 @@ export default function ApprovalsScreen() {
         keyExtractor={(a) => a.id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={
-          <View style={[styles.banner, { borderColor: meta.accent }]}>
+          <View style={[styles.banner, { borderColor: meta.bannerBorder }]}>
             <Text style={[styles.bannerTitle, { color: meta.accent }]}>{meta.tab}</Text>
-            <View style={[styles.count, { backgroundColor: meta.soft }]}>
+            <View
+              style={[
+                styles.count,
+                { backgroundColor: meta.countBackground, borderColor: meta.bannerBorder },
+              ]}
+            >
               <Text style={[styles.countText, { color: meta.accent }]}>{visible.length}건</Text>
             </View>
           </View>
@@ -97,7 +131,19 @@ export default function ApprovalsScreen() {
             location={item.location}
             period={item.period}
             time={`${item.startTime} ~ ${item.endTime}`}
-            right={<StatusBadge status={item.status} />}
+            right={
+              <View style={styles.badgePosition}>
+                <StatusBadge status={item.status} />
+              </View>
+            }
+            cardStyle={[
+              styles.approvalCard,
+              item.status === "pending" ? styles.pendingCard : styles.resolvedCard,
+            ]}
+            titleRowStyle={styles.approvalTitleRow}
+            hoursStyle={styles.approvalHours}
+            infoRowStyle={styles.approvalInfoRow}
+            infoIconSlotStyle={styles.approvalInfoIconSlot}
           >
             <View style={styles.divider} />
             <Text style={styles.studentName}>{item.studentName} 학생</Text>
@@ -194,8 +240,8 @@ export default function ApprovalsScreen() {
 function StatusBadge({ status }: { status: ApprovalStatus }) {
   const meta = STATUS[status];
   return (
-    <View style={[styles.badge, { backgroundColor: meta.soft }]}>
-      <Text style={[styles.badgeText, { color: meta.accent }]}>{meta.badge}</Text>
+    <View style={[styles.badge, { backgroundColor: meta.badgeBackground }]}>
+      <Text style={styles.badgeText}>{meta.badge}</Text>
     </View>
   );
 }
@@ -203,126 +249,177 @@ function StatusBadge({ status }: { status: ApprovalStatus }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: "#F5F5F5",
   },
   tabs: {
     flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 16,
+    justifyContent: "center",
+    gap: 16,
     paddingTop: 12,
   },
   tab: {
-    height: 34,
     justifyContent: "center",
     backgroundColor: "#E8E8E8",
     borderRadius: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
   },
   tabText: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontFamily: pretendard(600),
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: -0.35,
     color: "#818181",
   },
   tabTextOn: {
     color: Colors.white,
   },
   list: {
-    padding: 16,
+    paddingHorizontal: 39,
+    paddingTop: 30,
+    paddingBottom: 126,
     gap: 12,
   },
   banner: {
+    height: 60,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: Colors.card,
     borderWidth: 1,
     borderRadius: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
+    paddingHorizontal: 30,
+    width: 315,
+    marginLeft: -2,
+    marginBottom: 18,
   },
   bannerTitle: {
-    fontSize: 16,
-    fontWeight: "800",
+    fontFamily: pretendard(600),
+    fontSize: 18,
   },
   count: {
-    borderRadius: 10,
-    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderRadius: 9,
+    paddingHorizontal: 9,
     paddingVertical: 4,
   },
   countText: {
+    fontFamily: pretendard(600),
     fontSize: 12,
-    fontWeight: "700",
+    lineHeight: 17,
   },
   empty: {
     textAlign: "center",
+    fontFamily: pretendard(400),
     color: Colors.textSecondary,
     fontSize: 14,
     marginTop: 40,
   },
+  approvalCard: {
+    borderRadius: 29,
+    paddingTop: 32.5,
+    paddingBottom: 23.5,
+    paddingHorizontal: 39,
+  },
+  approvalTitleRow: {
+    alignItems: "flex-start",
+  },
+  approvalHours: {
+    marginTop: 7,
+    marginBottom: 17,
+  },
+  approvalInfoRow: {
+    gap: 9.5,
+    marginBottom: 8,
+  },
+  approvalInfoIconSlot: {
+    width: 9,
+  },
+  pendingCard: {
+    minHeight: 410,
+  },
+  resolvedCard: {
+    minHeight: 345,
+  },
   badge: {
     alignSelf: "flex-start",
-    borderRadius: 6,
+    borderRadius: 9,
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
   badgeText: {
-    fontSize: 12,
-    fontWeight: "700",
+    fontFamily: pretendard(600),
+    fontSize: 10,
+    color: Colors.white,
+  },
+  badgePosition: {
+    marginRight: -11,
+    transform: [{ translateY: -4 }],
   },
   divider: {
     height: 1,
     backgroundColor: Colors.border,
-    marginTop: 12,
-    marginBottom: 14,
+    marginTop: 19.5,
+    marginBottom: 16,
+    marginHorizontal: -7,
   },
   studentName: {
-    fontSize: 17,
-    fontWeight: "800",
+    fontFamily: pretendard(700),
+    fontSize: 21,
+    lineHeight: 25,
     color: Colors.text,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   subLabel: {
+    fontFamily: pretendard(500),
     fontSize: 13,
+    lineHeight: 16,
     color: Colors.textSecondary,
   },
   subValue: {
+    fontFamily: pretendard(500),
     fontSize: 13,
-    color: Colors.text,
-    marginBottom: 10,
+    lineHeight: 16,
+    color: Colors.textSecondary,
+    marginBottom: 16,
   },
   note: {
+    fontFamily: pretendard(500),
     fontSize: 13,
     color: Colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 16,
   },
   buttonRow: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: 16,
+    gap: 13,
+    marginTop: 19.5,
+    marginHorizontal: -3.5,
   },
   rejectBtn: {
     flex: 1,
+    height: 49,
     backgroundColor: "#818181",
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 13,
     alignItems: "center",
+    justifyContent: "center",
   },
   rejectText: {
+    fontFamily: pretendard(600),
     color: Colors.white,
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 15,
   },
   approveBtn: {
     flex: 1,
+    height: 49,
     backgroundColor: "#222222",
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 13,
     alignItems: "center",
+    justifyContent: "center",
   },
   approveText: {
+    fontFamily: pretendard(600),
     color: Colors.white,
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 15,
   },
   pressed: {
     opacity: 0.85,

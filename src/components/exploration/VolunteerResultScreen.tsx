@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   darkBackground: {
-    backgroundColor: '#222222',
+    backgroundColor: '#212121',
   },
   vectorBack: {
     position: 'absolute',

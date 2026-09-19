@@ -8,6 +8,7 @@ import { isAuthError } from "@/services/common/client";
 import { PostingInfoIcon, type PostingInfoIconType } from "@/components/common/PostingInfoIcon";
 import { getWorkingPosting, setWorkingPosting, upsertPosting } from "@/services/admin/postings";
 import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from "@/styles/admin/theme";
+import { pretendard } from "@/styles/common/fonts";
 import type { Posting } from "@/types/admin";
 
 export default function PostingPreviewScreen() {
@@ -113,6 +114,10 @@ export default function PostingPreviewScreen() {
         options={{
           title: "공고 작성",
           headerTitleAlign: "center",
+          headerTitleStyle: {
+            fontFamily: pretendard(500),
+            fontSize: 20,
+          },
         }}
       />
 
@@ -254,7 +259,7 @@ function getMinutes(time: string) {
 
 function DraftSaveIcon() {
   return (
-    <Svg width={26} height={26} viewBox="0 0 35 35" fill="none">
+    <Svg width={35} height={35} viewBox="0 0 35 35" fill="none">
       <Path
         d="M8.72656 9.01661C8.72656 7.38795 8.72656 6.57361 9.04357 5.95123C9.3224 5.40402 9.7673 4.95912 10.3145 4.68029C10.9369 4.36328 11.7512 4.36328 13.3799 4.36328H21.5232C23.1519 4.36328 23.9662 4.36328 24.5886 4.68029C25.1358 4.95912 25.5807 5.40402 25.8596 5.95123C26.1766 6.57361 26.1766 7.38795 26.1766 9.01661V28.3643C26.1766 29.071 26.1766 29.4244 26.0297 29.6178C25.9662 29.7019 25.8852 29.7712 25.7923 29.8209C25.6994 29.8707 25.5968 29.8996 25.4916 29.9057C25.2488 29.9203 24.9551 29.7239 24.3676 29.3328L17.4516 24.7216L10.5355 29.3313C9.94806 29.7239 9.65432 29.9203 9.41002 29.9057C9.30508 29.8994 9.20277 29.8703 9.11013 29.8206C9.0175 29.7709 8.93674 29.7017 8.87343 29.6178C8.72656 29.4244 8.72656 29.071 8.72656 28.3643V9.01661Z"
         fill="#28303F"
@@ -267,10 +272,16 @@ function DraftSaveIcon() {
 }
 
 function InfoRow({ icon, text }: { icon: PostingInfoIconType; text: string }) {
+  const iconSize = {
+    location: { width: 12, height: 14.66 },
+    calendar: { width: 13.03, height: 12.56 },
+    clock: { width: 12.36, height: 12.36 },
+  }[icon];
+
   return (
     <View style={styles.infoRow}>
       <View style={styles.infoIconSlot}>
-        <PostingInfoIcon type={icon} />
+        <PostingInfoIcon type={icon} width={iconSize.width} height={iconSize.height} />
       </View>
       <Text style={styles.infoText}>{text}</Text>
     </View>
@@ -283,8 +294,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.card,
   },
   scroll: {
-    padding: 20,
-    paddingBottom: 40,
+    paddingTop: 26,
+    paddingHorizontal: 32,
+    paddingBottom: 126,
   },
   titleRow: {
     flexDirection: "row",
@@ -294,116 +306,134 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
+    fontFamily: pretendard(800),
     fontSize: 22,
-    fontWeight: "800",
-    color: Colors.text,
+    color: "#222222",
   },
   hours: {
-    fontSize: 14,
-    color: Colors.text,
-    marginTop: 8,
+    fontFamily: pretendard(500),
+    fontSize: 18,
+    color: "#222222",
+    marginTop: 16,
     marginBottom: 12,
   },
   capacityPill: {
     alignSelf: "flex-start",
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: "#606060",
+    borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 5,
     marginBottom: 10,
   },
   capacityText: {
-    fontSize: 12,
-    color: Colors.text,
-    fontWeight: "600",
+    fontFamily: pretendard(500),
+    fontSize: 10,
+    color: "#606060",
   },
   tags: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: 5,
   },
   tag: {
-    backgroundColor: "#F1F1F1",
-    borderRadius: 6,
+    backgroundColor: "#E8E8E8",
+    borderRadius: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    fontSize: 11,
-    fontWeight: "600",
-    color: Colors.textSecondary,
+    fontFamily: pretendard(600),
+    fontSize: 10,
+    lineHeight: 14,
+    letterSpacing: -0.25,
+    color: "#222222",
+    opacity: 0.5,
   },
   tagWarn: {
-    backgroundColor: "#FDE8EC",
-    color: "#E0526E",
+    color: "#D10000",
+    fontSize: 12,
+    letterSpacing: -0.3,
+    opacity: 1,
   },
   thickDivider: {
-    height: 6,
-    backgroundColor: Colors.border,
-    marginHorizontal: -20,
+    height: 9,
+    backgroundColor: "#D9D9D9",
+    marginHorizontal: -32,
     marginVertical: 20,
   },
   infoRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 10,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   infoIconSlot: {
     width: 16,
     alignItems: "center",
+    paddingTop: 4,
   },
   infoText: {
     flex: 1,
-    fontSize: 15,
-    color: Colors.text,
+    fontFamily: pretendard(500),
+    fontSize: 19,
+    lineHeight: 23,
+    color: "#434343",
   },
   thinDivider: {
-    height: 1,
-    backgroundColor: Colors.border,
+    height: 0.5,
+    backgroundColor: "#9C9C9C",
     marginVertical: 10,
   },
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: Colors.text,
+    fontFamily: pretendard(700),
+    fontSize: 20,
+    color: "#111111",
     marginTop: 10,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   description: {
-    fontSize: 15,
-    lineHeight: 24,
-    color: Colors.text,
+    fontFamily: pretendard(300),
+    fontSize: 18,
+    lineHeight: 27,
+    color: "#606060",
   },
   footer: {
     flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 16,
+    gap: 8,
+    paddingLeft: 34,
+    paddingRight: 32,
     paddingTop: 10,
-    paddingBottom: 16,
+    paddingBottom: 34,
+    backgroundColor: Colors.card,
   },
   editButton: {
-    flex: 1,
+    width: 142,
+    height: 60,
     backgroundColor: "#818181",
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 16,
     alignItems: "center",
+    justifyContent: "center",
   },
   editButtonText: {
-    color: Colors.white,
-    fontSize: 15,
-    fontWeight: "700",
+    color: "#F5F5F5",
+    fontFamily: pretendard(600),
+    fontSize: 18,
+    lineHeight: 26,
+    letterSpacing: -0.45,
   },
   registerButton: {
-    flex: 1.6,
+    flex: 1,
+    height: 60,
     backgroundColor: "#222222",
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 16,
     alignItems: "center",
+    justifyContent: "center",
   },
   registerButtonText: {
-    color: Colors.white,
-    fontSize: 15,
-    fontWeight: "700",
+    color: "#F5F5F5",
+    fontFamily: pretendard(600),
+    fontSize: 18,
+    lineHeight: 26,
+    letterSpacing: -0.45,
   },
   backdrop: {
     flex: 1,
@@ -433,11 +463,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dialogTitle: {
+    fontFamily: pretendard(800),
     fontSize: 18,
-    fontWeight: "800",
     color: Colors.text,
   },
   dialogBody: {
+    fontFamily: pretendard(400),
     fontSize: 14,
     color: Colors.textSecondary,
     textAlign: "center",
@@ -459,8 +490,8 @@ const styles = StyleSheet.create({
   },
   dialogCloseText: {
     color: "#F5F5F5",
+    fontFamily: pretendard(700),
     fontSize: 15,
-    fontWeight: "700",
   },
   dialogConfirm: {
     width: 143,
@@ -472,8 +503,8 @@ const styles = StyleSheet.create({
   },
   dialogConfirmText: {
     color: "#F5F5F5",
+    fontFamily: pretendard(700),
     fontSize: 15,
-    fontWeight: "700",
   },
   centeredBackdrop: {
     flex: 1,
@@ -518,8 +549,8 @@ const styles = StyleSheet.create({
   },
   doneButtonText: {
     color: Colors.white,
+    fontFamily: pretendard(700),
     fontSize: 15,
-    fontWeight: "700",
   },
   pressed: {
     opacity: 0.85,

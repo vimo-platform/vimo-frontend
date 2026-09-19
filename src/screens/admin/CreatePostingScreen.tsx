@@ -21,6 +21,7 @@ import {
 } from '@/services/admin/postings';
 import { LoadingOverlay, LOADING_FILL_DURATION_MS } from '@/components/admin/LoadingOverlay';
 import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from '@/styles/admin/theme';
+import { pretendard } from '@/styles/common/fonts';
 import type { Gender, RecruitType } from '@/types/admin';
 
 const GENDERS: Gender[] = ['전체', '남성', '여성'];
@@ -67,6 +68,7 @@ function RequiredMessage({ visible }: { visible: boolean }) {
 
 export default function CreatePostingScreen() {
   const [memo, setMemo] = useState('');
+  const [isMemoFocused, setIsMemoFocused] = useState(false);
   const [location, setLocation] = useState('');
   const [count, setCount] = useState(3);
   const [creditHours, setCreditHours] = useState(3);
@@ -158,6 +160,10 @@ export default function CreatePostingScreen() {
         options={{
           title: '공고 작성',
           headerTitleAlign: 'center',
+          headerTitleStyle: {
+            fontFamily: pretendard(500),
+            fontSize: 20,
+          },
         }}
       />
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -168,12 +174,19 @@ export default function CreatePostingScreen() {
         <View
           style={[
             styles.memoBox,
+            isMemoFocused && styles.memoBoxActive,
             showErrors && missing.memo ? styles.fieldError : null,
           ]}
         >
           <View style={styles.memoInputWrap}>
             {/* 실제로 보이는 글자는 색이 항상 적용되는 Text로 렌더한다. */}
-            <Text style={[styles.memoText, memo.length === 0 && styles.memoPlaceholderText]}>
+            <Text
+              style={[
+                styles.memoText,
+                memo.length === 0 && styles.memoPlaceholderText,
+                isMemoFocused && styles.memoTextActive,
+              ]}
+            >
               {memo.length === 0
                 ? '봉사 모집 내용을 간단히 작성해주세요.\n예: 장애학우 수업 도우미 모집'
                 : memo}
@@ -187,9 +200,15 @@ export default function CreatePostingScreen() {
               style={[styles.memoText, styles.memoTextInput, webOutlineReset]}
               value={memo}
               onChangeText={setMemo}
+              onFocus={() => setIsMemoFocused(true)}
+              onBlur={() => setIsMemoFocused(false)}
             />
           </View>
-          <Ionicons name="pencil" size={16} color={Colors.white} />
+          <Ionicons
+            name="pencil"
+            size={16}
+            color={isMemoFocused ? Colors.white : Colors.text}
+          />
         </View>
         <RequiredMessage visible={showErrors && missing.memo} />
 
@@ -705,30 +724,40 @@ const styles = StyleSheet.create({
   heading: {
     marginVertical: 16,
     color: Colors.text,
-    fontSize: 19,
-    fontWeight: '800',
-    lineHeight: 28,
+    fontFamily: pretendard(600),
+    fontSize: 21,
+    lineHeight: 30,
     textAlign: 'center',
   },
   memoBox: {
     flexDirection: 'row',
+    backgroundColor: '#F1F1F1',
+    borderWidth: 1,
+    borderColor: 'transparent',
+    borderRadius: 28,
+    padding: 24,
+  },
+  memoBoxActive: {
     backgroundColor: '#222222',
-    borderRadius: 16,
-    padding: 16,
+    borderColor: '#9C9C9C',
   },
   memoInputWrap: {
     flex: 1,
     minHeight: 130,
   },
   memoText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: Colors.white,
+    fontFamily: pretendard(700),
+    fontSize: 15,
+    lineHeight: 19,
+    color: Colors.text,
     padding: 0,
     textAlignVertical: 'top',
   },
   memoPlaceholderText: {
-    color: '#9AA0A6',
+    color: Colors.textSecondary,
+  },
+  memoTextActive: {
+    color: Colors.white,
   },
   // 투명 입력 레이어: 보이는 글자는 위 Text가 담당하고, 여기선 커서/입력만.
   memoTextInput: {
@@ -739,8 +768,8 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: 10,
     color: Colors.text,
-    fontSize: 16,
-    fontWeight: '800',
+    fontFamily: pretendard(600),
+    fontSize: 20,
   },
   input: {
     backgroundColor: '#F1F1F1',
@@ -748,7 +777,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 13,
     color: Colors.text,
-    fontSize: 14,
+    fontFamily: pretendard(400),
+    fontSize: 15,
   },
   fieldError: {
     borderWidth: 1,
@@ -757,14 +787,14 @@ const styles = StyleSheet.create({
   requiredMessage: {
     marginTop: 6,
     color: Colors.danger,
+    fontFamily: pretendard(500),
     fontSize: 12,
-    fontWeight: '600',
   },
   formErrorSummary: {
     marginTop: 24,
     color: Colors.danger,
+    fontFamily: pretendard(600),
     fontSize: 13,
-    fontWeight: '700',
     textAlign: 'center',
   },
   stepper: {
@@ -779,12 +809,13 @@ const styles = StyleSheet.create({
   },
   stepperSign: {
     color: Colors.text,
+    fontFamily: pretendard(400),
     fontSize: 18,
   },
   stepperValue: {
     color: Colors.text,
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: pretendard(600),
+    fontSize: 15,
   },
   stepperInput: {
     minWidth: 32,
@@ -795,8 +826,8 @@ const styles = StyleSheet.create({
   helperText: {
     marginTop: 8,
     color: Colors.textSecondary,
+    fontFamily: pretendard(500),
     fontSize: 12,
-    fontWeight: '600',
   },
   creditInputRow: {
     flexDirection: 'row',
@@ -811,14 +842,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 13,
     color: Colors.text,
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: pretendard(600),
+    fontSize: 15,
     textAlign: 'center',
   },
   creditUnit: {
     color: Colors.text,
+    fontFamily: pretendard(500),
     fontSize: 15,
-    fontWeight: '700',
   },
   chips: {
     flexDirection: 'row',
@@ -839,8 +870,9 @@ const styles = StyleSheet.create({
   },
   chipText: {
     color: Colors.text,
-    fontSize: 13,
-    fontWeight: '600',
+    fontFamily: pretendard(600),
+    fontSize: 15,
+    letterSpacing: -0.375,
   },
   chipTextOn: {
     color: Colors.white,
@@ -858,6 +890,7 @@ const styles = StyleSheet.create({
   },
   rangeSep: {
     color: Colors.textSecondary,
+    fontFamily: pretendard(500),
     fontSize: 15,
   },
   rangeSepDate: {
@@ -872,6 +905,7 @@ const styles = StyleSheet.create({
   },
   timeLabel: {
     color: Colors.textSecondary,
+    fontFamily: pretendard(500),
     fontSize: 12,
   },
   timeInput: {
@@ -894,8 +928,9 @@ const styles = StyleSheet.create({
   pickerButtonText: {
     minWidth: 0,
     color: Colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
+    fontFamily: pretendard(400),
+    fontSize: 15,
+    letterSpacing: -0.375,
   },
   pickerButtonTextSelected: {
     color: Colors.white,
@@ -918,8 +953,8 @@ const styles = StyleSheet.create({
   },
   locationOptionText: {
     color: Colors.text,
+    fontFamily: pretendard(500),
     fontSize: 15,
-    fontWeight: '700',
   },
   locationOptionTextSelected: {
     color: Colors.white,
@@ -936,8 +971,10 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     color: Colors.white,
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: pretendard(600),
+    fontSize: 18,
+    lineHeight: 26,
+    letterSpacing: -0.45,
   },
   modalBackdrop: {
     flex: 1,
@@ -963,8 +1000,8 @@ const styles = StyleSheet.create({
   },
   selectorTitle: {
     color: Colors.text,
+    fontFamily: pretendard(700),
     fontSize: 18,
-    fontWeight: '800',
     textAlign: 'center',
   },
   weekdayRow: {
@@ -974,8 +1011,8 @@ const styles = StyleSheet.create({
   calendarWeekday: {
     flex: 1,
     color: Colors.textSecondary,
+    fontFamily: pretendard(600),
     fontSize: 12,
-    fontWeight: '700',
     textAlign: 'center',
   },
   calendarGrid: {
@@ -1005,15 +1042,15 @@ const styles = StyleSheet.create({
   },
   calendarDayText: {
     color: Colors.text,
+    fontFamily: pretendard(500),
     fontSize: 14,
-    fontWeight: '600',
   },
   calendarDayTextSelected: {
     color: Colors.white,
   },
   calendarDayTextToday: {
     color: Colors.danger,
-    fontWeight: '700',
+    fontFamily: pretendard(700),
   },
   selectorCancelButton: {
     alignItems: 'center',
@@ -1022,8 +1059,8 @@ const styles = StyleSheet.create({
   },
   selectorCancelText: {
     color: Colors.textSecondary,
+    fontFamily: pretendard(600),
     fontSize: 15,
-    fontWeight: '700',
   },
   timePickerRow: {
     height: 220,
@@ -1044,8 +1081,8 @@ const styles = StyleSheet.create({
   },
   timeOptionText: {
     color: Colors.text,
+    fontFamily: pretendard(500),
     fontSize: 15,
-    fontWeight: '700',
   },
   timeOptionTextSelected: {
     color: Colors.white,
@@ -1071,8 +1108,8 @@ const styles = StyleSheet.create({
   },
   selectorConfirmText: {
     color: Colors.white,
+    fontFamily: pretendard(600),
     fontSize: 15,
-    fontWeight: '700',
   },
   pressed: {
     opacity: 0.85,

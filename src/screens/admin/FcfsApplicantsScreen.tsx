@@ -25,10 +25,11 @@ export default function FcfsApplicantsScreen() {
     });
   }, [id]);
 
-  const closed =
-    posting?.status === "closed" || applicants.length >= (posting?.capacity ?? 0);
+  const capacity = posting?.capacity ?? 0;
+  const isCapacityFull = capacity > 0 && applicants.length >= capacity;
+  const closed = posting?.status === "closed" || isCapacityFull;
   // 선착순은 정원까지만 확정, 정원을 넘겨 지원한 인원은 마감 처리
-  const confirmedCount = Math.min(applicants.length, posting?.capacity ?? 0);
+  const confirmedCount = Math.min(applicants.length, capacity);
 
   const close = async () => {
     await closePosting(id);
@@ -42,7 +43,7 @@ export default function FcfsApplicantsScreen() {
 
   return (
     <View style={styles.container}>
-      <PostingSummary posting={posting} />
+      <PostingSummary posting={{ ...posting, applicants: applicants.length }} />
 
       <View style={styles.divider} />
 
@@ -57,7 +58,7 @@ export default function FcfsApplicantsScreen() {
           </Text>
         </View>
 
-        {closed && (
+        {isCapacityFull && (
           <Text style={styles.closedNotice}>
             선착순 {posting.capacity}명이 모두 채워져 모집이 마감되었습니다.
           </Text>

@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
   },
   progressTotal: {
     color: '#818181',
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '500',
   },
   quickFilters: {
