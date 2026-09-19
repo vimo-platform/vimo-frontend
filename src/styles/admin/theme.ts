@@ -1,3 +1,5 @@
+export const ADMIN_APP_FRAME_MAX_WIDTH = 393;
+
 export const Colors = {
   primary: "#208AEF",
   background: "#F5F7FA",

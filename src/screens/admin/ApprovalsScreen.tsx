@@ -16,7 +16,7 @@ import { useFocusEffect } from "expo-router";
 import { fetchApprovals, setApprovalStatus } from "@/services/admin/approvals";
 import { ActivityCard } from "@/components/admin/ActivityCard";
 import { SyncOverlay } from "@/components/admin/SyncOverlay";
-import { Colors } from "@/styles/admin/theme";
+import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from "@/styles/admin/theme";
 import type { Approval, ApprovalStatus } from "@/types/admin";
 
 const STATUS: Record<
@@ -329,6 +329,9 @@ const styles = StyleSheet.create({
   },
   sheetBackdrop: {
     flex: 1,
+    width: "100%",
+    maxWidth: ADMIN_APP_FRAME_MAX_WIDTH,
+    alignSelf: "center",
     backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "flex-end",
   },
@@ -402,6 +405,9 @@ const styles = StyleSheet.create({
   },
   resultBackdrop: {
     flex: 1,
+    width: "100%",
+    maxWidth: ADMIN_APP_FRAME_MAX_WIDTH,
+    alignSelf: "center",
     backgroundColor: "rgba(0,0,0,0.35)",
     alignItems: "center",
     justifyContent: "center",

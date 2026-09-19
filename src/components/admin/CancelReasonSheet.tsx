@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
-import { Colors } from "@/styles/admin/theme";
+import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from "@/styles/admin/theme";
 import type { Applicant } from "@/types/admin";
 
 const SoftPink = "#EF858B";
@@ -52,6 +52,9 @@ export function CancelReasonSheet({
 const styles = StyleSheet.create({
   modalRoot: {
     flex: 1,
+    width: "100%",
+    maxWidth: ADMIN_APP_FRAME_MAX_WIDTH,
+    alignSelf: "center",
     alignItems: "center",
     justifyContent: "flex-end",
   },

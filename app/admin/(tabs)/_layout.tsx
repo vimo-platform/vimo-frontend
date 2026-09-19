@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Tabs } from "expo-router";
 import { SvgXml } from "react-native-svg";
-import { pretendard } from '@/styles/common/fonts';
+import { pretendard } from "@/styles/common/fonts";
 
 type GnbProps = {
   state: { index: number; routes: { key: string; name: string }[] };
@@ -103,9 +103,7 @@ function GnbTabBar({ state, navigation }: GnbProps) {
                   height={24}
                   style={styles.icon}
                 />
-                <Text style={[styles.label, isActive && styles.activeLabel]}>
-                  {tab.label}
-                </Text>
+                <Text style={styles.label}>{tab.label}</Text>
               </View>
             </Pressable>
           );
@@ -121,12 +119,18 @@ function GnbTabBar({ state, navigation }: GnbProps) {
 export default function TabsLayout() {
   return (
     <Tabs
+      screenOptions={{
+        headerTitleStyle: {
+          fontFamily: pretendard(500),
+          fontSize: 20,
+        },
+      }}
       tabBar={({ state, navigation }) => (
         <GnbTabBar state={state} navigation={navigation} />
       )}
     >
       <Tabs.Screen name="index" options={{ title: "현장 QR", headerShown: false }} />
-      <Tabs.Screen name="postings" options={{ title: "공고" }} />
+      <Tabs.Screen name="postings" options={{ title: "공고", headerShown: false }} />
       <Tabs.Screen name="approvals" options={{ title: "승인" }} />
       <Tabs.Screen name="profile" options={{ title: "마이페이지", headerShown: false }} />
     </Tabs>
@@ -170,11 +174,7 @@ const styles = StyleSheet.create({
     color: "#000000",
     fontFamily: pretendard(400),
     fontSize: 10,
-    fontWeight: "400",
     textAlign: "center",
-  },
-  activeLabel: {
-    fontWeight: "600",
   },
   homeIndicatorArea: {
     height: 34,

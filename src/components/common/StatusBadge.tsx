@@ -86,7 +86,6 @@ const styles = StyleSheet.create({
   statusLabel: {
     fontFamily: pretendard(600),
     fontSize: 14,
-    fontWeight: '600',
     lineHeight: 19.6,
     letterSpacing: -0.35,
     textAlign: 'center',

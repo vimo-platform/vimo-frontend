@@ -8,6 +8,7 @@ const MONTHS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', 
 type Props = {
   visible: boolean;
   selectedDate: Date;
+  viewportMaxWidth?: number;
   onClose: () => void;
   onSelectMonth: (date: Date) => void;
 };
@@ -15,6 +16,7 @@ type Props = {
 export function MonthPickerModal({
   visible,
   selectedDate,
+  viewportMaxWidth,
   onClose,
   onSelectMonth,
 }: Props) {
@@ -43,7 +45,18 @@ export function MonthPickerModal({
 
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
+      <Pressable
+        style={[
+          styles.backdrop,
+          viewportMaxWidth
+            ? {
+                width: '100%',
+                maxWidth: viewportMaxWidth,
+                alignSelf: 'center',
+              }
+            : null,
+        ]}
+        onPress={onClose}>
         <Pressable style={styles.sheet}>
           <View style={styles.header}>
             <Pressable

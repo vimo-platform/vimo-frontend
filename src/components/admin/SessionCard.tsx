@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { ActivityCard } from "@/components/admin/ActivityCard";
+import { pretendard } from "@/styles/common/fonts";
 import type { Session } from "@/types/admin";
 
 export function SessionCard({ session }: { session: Session }) {
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
   },
   qrButtonText: {
     color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "700",
+    fontFamily: pretendard(500),
+    fontSize: 13,
   },
 });

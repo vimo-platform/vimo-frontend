@@ -98,7 +98,7 @@ export function Gnb({ activeKey = 'participation', items = defaultItems, style }
                 height={22}
                 style={styles.icon}
               />
-              <Text style={[styles.label, isActive && styles.activeLabel]}>{item.label}</Text>
+              <Text style={styles.label}>{item.label}</Text>
             </Pressable>
           );
         })}
@@ -144,11 +144,7 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontFamily: pretendard(400),
     fontSize: 10,
-    fontWeight: '400',
     textAlign: 'center',
-  },
-  activeLabel: {
-    fontWeight: '600',
   },
   homeIndicatorArea: {
     height: 34,

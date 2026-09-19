@@ -7,7 +7,7 @@ import Svg, { Path } from "react-native-svg";
 import { isAuthError } from "@/services/common/client";
 import { PostingInfoIcon, type PostingInfoIconType } from "@/components/common/PostingInfoIcon";
 import { getWorkingPosting, setWorkingPosting, upsertPosting } from "@/services/admin/postings";
-import { Colors } from "@/styles/admin/theme";
+import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from "@/styles/admin/theme";
 import type { Posting } from "@/types/admin";
 
 export default function PostingPreviewScreen() {
@@ -407,6 +407,9 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     flex: 1,
+    width: "100%",
+    maxWidth: ADMIN_APP_FRAME_MAX_WIDTH,
+    alignSelf: "center",
     backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "flex-end",
   },
@@ -474,6 +477,9 @@ const styles = StyleSheet.create({
   },
   centeredBackdrop: {
     flex: 1,
+    width: "100%",
+    maxWidth: ADMIN_APP_FRAME_MAX_WIDTH,
+    alignSelf: "center",
     backgroundColor: "rgba(0,0,0,0.35)",
     alignItems: "center",
     justifyContent: "center",

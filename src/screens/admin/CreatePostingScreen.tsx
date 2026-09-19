@@ -20,7 +20,7 @@ import {
   setWorkingPosting,
 } from '@/services/admin/postings';
 import { LoadingOverlay, LOADING_FILL_DURATION_MS } from '@/components/admin/LoadingOverlay';
-import { Colors } from '@/styles/admin/theme';
+import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from '@/styles/admin/theme';
 import type { Gender, RecruitType } from '@/types/admin';
 
 const GENDERS: Gender[] = ['전체', '남성', '여성'];
@@ -941,6 +941,9 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
+    width: '100%',
+    maxWidth: ADMIN_APP_FRAME_MAX_WIDTH,
+    alignSelf: 'center',
     justifyContent: 'center',
     padding: 24,
     backgroundColor: 'rgba(0,0,0,0.35)',

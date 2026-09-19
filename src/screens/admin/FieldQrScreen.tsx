@@ -11,6 +11,7 @@ import { SessionCard } from "@/components/admin/SessionCard";
 import { WeekCalendar, dateKey } from "@/components/admin/WeekCalendar";
 import { ParticipationLogo } from "@/components/join/ParticipationLogo";
 import { Colors } from "@/styles/admin/theme";
+import { pretendard } from "@/styles/common/fonts";
 import { useAuth } from "@/hooks/admin/use-admin-auth";
 import type { Session } from "@/types/admin";
 
@@ -43,7 +44,7 @@ export default function FieldQrScreen() {
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.logoRow}>
-          <ParticipationLogo />
+          <ParticipationLogo width={92.156} height={97.53} compactLayout />
         </View>
         <Text style={styles.greeting}>{user?.name}님, 안녕하세요!</Text>
 
@@ -91,16 +92,19 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   logoRow: {
-    marginBottom: 8,
+    marginBottom: 45,
   },
   greeting: {
+    fontFamily: pretendard(400),
     fontSize: 20,
-    fontWeight: "700",
+    lineHeight: 28,
+    letterSpacing: -0.5,
     color: Colors.text,
-    marginBottom: 24,
+    marginBottom: 22,
   },
   divider: {
     marginHorizontal: -20,
+    marginTop: 9,
     marginBottom: 30,
   },
   group: {
@@ -113,11 +117,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   groupTime: {
-    fontSize: 17,
-    fontWeight: "800",
+    fontFamily: pretendard(700),
+    fontSize: 18,
+    lineHeight: 25,
+    letterSpacing: -0.45,
     color: Colors.text,
   },
   empty: {
+    fontFamily: pretendard(400),
     textAlign: "center",
     color: Colors.textSecondary,
     fontSize: 14,

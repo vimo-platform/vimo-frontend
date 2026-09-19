@@ -4,8 +4,8 @@ import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from
 
 import { MonthPickerModal } from "@/components/calendar/MonthPickerModal";
 import { CalendarCircle } from "@/components/join/CalendarCircle";
-import { Colors } from "@/styles/admin/theme";
-import { pretendard } from '@/styles/common/fonts';
+import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from "@/styles/admin/theme";
+import { pretendard } from "@/styles/common/fonts";
 
 const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
 const WEEK_COUNT = 157;
@@ -42,8 +42,8 @@ type Props = {
 
 export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
   const { width } = useWindowDimensions();
-  // 화면이 393 너비 앱 프레임 안에 갇혀 있으므로(웹) 실제 창 너비가 아닌 프레임 너비를 기준으로 계산한다.
-  const calendarWidth = Math.max(280, Math.min(width, 393) - 40);
+  // 유저 메인과 동일하게 날짜 7개가 앱 프레임 전체 너비를 나눠 갖는다.
+  const calendarWidth = Math.min(width, 393);
   const today = useMemo(() => startOfDay(new Date()), []);
   const [isMonthPickerVisible, setIsMonthPickerVisible] = useState(false);
   const listRef = useRef<FlatList<Date[]>>(null);
@@ -190,6 +190,7 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
       <MonthPickerModal
         selectedDate={selected}
         visible={isMonthPickerVisible}
+        viewportMaxWidth={ADMIN_APP_FRAME_MAX_WIDTH}
         onClose={() => setIsMonthPickerVisible(false)}
         onSelectMonth={selectMonth}
       />
@@ -203,23 +204,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-start",
     gap: 8,
-    marginBottom: 16,
+    marginLeft: 10,
   },
   month: {
-    fontSize: 22,
-    fontWeight: "800",
+    fontFamily: pretendard(700),
+    fontSize: 20,
     color: Colors.text,
   },
   weekList: {
     height: 143,
     flexGrow: 0,
     flexShrink: 0,
+    marginHorizontal: -20,
   },
   week: {
     height: 143,
     flexDirection: "row",
     paddingHorizontal: 22,
-    paddingTop: 30,
+    paddingTop: 33,
   },
   day: {
     flex: 1,
@@ -243,7 +245,6 @@ const styles = StyleSheet.create({
     opacity: 0.5,
     fontFamily: pretendard(600),
     fontSize: 17,
-    fontWeight: "600",
     lineHeight: 24,
     letterSpacing: -0.425,
   },
@@ -252,20 +253,19 @@ const styles = StyleSheet.create({
     height: 43,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 6,
+    marginTop: 10,
   },
   date: {
     color: "#818181",
     opacity: 0.5,
     fontFamily: pretendard(600),
     fontSize: 17,
-    fontWeight: "600",
     lineHeight: 24,
     letterSpacing: -0.425,
   },
   todayText: {
     color: "#222222",
     opacity: 1,
-    fontWeight: "700",
+    fontFamily: pretendard(700),
   },
 });

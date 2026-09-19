@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/styles/admin/theme';
+import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from '@/styles/admin/theme';
 
 export const VOLUNTEER_LOCATIONS = [
   '샬롬관',
@@ -341,6 +341,9 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
+    width: '100%',
+    maxWidth: ADMIN_APP_FRAME_MAX_WIDTH,
+    alignSelf: 'center',
     justifyContent: 'center',
     padding: 24,
     backgroundColor: 'rgba(0,0,0,0.35)',

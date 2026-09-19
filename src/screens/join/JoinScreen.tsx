@@ -238,7 +238,7 @@ export function JoinScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
-            <ParticipationLogo />
+            <ParticipationLogo width={92.156} height={97.53} compactLayout />
             <View style={styles.greetingRow}>
               <Text numberOfLines={1} style={styles.greeting}>
                 <Text style={styles.userName}>{userName}</Text>님, 안녕하세요!
@@ -326,7 +326,7 @@ export function JoinScreen() {
             }}
           />
 
-          <AllLine />
+          <AllLine style={styles.divider} />
 
           <View style={styles.scheduleSection}>
             {selectedSchedules.length > 0 ? (
@@ -383,22 +383,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-    marginTop: 7,
+    marginTop: 45,
   },
   greeting: {
     flex: 1,
     color: '#111111',
     fontFamily: pretendard(400),
     fontSize: 20,
-    fontWeight: '400',
     lineHeight: 28,
     letterSpacing: -0.5,
   },
   userName: {
-    fontWeight: '500',
+    fontFamily: pretendard(500),
   },
   monthRow: {
-    marginTop: 20,
+    marginTop: 22,
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
@@ -408,7 +407,6 @@ const styles = StyleSheet.create({
     color: '#111111',
     fontFamily: pretendard(700),
     fontSize: 20,
-    fontWeight: '700',
   },
   calendarList: {
     height: 143,
@@ -419,7 +417,7 @@ const styles = StyleSheet.create({
     height: 143,
     flexDirection: 'row',
     paddingHorizontal: 22,
-    paddingTop: 30,
+    paddingTop: 33,
   },
   day: {
     flex: 1,
@@ -443,7 +441,6 @@ const styles = StyleSheet.create({
     opacity: 0.5,
     fontFamily: pretendard(600),
     fontSize: 17,
-    fontWeight: '600',
     lineHeight: 24,
     letterSpacing: -0.425,
   },
@@ -452,21 +449,24 @@ const styles = StyleSheet.create({
     height: 43,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 6,
+    marginTop: 10,
   },
   date: {
     color: '#818181',
     opacity: 0.5,
     fontFamily: pretendard(600),
     fontSize: 17,
-    fontWeight: '600',
     lineHeight: 24,
     letterSpacing: -0.425,
   },
   todayText: {
     color: '#222222',
     opacity: 1,
-    fontWeight: '700',
+    fontFamily: pretendard(700),
+  },
+  divider: {
+    width: '100%',
+    marginTop: 9,
   },
   scheduleSection: {
     alignItems: 'center',

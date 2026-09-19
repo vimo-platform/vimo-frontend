@@ -2,10 +2,8 @@ import { Stack } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
 import { AuthProvider } from "@/hooks/admin/use-admin-auth";
-import { Colors } from "@/styles/admin/theme";
-
-// 유저 화면과 통일감을 주기 위해 웹에서도 앱처럼 393 너비로 가운데 정렬한다.
-const APP_FRAME_MAX_WIDTH = 393;
+import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from "@/styles/admin/theme";
+import { pretendard } from "@/styles/common/fonts";
 
 export default function RootLayout() {
   return (
@@ -13,7 +11,15 @@ export default function RootLayout() {
       <View style={styles.frameOuter}>
         <View style={styles.frameInner}>
           {/* headerBackButtonDisplayMode: 뒤로가기 버튼에 이전 화면 이름("(tabs)" 등)이 붙지 않게 화살표만 표시 */}
-          <Stack screenOptions={{ headerBackButtonDisplayMode: "minimal" }}>
+          <Stack
+            screenOptions={{
+              headerBackButtonDisplayMode: "minimal",
+              headerTitleStyle: {
+                fontFamily: pretendard(500),
+                fontSize: 20,
+              },
+            }}
+          >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen
               name="posting/[id]"
@@ -66,6 +72,6 @@ const styles = StyleSheet.create({
   frameInner: {
     flex: 1,
     width: "100%",
-    maxWidth: APP_FRAME_MAX_WIDTH,
+    maxWidth: ADMIN_APP_FRAME_MAX_WIDTH,
   },
 });

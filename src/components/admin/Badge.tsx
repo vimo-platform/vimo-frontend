@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { Colors } from "@/styles/admin/theme";
+import { pretendard } from "@/styles/common/fonts";
 
 const TONES = {
   blue: { bg: "#E8F3FE", text: Colors.primary },
@@ -28,7 +29,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   text: {
+    fontFamily: pretendard(600),
     fontSize: 12,
-    fontWeight: "700",
   },
 });

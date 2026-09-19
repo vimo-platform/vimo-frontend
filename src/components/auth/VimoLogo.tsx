@@ -9,6 +9,7 @@ import Svg, {
   FeMergeNode,
   FeOffset,
   Filter,
+  G,
   Text as SvgText,
 } from 'react-native-svg';
 
@@ -57,19 +58,28 @@ export function VimoLogo({ accessibilityRole }: VimoLogoProps) {
             </FeMerge>
           </Filter>
         </Defs>
-        <SvgText
-          x={110}
-          y={60}
-          textAnchor="middle"
-          fontFamily={pretendard(700)}
-          fontSize={50}
-          fill="#222222"
-          stroke="#000000"
-          strokeWidth={2}
-          paintOrder="stroke"
-          filter="url(#logoVolume)">
-          VIMO
-        </SvgText>
+        <G filter="url(#logoVolume)">
+          <SvgText
+            x={110}
+            y={60}
+            textAnchor="middle"
+            fontFamily={pretendard(700)}
+            fontSize={50}
+            fill="none"
+            stroke="#000000"
+            strokeWidth={2}>
+            VIMO
+          </SvgText>
+          <SvgText
+            x={110}
+            y={60}
+            textAnchor="middle"
+            fontFamily={pretendard(700)}
+            fontSize={50}
+            fill="#222222">
+            VIMO
+          </SvgText>
+        </G>
       </Svg>
     </View>
   );

@@ -155,6 +155,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.45,
   },
   card: {
+    width: '100%',
+    maxWidth: 328,
+    alignSelf: 'center',
     minHeight: 241,
     paddingHorizontal: 26,
     paddingTop: 26,
@@ -180,14 +183,12 @@ const styles = StyleSheet.create({
     color: '#222222',
     fontFamily: pretendard(800),
     fontSize: 15,
-    fontWeight: '800',
   },
   credit: {
     marginTop: 10,
     color: '#222222',
     fontFamily: pretendard(500),
     fontSize: 12,
-    fontWeight: '500',
   },
   details: {
     gap: 7,
@@ -204,7 +205,6 @@ const styles = StyleSheet.create({
     color: '#818181',
     fontFamily: pretendard(500),
     fontSize: 13,
-    fontWeight: '500',
   },
   cardActions: {
     flexDirection: 'row',

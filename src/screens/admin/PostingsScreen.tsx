@@ -3,11 +3,13 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 
 import { deletePosting, fetchMyPostings, setWorkingPosting } from "@/services/admin/postings";
 import { ActivityCard } from "@/components/admin/ActivityCard";
-import { Colors } from "@/styles/admin/theme";
+import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from "@/styles/admin/theme";
+import { pretendard } from "@/styles/common/fonts";
 import type { Posting, PostingStatus } from "@/types/admin";
 
 type FilterKey = "all" | "open" | "closed" | "draft";
@@ -96,7 +98,7 @@ export default function PostingsScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <FlatList
         data={visible}
         keyExtractor={(p) => p.id}
@@ -162,12 +164,12 @@ export default function PostingsScreen() {
                     })
               }
             >
-              <View style={styles.cardFooter}>
-                <Text style={styles.countText}>
-                  모집{item.capacity}명 / 지원{item.applicants}명
-                </Text>
-                {isDraft ? (
-                  <View style={styles.draftActions}>
+              {isDraft ? (
+                <View style={[styles.cardFooter, styles.draftFooter]}>
+                  <Text style={styles.countText}>
+                    모집{item.capacity}명 / 지원{item.applicants}명
+                  </Text>
+                  <View style={[styles.actionRow, styles.draftActionRow]}>
                     <Pressable
                       style={({ pressed }) => [styles.deletePill, pressed && styles.pressed]}
                       onPress={() => setDeleteTarget(item)}
@@ -181,8 +183,10 @@ export default function PostingsScreen() {
                       <Text style={styles.editPillText}>수정</Text>
                     </Pressable>
                   </View>
-                ) : item.status === "closed" ? (
-                  <View style={styles.draftActions}>
+                </View>
+              ) : item.status === "closed" ? (
+                <View style={[styles.cardFooter, styles.closedFooter]}>
+                  <View style={styles.actionRow}>
                     <Pressable
                       style={({ pressed }) => [styles.deletePill, pressed && styles.pressed]}
                       onPress={() => setDeleteTarget(item)}
@@ -193,12 +197,17 @@ export default function PostingsScreen() {
                       <Text style={styles.pillText}>{STATUS_LABEL[item.status]}</Text>
                     </View>
                   </View>
-                ) : (
+                </View>
+              ) : (
+                <View style={styles.cardFooter}>
+                  <Text style={styles.countText}>
+                    모집{item.capacity}명 / 지원{item.applicants}명
+                  </Text>
                   <View style={styles.pill}>
                     <Text style={styles.pillText}>{STATUS_LABEL[item.status]}</Text>
                   </View>
-                )}
-              </View>
+                </View>
+              )}
             </ActivityCard>
           );
         }}
@@ -258,8 +267,10 @@ export default function PostingsScreen() {
             <View style={styles.doneCircle}>
               <Ionicons name="checkmark" size={28} color={Colors.white} />
             </View>
-            <Text style={styles.dialogTitle}>공고 삭제 완료</Text>
-            <Text style={styles.dialogDesc}>봉사 공고가 성공적으로{"\n"}삭제되었습니다.</Text>
+            <Text style={[styles.dialogTitle, styles.doneTitle]}>공고 삭제 완료</Text>
+            <Text style={[styles.dialogDesc, styles.doneDesc]}>
+              봉사 공고가 성공적으로{"\n"}삭제되었습니다.
+            </Text>
             <Pressable
               style={({ pressed }) => [styles.doneConfirm, pressed && styles.pressed]}
               onPress={() => setShowDeleteDone(false)}
@@ -269,7 +280,7 @@ export default function PostingsScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -279,18 +290,19 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   list: {
-    padding: 16,
-    paddingBottom: 100,
+    paddingTop: 23,
+    paddingHorizontal: 39,
+    paddingBottom: 115,
     gap: 12,
   },
   header: {
-    gap: 14,
-    marginBottom: 4,
+    gap: 23,
+    marginBottom: 21,
   },
   // 유저 공고페이지 검색창과 동일한 그라데이션 테두리
   searchGradient: {
-    height: 52,
-    borderRadius: 26,
+    height: 50,
+    borderRadius: 28,
     padding: 1.4,
   },
   searchBar: {
@@ -298,39 +310,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.card,
-    borderRadius: 25,
-    paddingHorizontal: 18,
+    borderRadius: 27,
+    paddingHorizontal: 24,
   },
   searchInput: {
     flex: 1,
     height: "100%",
     paddingVertical: 0,
-    fontSize: 15,
+    fontFamily: pretendard(500),
+    fontSize: 12,
     color: Colors.text,
   },
   chips: {
     flexDirection: "row",
-    gap: 10,
+    justifyContent: "center",
+    gap: 16,
   },
   chip: {
-    height: 34,
+    minHeight: 32,
     justifyContent: "center",
     backgroundColor: "#E8E8E8",
     borderRadius: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 11,
   },
   chipOn: {
     backgroundColor: "#222222",
   },
   chipText: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontFamily: pretendard(600),
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: -0.35,
     color: "#818181",
   },
   chipTextOn: {
     color: Colors.white,
   },
   empty: {
+    fontFamily: pretendard(400),
     textAlign: "center",
     color: Colors.textSecondary,
     fontSize: 14,
@@ -342,10 +359,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 14,
   },
+  draftFooter: {
+    flexDirection: "column",
+    alignItems: "stretch",
+  },
+  closedFooter: {
+    justifyContent: "center",
+    marginTop: 22,
+  },
   countText: {
     flexShrink: 1,
-    fontSize: 14,
-    fontWeight: "700",
+    fontFamily: pretendard(500),
+    fontSize: 13,
     color: Colors.text,
   },
   pill: {
@@ -356,9 +381,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#222222",
     borderRadius: 18,
   },
-  draftActions: {
+  actionRow: {
     flexDirection: "row",
-    gap: 10,
+    alignSelf: "center",
+    gap: 25,
+  },
+  draftActionRow: {
+    marginTop: 20,
   },
   editPill: {
     width: 105,
@@ -373,8 +402,8 @@ const styles = StyleSheet.create({
   },
   editPillText: {
     color: "#F5F5F5",
+    fontFamily: pretendard(500),
     fontSize: 13,
-    fontWeight: "700",
   },
   deletePill: {
     width: 105,
@@ -389,22 +418,22 @@ const styles = StyleSheet.create({
   },
   deletePillText: {
     color: "#E87070",
+    fontFamily: pretendard(500),
     fontSize: 13,
-    fontWeight: "700",
   },
   pillOff: {
     backgroundColor: "#B9BEC6",
   },
   pillText: {
     color: "#F5F5F5",
+    fontFamily: pretendard(500),
     fontSize: 13,
-    fontWeight: "700",
   },
   createButton: {
     position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 16,
+    left: 33,
+    right: 34,
+    bottom: 29,
     backgroundColor: "#222222",
     borderRadius: 16,
     paddingVertical: 17,
@@ -412,14 +441,19 @@ const styles = StyleSheet.create({
   },
   createButtonText: {
     color: Colors.white,
-    fontSize: 16,
-    fontWeight: "700",
+    fontFamily: pretendard(600),
+    fontSize: 18,
+    lineHeight: 26,
+    letterSpacing: -0.45,
   },
   pressed: {
     opacity: 0.85,
   },
   dialogOverlay: {
     flex: 1,
+    width: "100%",
+    maxWidth: ADMIN_APP_FRAME_MAX_WIDTH,
+    alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(17, 17, 17, 0.56)",
@@ -427,6 +461,9 @@ const styles = StyleSheet.create({
   },
   sheetOverlay: {
     flex: 1,
+    width: "100%",
+    maxWidth: ADMIN_APP_FRAME_MAX_WIDTH,
+    alignSelf: "center",
     justifyContent: "flex-end",
     backgroundColor: "rgba(17, 17, 17, 0.56)",
   },
@@ -440,13 +477,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.card,
   },
   dialogCard: {
-    width: "100%",
-    maxWidth: 320,
+    width: 238,
     alignItems: "center",
     paddingTop: 32,
     paddingBottom: 24,
-    paddingHorizontal: 24,
-    borderRadius: 20,
+    paddingHorizontal: 18,
+    borderRadius: 16,
     backgroundColor: Colors.card,
   },
   warnCircle: {
@@ -459,18 +495,28 @@ const styles = StyleSheet.create({
   },
   dialogTitle: {
     marginTop: 18,
-    fontSize: 19,
-    fontWeight: "800",
+    fontFamily: pretendard(700),
+    fontSize: 20,
     color: Colors.text,
     textAlign: "center",
   },
   dialogDesc: {
     marginTop: 12,
-    fontSize: 14,
-    fontWeight: "500",
-    lineHeight: 21,
+    fontFamily: pretendard(300),
+    fontSize: 16,
+    lineHeight: 22,
     color: Colors.textSecondary,
     textAlign: "center",
+  },
+  doneTitle: {
+    fontFamily: pretendard(800),
+    fontSize: 21,
+  },
+  doneDesc: {
+    fontFamily: pretendard(500),
+    fontSize: 16,
+    lineHeight: 26,
+    marginTop: 20,
   },
   dialogButtons: {
     flexDirection: "row",
@@ -487,8 +533,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#818181",
   },
   dialogCancelText: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontFamily: pretendard(600),
+    fontSize: 18,
+    lineHeight: 26,
+    letterSpacing: -0.45,
     color: "#F5F5F5",
   },
   dialogDelete: {
@@ -500,8 +548,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFE0E0",
   },
   dialogDeleteText: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontFamily: pretendard(600),
+    fontSize: 18,
+    lineHeight: 26,
+    letterSpacing: -0.45,
     color: "#EB7E7E",
   },
   doneClose: {
@@ -531,8 +581,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#222222",
   },
   doneConfirmText: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontFamily: pretendard(600),
+    fontSize: 18,
+    lineHeight: 26,
+    letterSpacing: -0.45,
     color: Colors.white,
   },
 });

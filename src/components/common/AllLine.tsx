@@ -20,7 +20,7 @@ export function AllLine({ style }: AllLineProps) {
 
 const styles = StyleSheet.create({
   line: {
-    width: '100%',
+    width: '115%',
     height: 9,
   },
 });

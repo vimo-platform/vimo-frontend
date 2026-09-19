@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { PostingInfoIcon, type PostingInfoIconType } from "@/components/common/PostingInfoIcon";
 import { Colors } from "@/styles/admin/theme";
+import { pretendard } from "@/styles/common/fonts";
 
 type Props = {
   title: string;
@@ -72,12 +73,13 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    fontSize: 17,
-    fontWeight: "800",
+    fontFamily: pretendard(800),
+    fontSize: 15,
     color: Colors.text,
   },
   hours: {
-    fontSize: 13,
+    fontFamily: pretendard(500),
+    fontSize: 12,
     color: Colors.text,
     marginTop: 4,
     marginBottom: 14,
@@ -93,6 +95,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   infoText: {
+    fontFamily: pretendard(500),
     fontSize: 13,
     color: Colors.textSecondary,
   },
