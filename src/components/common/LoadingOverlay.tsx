@@ -33,7 +33,9 @@ function VimoLoadingLogo({ size = 120 }: { size?: number }) {
   );
 }
 
-export const LOADING_FILL_DURATION_MS = 5500;
+// 실제 작업 시간을 미리 알 수 없어서, 중간에 멈췄다 튀는 것보다 처음부터
+// 넉넉하게 천천히 채우는 쪽이 자연스럽다는 판단으로 이 값을 쓴다.
+export const LOADING_FILL_DURATION_MS = 9000;
 
 export function LoadingOverlay({ message }: { message: string }) {
   const [appear] = useState(() => new Animated.Value(0));

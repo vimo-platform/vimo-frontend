@@ -141,6 +141,9 @@ export default function CreatePostingScreen() {
         return;
       }
 
+      // 실패 원인을 화면에서는 뭉뚱그려 보여주지만, 콘솔에는 실제 상태 코드/메시지를 남겨
+      // 브라우저 개발자 도구 콘솔에서 정확한 원인을 확인할 수 있게 한다.
+      console.error('generatePostingDraft failed:', error);
       setSubmitError('공고 생성에 실패했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
       setSubmitting(false);

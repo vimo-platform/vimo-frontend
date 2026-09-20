@@ -1,13 +1,18 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 
 import { deletePosting, fetchMyPostings, setWorkingPosting } from "@/services/admin/postings";
 import { ActivityCard } from "@/components/admin/ActivityCard";
+import {
+  GradientSearchField,
+  SEARCH_FIELD_PLACEHOLDER_COLOR,
+  SEARCH_FIELD_TEXT_STYLE,
+  SearchIcon,
+} from "@/components/common";
 import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from "@/styles/admin/theme";
 import { pretendard } from "@/styles/common/fonts";
 import type { Posting, PostingStatus } from "@/types/admin";
@@ -98,31 +103,23 @@ export default function PostingsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <FlatList
         data={visible}
         keyExtractor={(p) => p.id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View style={styles.header}>
-            <LinearGradient
-              colors={["#C1C1C1", "#FFFFFF", "#222222", "#EFEFEF"]}
-              locations={[0.15, 0.42, 0.73, 1]}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.searchGradient}
-            >
-              <View style={styles.searchBar}>
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="어떤 봉사를 찾으시나요?"
-                  placeholderTextColor={Colors.textSecondary}
-                  value={query}
-                  onChangeText={setQuery}
-                />
-                <Ionicons name="search" size={20} color={Colors.textSecondary} />
-              </View>
-            </LinearGradient>
+            <GradientSearchField>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="어떤 봉사를 찾으시나요?"
+                placeholderTextColor={SEARCH_FIELD_PLACEHOLDER_COLOR}
+                value={query}
+                onChangeText={setQuery}
+              />
+              <SearchIcon size={20} />
+            </GradientSearchField>
             <View style={styles.chips}>
               {FILTERS.map((f) => (
                 <Pressable
@@ -287,7 +284,8 @@ export default function PostingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    // 관리자 현장QR/마이페이지와 동일한 배경색으로 통일.
+    backgroundColor: "#F9F9FB",
   },
   list: {
     paddingTop: 23,
@@ -299,26 +297,11 @@ const styles = StyleSheet.create({
     gap: 23,
     marginBottom: 21,
   },
-  // 유저 공고페이지 검색창과 동일한 그라데이션 테두리
-  searchGradient: {
-    height: 50,
-    borderRadius: 28,
-    padding: 1.4,
-  },
-  searchBar: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.card,
-    borderRadius: 27,
-    paddingHorizontal: 24,
-  },
   searchInput: {
     flex: 1,
     height: "100%",
     paddingVertical: 0,
-    fontFamily: pretendard(500),
-    fontSize: 12,
+    ...SEARCH_FIELD_TEXT_STYLE,
     color: Colors.text,
   },
   chips: {
@@ -347,10 +330,10 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   empty: {
-    fontFamily: pretendard(400),
+    color: "#222222",
+    fontSize: 16,
+    fontWeight: "700",
     textAlign: "center",
-    color: Colors.textSecondary,
-    fontSize: 14,
     marginTop: 60,
   },
   cardFooter: {

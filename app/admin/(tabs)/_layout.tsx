@@ -136,7 +136,8 @@ export default function TabsLayout() {
         options={{
           title: "승인",
           headerTitleAlign: "center",
-          headerStyle: { backgroundColor: "#F5F5F5" },
+          // 헤더 아래 화면 배경(#F9F9FB)과 이어지도록 동일한 색으로 맞춘다.
+          headerStyle: { backgroundColor: "#F9F9FB" },
           headerShadowVisible: false,
         }}
       />

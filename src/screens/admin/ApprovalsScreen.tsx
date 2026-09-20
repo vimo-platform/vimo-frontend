@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 
 import { fetchApprovals, setApprovalStatus } from "@/services/admin/approvals";
@@ -90,7 +91,7 @@ export default function ApprovalsScreen() {
   const meta = STATUS[tab];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
       <View style={styles.tabs}>
         {ORDER.map((key) => {
           const on = tab === key;
@@ -233,7 +234,7 @@ export default function ApprovalsScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -249,7 +250,8 @@ function StatusBadge({ status }: { status: ApprovalStatus }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    // 관리자 현장QR/마이페이지와 동일한 배경색으로 통일.
+    backgroundColor: "#F9F9FB",
   },
   tabs: {
     flexDirection: "row",
@@ -310,9 +312,9 @@ const styles = StyleSheet.create({
   },
   empty: {
     textAlign: "center",
-    fontFamily: pretendard(400),
-    color: Colors.textSecondary,
-    fontSize: 14,
+    color: "#222222",
+    fontSize: 16,
+    fontWeight: "700",
     marginTop: 40,
   },
   approvalCard: {

@@ -1,59 +1,40 @@
 import * as SplashScreen from 'expo-splash-screen';
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, { Easing, Keyframe } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
+import { useRef, useState } from 'react';
+import { Animated, Easing, StyleSheet } from 'react-native';
 
 import { VimoLogo } from './VimoLogo';
 
 const DURATION = 600;
+const HOLD_RATIO = 0.2;
 
 export function AnimatedSplashOverlay() {
-  const [animate, setAnimate] = useState(false);
   const [visible, setVisible] = useState(true);
+  const opacity = useRef(new Animated.Value(1)).current;
 
   if (!visible) return null;
 
-  const splashKeyframe = new Keyframe({
-    0: {
-      opacity: 1,
-    },
-    20: {
-      opacity: 1,
-    },
-    70: {
-      opacity: 0,
-      easing: Easing.elastic(0.7),
-    },
-    100: {
-      opacity: 0,
-      easing: Easing.elastic(0.7),
-    },
-  });
-
-  const logo = <VimoLogo accessibilityRole="header" />;
-
-  return animate ? (
+  return (
     <Animated.View
-      entering={splashKeyframe.duration(DURATION).withCallback((finished: boolean) => {
-        'worklet';
-        if (finished) {
-          scheduleOnRN(setVisible, false);
-        }
-      })}
-      style={styles.splashOverlay}>
-      {logo}
-    </Animated.View>
-  ) : (
-    <View
       onLayout={() => {
         SplashScreen.hideAsync().finally(() => {
-          setAnimate(true);
+          Animated.sequence([
+            Animated.delay(DURATION * HOLD_RATIO),
+            Animated.timing(opacity, {
+              toValue: 0,
+              duration: DURATION * (1 - HOLD_RATIO),
+              easing: Easing.elastic(0.7),
+              useNativeDriver: true,
+            }),
+          ]).start(({ finished }) => {
+            if (finished) {
+              setVisible(false);
+            }
+          });
         });
       }}
-      style={styles.splashOverlay}>
-      {logo}
-    </View>
+      style={[styles.splashOverlay, { opacity }]}>
+      <VimoLogo accessibilityRole="header" />
+    </Animated.View>
   );
 }
 

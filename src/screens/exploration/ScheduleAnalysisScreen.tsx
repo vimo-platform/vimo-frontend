@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Tag } from '@/components/common';
-import { LoadingOverlay } from '@/components/common/LoadingOverlay';
+import { LoadingOverlay, LOADING_FILL_DURATION_MS } from '@/components/common/LoadingOverlay';
 import { useUserSessionGuard } from '@/hooks/common/use-user-session-guard';
 import type { ApiLocalTime, ClassSlot } from '@/services/common/user-setup';
 
@@ -28,8 +28,8 @@ import { pretendard } from '@/styles/common/fonts';
 
 const EXPLORATION_STAR = require('@/assets/images/explorationimg/explorationstar.png');
 
-// 분석이 끝난 뒤 결과 화면으로 넘어가기 전 잠깐 멈춘 느낌을 주는 최소 지연.
-const RESULT_TRANSITION_DELAY_MS = 500;
+// 로딩 바가 다 찬 뒤 결과 화면이 뜨기까지의 최소 틈.
+const RESULT_TRANSITION_DELAY_MS = 50;
 
 type AnalysisPhase = 'loading' | 'complete';
 
@@ -55,7 +55,12 @@ export function ScheduleAnalysisScreen() {
       ? getSavedScheduleAnalysis().then((savedAnalysis) => savedAnalysis ?? null)
       : analyzeScheduleImage(uploadedImageUri);
 
-    request.then((result) => {
+    // 로딩 바가 끝까지 차기 전에 화면이 넘어가지 않도록, 실제 분석과
+    // 게이지가 다 차는 시간(LOADING_FILL_DURATION_MS) 둘 다 끝나길 기다린다.
+    Promise.all([
+      request,
+      new Promise((resolve) => setTimeout(resolve, LOADING_FILL_DURATION_MS)),
+    ]).then(([result]) => {
       if (!mounted) {
         return;
       }

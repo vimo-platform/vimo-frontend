@@ -116,18 +116,20 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
 
   return (
     <View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="월 선택"
-        hitSlop={8}
-        style={styles.monthRow}
-        onPress={() => setIsMonthPickerVisible(true)}
-      >
-        <Text style={styles.month}>
-          {selected.getFullYear()}년 {selected.getMonth() + 1}월
-        </Text>
-        <Ionicons name="caret-down" size={14} color={Colors.text} />
-      </Pressable>
+      <View style={styles.monthRowWrap}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="월 선택"
+          hitSlop={8}
+          style={styles.monthRow}
+          onPress={() => setIsMonthPickerVisible(true)}
+        >
+          <Text style={styles.month}>
+            {selected.getFullYear()}년 {selected.getMonth() + 1}월
+          </Text>
+          <Ionicons name="caret-down" size={14} color={Colors.text} />
+        </Pressable>
+      </View>
 
       <FlatList
         ref={listRef}
@@ -199,12 +201,14 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
 }
 
 const styles = StyleSheet.create({
+  monthRowWrap: {
+    paddingHorizontal: 30,
+  },
   monthRow: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
     gap: 8,
-    marginLeft: 10,
   },
   month: {
     fontFamily: pretendard(700),
@@ -215,7 +219,6 @@ const styles = StyleSheet.create({
     height: 143,
     flexGrow: 0,
     flexShrink: 0,
-    marginHorizontal: -20,
   },
   week: {
     height: 143,

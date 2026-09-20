@@ -6,7 +6,14 @@ import { ActivityIndicator, Image, Platform, Pressable, ScrollView, StyleSheet, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, SvgUri } from 'react-native-svg';
 
-import { AllLine, HeartImage } from '@/components/common';
+import {
+  AllLine,
+  GradientSearchField,
+  HeartImage,
+  SEARCH_FIELD_PLACEHOLDER_COLOR,
+  SEARCH_FIELD_TEXT_STYLE,
+  SearchIcon,
+} from '@/components/common';
 import { ScheduleEditIcon } from '@/components/common/Icons';
 import { VolunteerInfoIcon } from '@/components/common/VolunteerInfoIcon';
 import { UserGnb } from '@/components/navigation/UserGnb';
@@ -196,27 +203,18 @@ function SearchInput({
   onChangeQuery: (query: string) => void;
 }) {
   return (
-    <LinearGradient
-      colors={['#C1C1C1', '#FFFFFF', '#222222', '#EFEFEF']}
-      locations={[0.15, 0.42, 0.73, 1]}
-      start={{ x: 0, y: 0.5 }}
-      end={{ x: 1, y: 0.5 }}
-      style={styles.searchGradient}>
-      <View style={styles.searchWrapper}>
-        <TextInput
-          accessibilityLabel="봉사 검색"
-          placeholder="어떤 봉사를 찾으시나요?"
-          placeholderTextColor="#818181"
-          returnKeyType="search"
-          style={styles.searchInput}
-          value={query}
-          onChangeText={onChangeQuery}
-        />
-        <View pointerEvents="none" style={styles.searchIcon}>
-          <SearchIcon />
-        </View>
-      </View>
-    </LinearGradient>
+    <GradientSearchField>
+      <TextInput
+        accessibilityLabel="봉사 검색"
+        placeholder="어떤 봉사를 찾으시나요?"
+        placeholderTextColor={SEARCH_FIELD_PLACEHOLDER_COLOR}
+        returnKeyType="search"
+        style={styles.searchInput}
+        value={query}
+        onChangeText={onChangeQuery}
+      />
+      <SearchIcon size={20} />
+    </GradientSearchField>
   );
 }
 
@@ -564,21 +562,6 @@ function HeartTabIcon({ active }: { active: boolean }) {
   return <SvgUri height={22} uri={uri} width={22} />;
 }
 
-function SearchIcon() {
-  return (
-    <Svg height={24} viewBox="0 0 24 24" width={24}>
-      <Path
-        d="M21 21 16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
-        fill="none"
-        stroke="#818181"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-      />
-    </Svg>
-  );
-}
-
 function TinyChevronIcon() {
   return (
     <Svg height={6} viewBox="0 0 4 7" width={3}>
@@ -636,36 +619,12 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 20,
   },
-  searchGradient: {
-    width: 315,
-    height: 50,
-    alignSelf: 'center',
-    padding: 1.2,
-    borderRadius: 25,
-    shadowColor: '#F5F5F5',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  searchWrapper: {
-    flex: 1,
-    justifyContent: 'center',
-    borderRadius: 25,
-    backgroundColor: '#F2F2F4',
-  },
-  searchIcon: {
-    position: 'absolute',
-    right: 25,
-  },
   searchInput: {
-    height: 50,
-    paddingRight: 60,
-    paddingLeft: 24,
+    flex: 1,
+    height: '100%',
+    paddingVertical: 0,
+    ...SEARCH_FIELD_TEXT_STYLE,
     color: '#222222',
-    fontFamily: pretendard(600),
-    fontSize: 17,
-    fontWeight: '600',
   },
   scheduleTitleRow: {
     flexDirection: 'row',
