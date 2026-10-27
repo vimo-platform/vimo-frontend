@@ -5,6 +5,7 @@ import { Stack, router, useFocusEffect } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 
 import { isAuthError } from "@/services/common/client";
+import { PostingFlowHeader } from "@/components/admin/PostingFlowHeader";
 import { PostingInfoIcon, type PostingInfoIconType } from "@/components/common/PostingInfoIcon";
 import { getWorkingPosting, setWorkingPosting, upsertPosting } from "@/services/admin/postings";
 import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from "@/styles/admin/theme";
@@ -110,18 +111,14 @@ export default function PostingPreviewScreen() {
 
   return (
     <Animated.View style={[styles.container, { opacity: appear }]}>
-      <Stack.Screen
-        options={{
-          title: "공고 작성",
-          headerTitleAlign: "center",
-          headerTitleStyle: {
-            fontFamily: pretendard(500),
-            fontSize: 20,
-          },
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
+      <PostingFlowHeader title="공고 작성" />
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="never"
+        automaticallyAdjustContentInsets={false}
+        style={styles.scrollViewport}
+        contentContainerStyle={styles.scroll}>
         <View style={styles.titleRow}>
           <Text style={styles.title}>{posting.title}</Text>
           <Pressable disabled={isSaving} onPress={saveDraft} hitSlop={10}>
@@ -297,6 +294,9 @@ const styles = StyleSheet.create({
     paddingTop: 26,
     paddingHorizontal: 32,
     paddingBottom: 126,
+  },
+  scrollViewport: {
+    flex: 1,
   },
   titleRow: {
     flexDirection: "row",

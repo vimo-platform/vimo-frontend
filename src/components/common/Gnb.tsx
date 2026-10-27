@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import type { ReactNode } from 'react';
+import { Pressable, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 
 import {
   GnbMyPageIcon,
@@ -16,9 +17,12 @@ type GnbItem = {
 };
 
 type GnbProps = {
-  activeKey?: GnbTabKey;
+  activeKey?: GnbTabKey | null;
   items?: GnbItem[];
   style?: StyleProp<ViewStyle>;
+  tabStyle?: StyleProp<ViewStyle>;
+  labelStyle?: StyleProp<TextStyle>;
+  renderIcon?: (key: GnbTabKey, isActive: boolean) => ReactNode;
 };
 
 const iconByKey = {
@@ -35,7 +39,7 @@ const defaultItems: GnbItem[] = [
   { key: 'myPage', label: '마이페이지' },
 ];
 
-export function Gnb({ activeKey = 'participation', items = defaultItems, style }: GnbProps) {
+export function Gnb({ activeKey = 'participation', items = defaultItems, style, tabStyle, labelStyle, renderIcon }: GnbProps) {
   return (
     <View style={[styles.container, style]}>
       <View style={styles.tabRow}>
@@ -48,14 +52,14 @@ export function Gnb({ activeKey = 'participation', items = defaultItems, style }
               key={item.key}
               accessibilityRole="button"
               accessibilityState={{ selected: isActive }}
-              style={styles.tab}
+              style={[styles.tab, tabStyle]}
               onPress={item.onPress}>
-              <Icon
+              {renderIcon ? renderIcon(item.key, isActive) : <Icon
                 width={22}
                 height={22}
                 style={[styles.icon, !isActive && styles.inactiveIcon]}
-              />
-              <Text style={[styles.label, isActive && styles.activeLabel]}>{item.label}</Text>
+              />}
+              <Text style={[styles.label, isActive && styles.activeLabel, labelStyle]}>{item.label}</Text>
             </Pressable>
           );
         })}

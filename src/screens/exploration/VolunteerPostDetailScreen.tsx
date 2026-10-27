@@ -1,6 +1,7 @@
 import { Href, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,6 +15,8 @@ import { AllLine, Button, HeartImage } from '@/components/common';
 import { BackIcon } from '@/components/common/Icons';
 import { VolunteerInfoIcon } from '@/components/common/VolunteerInfoIcon';
 import { useUserSessionGuard } from '@/hooks/common/use-user-session-guard';
+import { fetchMyApplications } from '@/services/common/volunteers';
+import { getApplicationOutcome } from '@/services/exploration/application-result';
 
 import { createVolunteerApplication, getVolunteerPostById, updateVolunteerFavorite } from '@/services/exploration/api';
 import type { VolunteerPost } from '@/types/exploration/types';
@@ -42,6 +45,7 @@ export function VolunteerPostDetailScreen() {
     [id],
   );
   const [remotePost, setRemotePost] = useState<VolunteerPost | null>(null);
+  const [isApplying, setIsApplying] = useState(false);
   const post = remotePost ?? snapshotPost;
 
   useEffect(() => {
@@ -115,30 +119,44 @@ export function VolunteerPostDetailScreen() {
       return;
     }
 
-    if (isApplied || isClosed) {
+    if (isApplied || isClosed || isApplying) {
       return;
     }
 
+    setIsApplying(true);
     try {
-      await createVolunteerApplication(post.id);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : '';
+      let application;
+      try {
+        application = await createVolunteerApplication(post.id);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '';
+        if (!message.includes('이미 신청')) throw error;
 
-      if (!message.includes('이미 신청')) {
+        application = (await fetchMyApplications()).find((item) => item.volunteerId === post.id);
+        if (!application) throw new Error('기존 지원 내역을 확인하지 못했어요. 다시 시도해 주세요.');
+      }
+
+      const outcome = getApplicationOutcome(post.recruitType, application);
+      if (outcome === 'unknown') {
+        Alert.alert('지원 상태 확인', '지원 결과를 확인하지 못했어요. 지원 현황에서 신청 상태를 확인해 주세요.', [
+          { text: '지원 현황', onPress: () => router.replace('/application-status') },
+        ]);
         return;
       }
-    }
 
-    if (post.recruitType === 'fcfs') {
       submitVolunteerApplication(post.id);
-      approveVolunteerApplication(post.id);
+      if (outcome === 'confirmed') {
+        approveVolunteerApplication(post.id);
+        router.push(`/volunteer-approval-confirmed?id=${post.id}&source=fcfs` as Href);
+        return;
+      }
 
-      router.push(`/volunteer-approval-confirmed?id=${post.id}&source=fcfs` as Href);
-      return;
+      router.push(`/volunteer-apply-complete?id=${post.id}` as Href);
+    } catch (error) {
+      Alert.alert('지원 실패', error instanceof Error ? error.message : '봉사 지원에 실패했어요. 다시 시도해 주세요.');
+    } finally {
+      setIsApplying(false);
     }
-
-    submitVolunteerApplication(post.id);
-    router.push(`/volunteer-apply-complete?id=${post.id}` as Href);
   };
 
   return (
@@ -203,8 +221,8 @@ export function VolunteerPostDetailScreen() {
 
         <View style={styles.bottomBar}>
           <Button
-            label={bottomButtonLabel}
-            disabled={isClosed || (mode !== 'confirm' && isApplied)}
+            label={isApplying ? '지원 중' : bottomButtonLabel}
+            disabled={isApplying || isClosed || (mode !== 'confirm' && isApplied)}
             style={[styles.applyButton, (isClosed || (mode !== 'confirm' && isApplied)) && styles.closedButton]}
             onPress={handleBottomButtonPress}
           />

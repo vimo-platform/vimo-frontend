@@ -160,13 +160,17 @@ export default function CreatePostingScreen() {
         options={{
           title: '공고 작성',
           headerTitleAlign: 'center',
+          headerTransparent: false,
+          headerStyle: { backgroundColor: Colors.card },
           headerTitleStyle: {
             fontFamily: pretendard(500),
             fontSize: 20,
           },
         }}
       />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.scroll}>
         <Text style={styles.heading}>
           공고 내용을 입력해 주세요{'\n'}깔끔하게 정리해드릴게요
         </Text>
@@ -718,7 +722,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.card,
   },
   scroll: {
-    padding: 20,
+    paddingHorizontal: 39,
+    paddingTop: 10,
     paddingBottom: 40,
   },
   heading: {
@@ -803,7 +808,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     gap: 20,
     backgroundColor: '#F1F1F1',
-    borderRadius: 14,
+    borderRadius: 21,
     paddingHorizontal: 18,
     paddingVertical: 10,
   },

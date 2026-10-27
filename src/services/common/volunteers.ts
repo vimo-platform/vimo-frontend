@@ -267,8 +267,9 @@ function shouldFetchVolunteerDetail(data: ApiVolunteer) {
   const hasKeywords = Boolean(
     data.selectedCategories?.length || data.summaryTags?.length || data.keywords?.length || data.category,
   );
+  const hasRecruitType = Boolean(data.recruitType ?? data.recruitmentType ?? data.applicationType);
 
-  return !((data.content ?? data.description) && hasDateTime && hasCapacity && hasKeywords);
+  return !((data.content ?? data.description) && hasDateTime && hasCapacity && hasKeywords && hasRecruitType);
 }
 
 function normalizeRecruitType(type?: ApiVolunteer['recruitType']) {

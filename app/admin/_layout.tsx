@@ -1,6 +1,6 @@
 import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
 import { AuthProvider } from "@/hooks/admin/use-admin-auth";
@@ -51,7 +51,17 @@ export default function RootLayout() {
           <Stack
             screenOptions={{
               headerShadowVisible: false,
+              headerBackVisible: false,
               headerLeft: ({ canGoBack }) => <HeaderBackButton canGoBack={canGoBack} />,
+              unstable_headerLeftItems: Platform.OS === "ios"
+                ? ({ canGoBack }) => canGoBack
+                  ? [{
+                      type: "custom",
+                      element: <HeaderBackButton canGoBack />,
+                      hidesSharedBackground: true,
+                    }]
+                  : []
+                : undefined,
               headerTitleStyle: {
                 fontFamily: pretendard(500),
                 fontSize: 20,
@@ -75,7 +85,7 @@ export default function RootLayout() {
               name="posting/preview"
               options={{
                 title: "공고 작성",
-                headerTitleAlign: "center",
+                headerShown: false,
                 // 로딩 화면(작성 화면 내부)에서 미리보기로 넘어올 때
                 // 딱 끊기지 않고 서서히 크로스페이드되도록.
                 animation: "fade",
@@ -84,11 +94,11 @@ export default function RootLayout() {
             />
             <Stack.Screen
               name="posting/edit"
-              options={{ title: "공고 수정", headerTitleAlign: "center" }}
+              options={{ title: "공고 수정", headerShown: false }}
             />
             <Stack.Screen
               name="activity/[id]"
-              options={{ title: "상세보기", headerTitleAlign: "center" }}
+              options={{ title: "상세보기", headerShown: false }}
             />
             <Stack.Screen
               name="qr/[sessionId]"
@@ -103,9 +113,8 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   headerBackButton: {
-    width: 20,
+    width: 44,
     height: 44,
-    marginLeft: 20,
     alignItems: "center",
     justifyContent: "center",
   },

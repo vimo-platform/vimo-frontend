@@ -239,12 +239,16 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    minWidth: 0,
     color: '#222222',
     fontFamily: 'Pretendard',
     fontSize: 16,
     fontWeight: '300',
-    height: 56,
+    height: '100%',
+    lineHeight: 24,
     padding: 0,
+    textAlignVertical: 'center',
+    transform: [{ translateY: -2 }],
   },
   saveRow: {
     flexDirection: 'row',

@@ -13,6 +13,7 @@ import {
 import { Stack, router } from "expo-router";
 
 import { getWorkingPosting, setWorkingPosting } from "@/services/admin/postings";
+import { PostingFlowHeader } from "@/components/admin/PostingFlowHeader";
 import {
   DateSelectModal,
   LocationSelectModal,
@@ -86,8 +87,13 @@ export default function PostingEditScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Stack.Screen options={{ title: "공고 수정", headerTitleAlign: "center" }} />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <PostingFlowHeader title="공고 수정" />
+      <ScrollView
+        contentInsetAdjustmentBehavior="never"
+        automaticallyAdjustContentInsets={false}
+        style={styles.scrollViewport}
+        contentContainerStyle={styles.scroll}>
         <Field label="공고 제목" value={title} onChangeText={setTitle} max={30} />
         <Field label="봉사 인증 시간" value={hoursText} onChangeText={setHoursText} max={30} />
 
@@ -321,6 +327,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.card,
+  },
+  scrollViewport: {
+    flex: 1,
   },
   scroll: {
     padding: 20,
