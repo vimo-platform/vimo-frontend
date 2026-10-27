@@ -5,6 +5,7 @@ import { useLocalSearchParams } from "expo-router";
 
 import { fetchParticipants } from "@/services/admin/participants";
 import { Colors } from "@/styles/admin/theme";
+import { pretendard } from "@/styles/common/fonts";
 import type { Participant, ParticipantStatus } from "@/types/admin";
 
 const STATUS: Record<ParticipantStatus, { label: string; color: string }> = {
@@ -96,8 +97,10 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   statsTitle: {
-    fontSize: 15,
-    fontWeight: "700",
+    fontFamily: pretendard(600),
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.325,
     color: Colors.text,
     marginBottom: 20,
   },
@@ -110,11 +113,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statLabel: {
-    fontSize: 13,
+    fontFamily: pretendard(500),
+    fontSize: 12,
+    lineHeight: 17,
+    letterSpacing: -0.3,
   },
   statValue: {
-    fontSize: 18,
-    fontWeight: "800",
+    fontFamily: pretendard(600),
+    fontSize: 20,
+    lineHeight: 28,
+    letterSpacing: -0.5,
     color: Colors.text,
   },
   listCard: {
@@ -124,8 +132,10 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   listTitle: {
-    fontSize: 14,
-    fontWeight: "700",
+    fontFamily: pretendard(600),
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.325,
     color: Colors.text,
     marginBottom: 6,
   },
@@ -138,20 +148,27 @@ const styles = StyleSheet.create({
   },
   name: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: "700",
+    fontFamily: pretendard(600),
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.325,
     color: Colors.text,
   },
   department: {
     flex: 1.4,
-    fontSize: 14,
+    fontFamily: pretendard(400),
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.325,
     color: Colors.textSecondary,
     textAlign: "center",
   },
   status: {
     flex: 1,
-    fontSize: 14,
-    fontWeight: "600",
+    fontFamily: pretendard(400),
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.325,
     textAlign: "right",
   },
 });

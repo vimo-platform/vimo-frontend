@@ -4,7 +4,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { Figma } from "@/components/admin/Figma";
-import { Colors } from "@/styles/admin/theme";
+import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from "@/styles/admin/theme";
 
 type Step = { icon: ComponentProps<typeof Figma>["name"]; label: string };
 
@@ -106,6 +106,9 @@ export function SyncOverlay({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: "100%",
+    maxWidth: ADMIN_APP_FRAME_MAX_WIDTH,
+    alignSelf: "center",
     backgroundColor: Colors.card,
     paddingTop: 60,
     paddingHorizontal: 28,

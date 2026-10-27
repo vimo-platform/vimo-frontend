@@ -2,9 +2,10 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
-import { MonthPickerModal } from "@/components/calendar/MonthPickerModal";
+import { MonthPickerModal } from "@/components/admin/MonthPickerModal";
 import { CalendarCircle } from "@/components/join/CalendarCircle";
-import { Colors } from "@/styles/admin/theme";
+import { ADMIN_APP_FRAME_MAX_WIDTH, Colors } from "@/styles/admin/theme";
+import { pretendard } from "@/styles/common/fonts";
 
 const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
 const WEEK_COUNT = 157;
@@ -41,7 +42,8 @@ type Props = {
 
 export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
   const { width } = useWindowDimensions();
-  const calendarWidth = Math.max(320, width - 40);
+  // 유저 메인과 동일하게 날짜 7개가 앱 프레임 전체 너비를 나눠 갖는다.
+  const calendarWidth = Math.min(width, 393);
   const today = useMemo(() => startOfDay(new Date()), []);
   const [isMonthPickerVisible, setIsMonthPickerVisible] = useState(false);
   const listRef = useRef<FlatList<Date[]>>(null);
@@ -80,18 +82,20 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
 
   return (
     <View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="월 선택"
-        hitSlop={8}
-        style={styles.monthRow}
-        onPress={() => setIsMonthPickerVisible(true)}
-      >
-        <Text style={styles.month}>
-          {selected.getFullYear()}년 {selected.getMonth() + 1}월
-        </Text>
-        <Ionicons name="caret-down" size={14} color={Colors.text} />
-      </Pressable>
+      <View style={styles.monthRowWrap}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="월 선택"
+          hitSlop={8}
+          style={styles.monthRow}
+          onPress={() => setIsMonthPickerVisible(true)}
+        >
+          <Text style={styles.month}>
+            {selected.getFullYear()}년 {selected.getMonth() + 1}월
+          </Text>
+          <Ionicons name="caret-down" size={14} color={Colors.text} />
+        </Pressable>
+      </View>
 
       <FlatList
         ref={listRef}
@@ -156,6 +160,7 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
       <MonthPickerModal
         selectedDate={selected}
         visible={isMonthPickerVisible}
+        viewportMaxWidth={ADMIN_APP_FRAME_MAX_WIDTH}
         onClose={() => setIsMonthPickerVisible(false)}
         onSelectMonth={selectMonth}
       />
@@ -164,16 +169,18 @@ export function WeekCalendar({ selected, onSelect, marked = [] }: Props) {
 }
 
 const styles = StyleSheet.create({
+  monthRowWrap: {
+    paddingHorizontal: 30,
+  },
   monthRow: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
     gap: 8,
-    marginBottom: 16,
   },
   month: {
-    fontSize: 22,
-    fontWeight: "800",
+    fontFamily: pretendard(700),
+    fontSize: 20,
     color: Colors.text,
   },
   weekList: {
@@ -185,7 +192,7 @@ const styles = StyleSheet.create({
     height: 143,
     flexDirection: "row",
     paddingHorizontal: 22,
-    paddingTop: 30,
+    paddingTop: 33,
   },
   day: {
     flex: 1,
@@ -207,9 +214,8 @@ const styles = StyleSheet.create({
   weekday: {
     color: "#818181",
     opacity: 0.5,
-    fontFamily: "Pretendard",
+    fontFamily: pretendard(600),
     fontSize: 17,
-    fontWeight: "600",
     lineHeight: 24,
     letterSpacing: -0.425,
   },
@@ -218,20 +224,19 @@ const styles = StyleSheet.create({
     height: 43,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 6,
+    marginTop: 10,
   },
   date: {
     color: "#818181",
     opacity: 0.5,
-    fontFamily: "Pretendard",
+    fontFamily: pretendard(600),
     fontSize: 17,
-    fontWeight: "600",
     lineHeight: 24,
     letterSpacing: -0.425,
   },
   todayText: {
     color: "#222222",
     opacity: 1,
-    fontWeight: "700",
+    fontFamily: pretendard(700),
   },
 });

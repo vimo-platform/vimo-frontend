@@ -1,14 +1,17 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useMemo, useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 
 import { fetchSessionCalendar } from "@/services/admin/sessions";
+import { AllLine } from "@/components/common";
 import { SessionStatusBadge } from "@/components/admin/Figma";
 import { SessionCard } from "@/components/admin/SessionCard";
 import { WeekCalendar, dateKey } from "@/components/admin/WeekCalendar";
+import { ParticipationLogo } from "@/components/admin/ParticipationLogo";
 import { Colors } from "@/styles/admin/theme";
+import { pretendard } from "@/styles/common/fonts";
 import { useAuth } from "@/hooks/admin/use-admin-auth";
 import type { Session } from "@/types/admin";
 
@@ -38,10 +41,14 @@ export default function FieldQrScreen() {
   }, [sessions]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
+    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Image source={require("@/assets/admin/icons/logo.png")} style={styles.logo} />
-        <Text style={styles.greeting}>{user?.name}님, 안녕하세요!</Text>
+        <View style={styles.header}>
+          <View style={styles.logoRow}>
+            <ParticipationLogo width={92.156} height={97.53} compactLayout />
+          </View>
+          <Text style={styles.greeting}>{user?.name}님, 안녕하세요!</Text>
+        </View>
 
         <WeekCalendar
           selected={selected}
@@ -49,14 +56,16 @@ export default function FieldQrScreen() {
           marked={markedDates}
         />
 
-        <View style={styles.divider} />
+        <AllLine style={styles.divider} />
 
-        {groups.map(([time, list]) => (
-          <SessionGroup key={time} time={time} sessions={list} />
-        ))}
-        {groups.length === 0 && (
-          <Text style={styles.empty}>이 날짜에 예정된 봉사 회차가 없어요.</Text>
-        )}
+        <View style={styles.sessionSection}>
+          {groups.map(([time, list]) => (
+            <SessionGroup key={time} time={time} sessions={list} />
+          ))}
+          {groups.length === 0 && (
+            <Text style={styles.empty}>이 날짜에 예정된 봉사 회차가 없어요.</Text>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -80,28 +89,35 @@ function SessionGroup({ time, sessions }: { time: string; sessions: Session[] })
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: Colors.card,
+    // 유저 참여 화면과 동일한 배경색으로 맞춘다.
+    backgroundColor: "#F9F9FB",
   },
   scroll: {
-    padding: 20,
     paddingBottom: 40,
   },
-  logo: {
-    width: 44,
-    height: 44,
-    marginBottom: 20,
+  header: {
+    paddingHorizontal: 30,
+  },
+  logoRow: {
+    marginBottom: 36,
   },
   greeting: {
+    fontFamily: pretendard(400),
     fontSize: 20,
-    fontWeight: "700",
+    lineHeight: 28,
+    letterSpacing: -0.5,
     color: Colors.text,
-    marginBottom: 24,
+    // 유저 화면은 인사말 옆에 34px짜리 "지원 현황" 버튼이 나란히 있어 줄 높이가
+    // 28이 아닌 34가 된다. 그 버튼이 없는 관리자 화면에서도 같은 세로 간격을
+    // 맞추기 위해 marginBottom에 6(=34-28)을 더한다.
+    marginBottom: 28,
   },
   divider: {
-    height: 6,
-    backgroundColor: Colors.border,
-    marginHorizontal: -20,
-    marginVertical: 24,
+    marginTop: 9,
+  },
+  sessionSection: {
+    paddingTop: 30,
+    paddingHorizontal: 30,
   },
   group: {
     marginBottom: 24,
@@ -113,14 +129,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   groupTime: {
-    fontSize: 17,
-    fontWeight: "800",
+    fontFamily: pretendard(700),
+    fontSize: 18,
+    lineHeight: 25,
+    letterSpacing: -0.45,
     color: Colors.text,
   },
   empty: {
+    color: "#222222",
+    fontSize: 16,
+    fontWeight: "700",
     textAlign: "center",
-    color: Colors.textSecondary,
-    fontSize: 14,
-    marginTop: 40,
   },
 });
