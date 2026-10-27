@@ -4,7 +4,7 @@ import { SvgXml } from "react-native-svg";
 
 type GnbProps = {
   state: { index: number; routes: { key: string; name: string }[] };
-  navigation: { navigate: (name: string) => void };
+  navigateToTab: (routeKey: string) => void;
 };
 
 const fieldQrIconXml = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -47,7 +47,7 @@ const adminTabMeta: Record<string, { icon: string; label: string }> = {
   },
 };
 
-function GnbTabBar({ state, navigation }: GnbProps) {
+function GnbTabBar({ state, navigateToTab }: GnbProps) {
   return (
     <View style={styles.bar}>
       <View style={styles.tabRow}>
@@ -65,7 +65,7 @@ function GnbTabBar({ state, navigation }: GnbProps) {
               accessibilityRole="button"
               accessibilityState={{ selected: isActive }}
               style={styles.tab}
-              onPress={() => navigation.navigate(route.name)}
+              onPress={() => navigateToTab(route.key)}
             >
               <View style={[styles.tabInner, isActive && styles.tabInnerActive]}>
                 <SvgXml
@@ -92,8 +92,8 @@ function GnbTabBar({ state, navigation }: GnbProps) {
 export default function TabsLayout() {
   return (
     <Tabs
-      tabBar={({ state, navigation }) => (
-        <GnbTabBar state={state} navigation={navigation} />
+      tabBar={({ state, navigateToTab }) => (
+        <GnbTabBar state={state} navigateToTab={navigateToTab} />
       )}
     >
       <Tabs.Screen name="index" options={{ title: "현장 QR", headerShown: false }} />

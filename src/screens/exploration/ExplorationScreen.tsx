@@ -591,9 +591,9 @@ function SearchIcon() {
 
 function ScheduleEditIcon() {
   return (
-    <Svg height={20} viewBox="0 0 24 24" width={20}>
+    <Svg height={20} viewBox="0 0 24 24" width={20} style={{ flexShrink: 0 }}>
       <Path
-        d="M7 3v3M17 3v3M4.5 9h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v8"
+        d="M7 3v3M17 3v3M4 9h16M12 21H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5"
         fill="none"
         stroke="#818181"
         strokeLinecap="round"

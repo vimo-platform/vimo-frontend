@@ -7,6 +7,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  type ScrollViewInstance,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -45,7 +46,7 @@ export function CertificationScreen() {
 
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, 393);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const pendingSectionY = useRef(0);
   const rejectedSectionY = useRef(0);
   const completedSectionY = useRef(0);
