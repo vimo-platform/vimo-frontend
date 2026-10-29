@@ -2,6 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Href, router } from 'expo-router';
 import { useState } from 'react';
 import {
+  Alert,
   Image,
   Modal,
   Platform,
@@ -38,20 +39,24 @@ export function ScheduleRegisterScreen() {
   };
 
   const pickScheduleImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (!permission.granted) {
-      setShowUploadAlert(true);
-      return;
-    }
+      if (!permission.granted) {
+        setShowUploadAlert(true);
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 1,
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 1,
+      });
 
-    if (!result.canceled && result.assets[0]?.uri) {
-      setSelectedImageUri(result.assets[0].uri);
+      if (!result.canceled && result.assets[0]?.uri) {
+        setSelectedImageUri(result.assets[0].uri);
+      }
+    } catch {
+      Alert.alert('사진 선택 실패', '사진을 불러오지 못했어요. 다시 선택해 주세요.');
     }
   };
 

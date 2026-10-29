@@ -42,10 +42,11 @@ export type UserSetupPayload = {
   keywords: string[];
 };
 
-export function analyzeTimetableOcr(formData: FormData) {
+export function analyzeTimetableOcr(formData: FormData, signal?: AbortSignal) {
   return apiRequest<TimetableAnalysisResponse>('/api/v1/timetables/ocr', {
     method: 'POST',
     body: formData,
+    signal,
   });
 }
 
@@ -56,6 +57,6 @@ export function saveUserSetup(payload: UserSetupPayload) {
   });
 }
 
-export function getMySetup() {
-  return apiRequest<TimetableSetupResponse>('/api/v1/users/me/setup');
+export function getMySetup(signal?: AbortSignal) {
+  return apiRequest<TimetableSetupResponse>('/api/v1/users/me/setup', { signal });
 }

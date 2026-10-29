@@ -4,18 +4,17 @@
     "slug": "vimo_frontend",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/vimo-app-icon.png",
     "scheme": "vimo",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/vimo-app-icon.png"
     },
     "android": {
+      "icon": "./assets/images/vimo-app-icon.png",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#1C1C1E",
+        "foregroundImage": "./assets/images/vimo-app-icon.png"
       },
       "predictiveBackGestureEnabled": false
     },

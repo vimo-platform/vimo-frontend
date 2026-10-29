@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Animated,
   Easing,
   Image,
@@ -15,6 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Tag } from '@/components/common';
 import { LoadingOverlay, LOADING_FILL_DURATION_MS } from '@/components/common/LoadingOverlay';
 import { useUserSessionGuard } from '@/hooks/common/use-user-session-guard';
+import { isAuthError } from '@/services/common/client';
+import { getScheduleAnalysisErrorMessage, TimetableError } from '@/services/exploration/schedule-analysis-errors';
 import type { ApiLocalTime, ClassSlot } from '@/services/common/user-setup';
 
 import {
@@ -27,48 +30,91 @@ import { setScheduleRecommendationFromAnalysis } from '@/services/exploration/cu
 
 const EXPLORATION_STAR = require('@/assets/images/explorationimg/explorationstar.png');
 
-type AnalysisPhase = 'loading' | 'complete';
+type AnalysisPhase = 'loading' | 'complete' | 'error';
 
 export function ScheduleAnalysisScreen() {
+  const { imageUri, source } = useLocalSearchParams<{ imageUri?: string; source?: string }>();
+  const uploadedImageUri = typeof imageUri === 'string' && imageUri ? imageUri : undefined;
+  const isSavedScheduleView = source === 'saved';
+
+  return (
+    <ScheduleAnalysisContent
+      key={`${isSavedScheduleView ? 'saved' : 'upload'}:${uploadedImageUri ?? ''}`}
+      uploadedImageUri={uploadedImageUri}
+      isSavedScheduleView={isSavedScheduleView}
+    />
+  );
+}
+
+function ScheduleAnalysisContent({ uploadedImageUri, isSavedScheduleView }: {
+  uploadedImageUri?: string;
+  isSavedScheduleView: boolean;
+}) {
   useUserSessionGuard();
 
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, 393);
-  const { imageUri, source } = useLocalSearchParams<{ imageUri?: string; source?: string }>();
-  const uploadedImageUri = typeof imageUri === 'string' && imageUri ? imageUri : undefined;
-  const isSavedScheduleView = source === 'saved';
   const [phase, setPhase] = useState<AnalysisPhase>('loading');
   const [analysis, setAnalysis] = useState<ScheduleAnalysisResult | null>(null);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [showKeywordError, setShowKeywordError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
   const [completeOpacity] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     let mounted = true;
+    let timedOut = false;
+    let loadingTimer: ReturnType<typeof setTimeout> | undefined;
+    const controller = new AbortController();
+    let timeoutTimer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<never>((_, reject) => {
+      timeoutTimer = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+        reject(new TimetableError('시간표 요청 시간이 초과되었어요. 다시 시도해 주세요.'));
+      }, 60_000);
+    });
 
     const request = isSavedScheduleView
-      ? getSavedScheduleAnalysis().then((savedAnalysis) => savedAnalysis ?? null)
-      : analyzeScheduleImage(uploadedImageUri);
+      ? getSavedScheduleAnalysis({ throwOnError: true, signal: controller.signal }).then((savedAnalysis) => {
+          if (!savedAnalysis?.classes.length) throw new TimetableError('저장된 수업 정보가 없어요. 시간표 사진을 다시 등록해 주세요.');
+          return savedAnalysis;
+        })
+      : analyzeScheduleImage(uploadedImageUri, controller.signal);
 
     Promise.all([
-      request,
+      Promise.race([request, deadline]),
       isSavedScheduleView
         ? Promise.resolve()
-        : new Promise((resolve) => setTimeout(resolve, LOADING_FILL_DURATION_MS)),
+        : new Promise((resolve) => { loadingTimer = setTimeout(resolve, LOADING_FILL_DURATION_MS); }),
     ]).then(([result]) => {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setAnalysis(result);
       setSelectedKeywords(isSavedScheduleView ? result?.recommendedKeywords ?? [] : []);
       setPhase('complete');
+    }).catch((error: unknown) => {
+      if (!mounted) return;
+      setErrorMessage(timedOut
+        ? '분석 시간이 오래 걸리고 있어요. 인터넷 연결을 확인하고 다시 시도해 주세요.'
+        : getScheduleAnalysisErrorMessage(error));
+      setNeedsLogin(isAuthError(error));
+      setPhase('error');
+    }).finally(() => {
+      clearTimeout(timeoutTimer);
+      clearTimeout(loadingTimer);
     });
 
     return () => {
       mounted = false;
+      controller.abort();
+      clearTimeout(timeoutTimer);
+      clearTimeout(loadingTimer);
     };
-  }, [isSavedScheduleView, uploadedImageUri]);
+  }, [isSavedScheduleView, uploadedImageUri, retryAttempt]);
 
   useEffect(() => {
     if (phase !== 'complete') {
@@ -99,12 +145,76 @@ export function ScheduleAnalysisScreen() {
     );
   };
 
+  const retryAnalysis = () => {
+    setPhase('loading');
+    setAnalysis(null);
+    setSelectedKeywords([]);
+    setShowKeywordError(false);
+    setErrorMessage('');
+    setNeedsLogin(false);
+    setRetryAttempt((attempt) => attempt + 1);
+  };
+
+  const handleSave = async () => {
+    if (isSaving || !analysis || phase !== 'complete') return;
+    if (selectedKeywords.length === 0) {
+      setShowKeywordError(true);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await saveScheduleAnalysisSelection(analysis, selectedKeywords);
+      setScheduleRecommendationFromAnalysis({
+        scheduleItems: analysis.scheduleItems,
+        freeTimeSlots: analysis.freeTimeSlots,
+        selectedKeywords,
+        timetableImageUrl: analysis.timetableImageUrl,
+      });
+      router.replace('/search');
+    } catch (error) {
+      Alert.alert('시간표 저장 실패', getScheduleAnalysisErrorMessage(error), isAuthError(error)
+        ? [{ text: '다시 로그인', onPress: () => router.replace('/') }]
+        : undefined);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (phase === 'loading') {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={[styles.loadingScreen, { width: contentWidth }]}> 
           <LoadingOverlay message="시간표를 읽고 있어요" />
           <View style={styles.homeIndicator} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (phase === 'error') {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.screen, { width: contentWidth }]}>
+          <ScrollView contentContainerStyle={styles.failureContent}>
+            <Text accessibilityRole="header" style={styles.failureTitle}>
+              {isSavedScheduleView ? '시간표를 불러오지 못했어요' : '시간표를 분석하지 못했어요'}
+            </Text>
+            <Text accessibilityLiveRegion="polite" style={styles.failureMessage}>{errorMessage}</Text>
+            <Button
+              label={needsLogin ? '다시 로그인' : '다시 시도'}
+              style={styles.nextButton}
+              onPress={() => needsLogin ? router.replace('/') : retryAnalysis()}
+            />
+            {!needsLogin ? (
+              <Button
+                label="사진 다시 선택"
+                variant="secondary"
+                style={styles.nextButton}
+                onPress={() => router.replace('/schedule-register')}
+              />
+            ) : null}
+          </ScrollView>
         </View>
       </SafeAreaView>
     );
@@ -152,23 +262,10 @@ export function ScheduleAnalysisScreen() {
             <Text style={styles.keywordErrorText}>1개 이상의 키워드를 선택하세요</Text>
           ) : null}
           <Button
-            label="다음"
+            label={isSaving ? '저장 중' : '다음'}
+            disabled={isSaving}
             style={styles.nextButton}
-            onPress={async () => {
-              if (selectedKeywords.length === 0) {
-                setShowKeywordError(true);
-                return;
-              }
-
-              await saveScheduleAnalysisSelection(analysis, selectedKeywords);
-              setScheduleRecommendationFromAnalysis({
-                scheduleItems: analysis?.scheduleItems,
-                freeTimeSlots: analysis?.freeTimeSlots,
-                selectedKeywords,
-                timetableImageUrl: analysis?.timetableImageUrl,
-              });
-              router.replace('/search');
-            }}
+            onPress={handleSave}
           />
         </View>
         <View style={styles.completeHomeIndicator} />
@@ -204,7 +301,31 @@ function SectionTitle({
   );
 }
 
-const TIMETABLE_DAYS = ['월', '화', '수', '목', '금', '토'];
+const TIMETABLE_DAYS = ['월', '화', '수', '목', '금', '토', '일'];
+const TIMETABLE_MIN_DAY_COUNT = 5;
+const TIMETABLE_DAY_INDEX: Readonly<Record<string, number>> = {
+  MONDAY: 0,
+  MON: 0,
+  월: 0,
+  TUESDAY: 1,
+  TUE: 1,
+  화: 1,
+  WEDNESDAY: 2,
+  WED: 2,
+  수: 2,
+  THURSDAY: 3,
+  THU: 3,
+  목: 3,
+  FRIDAY: 4,
+  FRI: 4,
+  금: 4,
+  SATURDAY: 5,
+  SAT: 5,
+  토: 5,
+  SUNDAY: 6,
+  SUN: 6,
+  일: 6,
+};
 const TIMETABLE_START_MINUTES = 9 * 60;
 const TIMETABLE_END_MINUTES = 19 * 60;
 const TIMETABLE_HEADER_HEIGHT = 22;
@@ -226,16 +347,22 @@ const CLASS_COLORS = [
 ];
 
 function AnalyzedTimetable({ classes }: { classes: ClassSlot[] }) {
+  const dayCount = classes.reduce(
+    (count, item) => Math.max(count, getDayIndex(item.dayOfWeek) + 1),
+    TIMETABLE_MIN_DAY_COUNT,
+  );
+  const days = TIMETABLE_DAYS.slice(0, dayCount);
+  const columnWidth = TIMETABLE_GRID_WIDTH / days.length;
   const classBlocks = classes
-    .map((item, index) => getClassBlockLayout(item, index))
+    .map((item, index) => getClassBlockLayout(item, index, columnWidth))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   return (
     <View style={styles.analyzedTimetable}>
       <View style={styles.dayHeaderRow}>
         <View style={styles.timeHeaderSpacer} />
-        {TIMETABLE_DAYS.map((day) => (
-          <Text key={day} style={styles.dayHeaderText}>
+        {days.map((day) => (
+          <Text key={day} style={[styles.dayHeaderText, { width: columnWidth }]}>
             {day}
           </Text>
         ))}
@@ -245,15 +372,13 @@ function AnalyzedTimetable({ classes }: { classes: ClassSlot[] }) {
         {Array.from({ length: 11 }).map((_, index) => (
           <View key={`row-${index}`} style={[styles.gridLineHorizontal, { top: index * 31.8 }]} />
         ))}
-        {Array.from({ length: TIMETABLE_DAYS.length + 1 }).map((_, index) => (
+        {Array.from({ length: days.length + 1 }).map((_, index) => (
           <View
             key={`column-${index}`}
             style={[
               styles.gridLineVertical,
               {
-                left:
-                  TIMETABLE_TIME_GUTTER +
-                  index * (TIMETABLE_GRID_WIDTH / TIMETABLE_DAYS.length),
+                left: TIMETABLE_TIME_GUTTER + index * columnWidth,
               },
             ]}
           />
@@ -287,7 +412,7 @@ function AnalyzedTimetable({ classes }: { classes: ClassSlot[] }) {
   );
 }
 
-function getClassBlockLayout(classItem: ClassSlot, index: number) {
+function getClassBlockLayout(classItem: ClassSlot, index: number, columnWidth: number) {
   const dayIndex = getDayIndex(classItem.dayOfWeek);
 
   if (dayIndex < 0) {
@@ -303,7 +428,6 @@ function getClassBlockLayout(classItem: ClassSlot, index: number) {
     return null;
   }
 
-  const columnWidth = TIMETABLE_GRID_WIDTH / TIMETABLE_DAYS.length;
   const minuteRange = TIMETABLE_END_MINUTES - TIMETABLE_START_MINUTES;
   const top = ((clampedStart - TIMETABLE_START_MINUTES) / minuteRange) * TIMETABLE_GRID_HEIGHT;
   const height = Math.max(24, ((clampedEnd - clampedStart) / minuteRange) * TIMETABLE_GRID_HEIGHT);
@@ -324,29 +448,8 @@ function getClassTextLineCount(height: number) {
 }
 
 function getDayIndex(dayOfWeek: string) {
-  const normalized = dayOfWeek.trim().toUpperCase();
-  const dayMap: Record<string, number> = {
-    MONDAY: 0,
-    MON: 0,
-    월: 0,
-    TUESDAY: 1,
-    TUE: 1,
-    화: 1,
-    WEDNESDAY: 2,
-    WED: 2,
-    수: 2,
-    THURSDAY: 3,
-    THU: 3,
-    목: 3,
-    FRIDAY: 4,
-    FRI: 4,
-    금: 4,
-    SATURDAY: 5,
-    SAT: 5,
-    토: 5,
-  };
-
-  return dayMap[normalized] ?? -1;
+  const normalized = dayOfWeek.trim().toUpperCase().replace(/요일$/, '');
+  return TIMETABLE_DAY_INDEX[normalized] ?? -1;
 }
 
 function getMinutes(time: ApiLocalTime) {
@@ -380,6 +483,27 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  failureContent: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 30,
+    paddingVertical: 40,
+    gap: 16,
+  },
+  failureTitle: {
+    color: '#222222',
+    fontSize: 21,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  failureMessage: {
+    color: '#606060',
+    fontSize: 15,
+    lineHeight: 23,
+    textAlign: 'center',
+    marginBottom: 16,
   },
   scrollContent: {
     alignItems: 'center',
@@ -440,7 +564,6 @@ const styles = StyleSheet.create({
     width: TIMETABLE_TIME_GUTTER,
   },
   dayHeaderText: {
-    width: TIMETABLE_GRID_WIDTH / TIMETABLE_DAYS.length,
     color: '#8F8F8F',
     fontFamily: 'Pretendard',
     fontSize: 7,

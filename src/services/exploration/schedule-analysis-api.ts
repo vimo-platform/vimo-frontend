@@ -1,4 +1,5 @@
-import { Platform } from 'react-native';
+import { TimetableError } from './schedule-analysis-errors';
+import { createTimetableFormData } from './timetable-image-upload';
 
 import {
   analyzeTimetableOcr,
@@ -35,38 +36,39 @@ export const TIMETABLE_KEYWORD_OPTIONS = [
   '수업 보조',
 ];
 
-export async function analyzeScheduleImage(imageUri?: string): Promise<ScheduleAnalysisResult> {
+export async function analyzeScheduleImage(imageUri?: string, signal?: AbortSignal): Promise<ScheduleAnalysisResult> {
   if (!imageUri) {
-    return getEmptyScheduleAnalysisResult();
+    throw new TimetableError('학교 시간표 사진을 먼저 선택해 주세요.');
   }
 
-  try {
-    const formData = await createTimetableFormData(imageUri);
-    const analysis = await analyzeTimetableOcr(formData);
+  const formData = await createTimetableFormData(imageUri, signal);
+  const analysis = await analyzeTimetableOcr(formData, signal);
 
-    return normalizeScheduleAnalysisResult(analysis);
-  } catch {
-    return getEmptyScheduleAnalysisResult();
-  }
+  return normalizeScheduleAnalysisResult(analysis);
 }
 
 export async function saveScheduleAnalysisSelection(
   analysis: ScheduleAnalysisResult | null,
   selectedKeywords: string[],
 ) {
-  if (!analysis) {
-    return;
+  if (!analysis?.classes.length) {
+    throw new TimetableError('시간표 분석을 완료한 뒤 저장해 주세요.');
+  }
+  if (!selectedKeywords.length) {
+    throw new TimetableError('1개 이상의 키워드를 선택해 주세요.');
   }
 
   await saveUserSetup({
     freeTimeSlots: analysis.freeTimeSlots,
     keywords: selectedKeywords,
-  }).catch(() => undefined);
+  });
 }
 
-export async function getSavedScheduleAnalysis(): Promise<ScheduleAnalysisResult | null> {
+export async function getSavedScheduleAnalysis(
+  { throwOnError = false, signal }: { throwOnError?: boolean; signal?: AbortSignal } = {},
+): Promise<ScheduleAnalysisResult | null> {
   try {
-    const setup = await getMySetup();
+    const setup = await getMySetup(signal);
     const hasSavedSetup =
       Boolean(setup.timetableImageUrl) ||
       Boolean(setup.classes?.length) ||
@@ -78,34 +80,25 @@ export async function getSavedScheduleAnalysis(): Promise<ScheduleAnalysisResult
     }
 
     return normalizeTimetableSetup(setup);
-  } catch {
+  } catch (error) {
+    if (throwOnError) throw error;
     return null;
   }
-}
-
-async function createTimetableFormData(imageUri: string) {
-  const formData = new FormData();
-
-  if (Platform.OS === 'web') {
-    const response = await fetch(imageUri);
-    const blob = await response.blob();
-
-    formData.append('file', blob, 'timetable.jpg');
-    return formData;
-  }
-
-  formData.append('file', {
-    uri: imageUri,
-    name: 'timetable.jpg',
-    type: 'image/jpeg',
-  } as unknown as Blob);
-
-  return formData;
 }
 
 function normalizeScheduleAnalysisResult(
   analysis: TimetableAnalysisResponse,
 ): ScheduleAnalysisResult {
+  if (!analysis || !Array.isArray(analysis.classes) || !Array.isArray(analysis.freeTimeSlots)) {
+    throw new TimetableError('시간표 분석 결과를 확인하지 못했어요. 다시 시도해 주세요.');
+  }
+  if (!analysis.classes.length) {
+    throw new TimetableError('사진에서 수업 정보를 찾지 못했어요. 시간표가 선명하게 보이는 사진을 다시 선택해 주세요.');
+  }
+  if (!analysis.classes.every((item) => isValidSlot(item) && typeof item.subjectName === 'string') ||
+      !analysis.freeTimeSlots.every(isValidSlot)) {
+    throw new TimetableError('시간표 분석 결과의 형식이 올바르지 않아요. 다시 시도해 주세요.');
+  }
   const classes = analysis.classes ?? [];
   const freeTimeSlots = analysis.freeTimeSlots ?? [];
 
@@ -140,7 +133,8 @@ function mapClassesToScheduleItems(classes: ClassSlot[]) {
 
 function formatApiTime(time: ApiLocalTime) {
   if (typeof time === 'string') {
-    return time.slice(0, 5);
+    const [hour = '0', minute = '0'] = time.split(':');
+    return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
   }
 
   const hour = String(time.hour ?? 0).padStart(2, '0');
@@ -148,12 +142,19 @@ function formatApiTime(time: ApiLocalTime) {
 
   return `${hour}:${minute}`;
 }
+function isValidSlot(slot: ClassSlot | FreeTimeSlot) {
+  return Boolean(slot && typeof slot.dayOfWeek === 'string' && slot.dayOfWeek.trim() &&
+    isValidTime(slot.startTime) && isValidTime(slot.endTime));
+}
 
-function getEmptyScheduleAnalysisResult(): ScheduleAnalysisResult {
-  return {
-    classes: [],
-    scheduleItems: [],
-    freeTimeSlots: [],
-    recommendedKeywords: TIMETABLE_KEYWORD_OPTIONS,
-  };
+function isValidTime(time: ApiLocalTime) {
+  if (typeof time === 'string') {
+    const match = /^(\d{1,2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/.exec(time);
+    return Boolean(match && Number(match[1]) < 24 && Number(match[2]) < 60);
+  }
+  if (!time) return false;
+  const { hour, minute } = time;
+  return typeof hour === 'number' && typeof minute === 'number' &&
+    Number.isInteger(hour) && Number.isInteger(minute) &&
+    hour >= 0 && hour < 24 && minute >= 0 && minute < 60;
 }
