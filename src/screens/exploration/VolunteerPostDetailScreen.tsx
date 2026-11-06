@@ -174,7 +174,12 @@ export function VolunteerPostDetailScreen() {
           <Text style={styles.topTitle}>지원공고</Text>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollViewport}
+          contentInsetAdjustmentBehavior="never"
+          automaticallyAdjustContentInsets={false}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <View style={styles.titleRow}>
               <Text numberOfLines={3} style={styles.title}>
@@ -281,6 +286,7 @@ const styles = StyleSheet.create({
   },
   topBar: {
     height: 57,
+    flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -299,6 +305,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     lineHeight: 25,
+  },
+  scrollViewport: {
+    flex: 1,
   },
   scrollContent: {
     paddingBottom: 126,

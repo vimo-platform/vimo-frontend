@@ -169,7 +169,9 @@ export default function CreatePostingScreen() {
         }}
       />
       <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior="never"
+        automaticallyAdjustContentInsets={false}
+        style={styles.scrollViewport}
         contentContainerStyle={styles.scroll}>
         <Text style={styles.heading}>
           공고 내용을 입력해 주세요{'\n'}깔끔하게 정리해드릴게요
@@ -720,6 +722,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.card,
+  },
+  scrollViewport: {
+    flex: 1,
   },
   scroll: {
     paddingHorizontal: 39,

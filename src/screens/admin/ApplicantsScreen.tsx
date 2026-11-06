@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { approveApplicant, fetchApplicants } from "@/services/admin/applicants";
 import { closePosting, fetchPosting } from "@/services/admin/postings";
@@ -57,47 +58,50 @@ export default function ApplicantsScreen() {
         : Colors.text;
 
   return (
-    <View style={styles.container}>
-      <PostingSummary posting={posting} />
-
-      <View style={styles.divider} />
-
-      <View style={styles.listArea}>
-        <View style={styles.listHeader}>
-          <Text style={styles.listTitle}>지원자 목록</Text>
-          <Text style={styles.count}>
-            <Text style={[styles.countSelected, { color: countColor }]}>{selectedCount}</Text> /{" "}
-            {posting.capacity}
-          </Text>
-        </View>
-        <FlatList
-          data={applicants}
-          keyExtractor={(a) => a.id}
-          renderItem={({ item }) => (
-            <View style={styles.row}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.department}>{item.department}</Text>
-              {item.cancel ? (
-                <Pressable
-                  style={[styles.selectBtn, styles.cancelBtn]}
-                  onPress={() => setCancelTarget(item)}
-                >
-                  <Text style={styles.cancelText}>취소 사유 확인</Text>
-                </Pressable>
-              ) : (
-                <Pressable
-                  style={[styles.selectBtn, item.selected && styles.selectBtnOn]}
-                  onPress={() => selectApplicant(item)}
-                >
-                  <Text style={[styles.selectText, item.selected && styles.selectTextOn]}>
-                    {item.selected ? "채택됨" : "채택"}
-                  </Text>
-                </Pressable>
-              )}
+    <SafeAreaView edges={["bottom", "left", "right"]} style={styles.container}>
+      <FlatList
+        style={styles.list}
+        contentInsetAdjustmentBehavior="never"
+        automaticallyAdjustContentInsets={false}
+        data={applicants}
+        keyExtractor={(a) => a.id}
+        ListHeaderComponent={
+          <>
+            <PostingSummary posting={posting} />
+            <View style={styles.divider} />
+            <View style={styles.listHeader}>
+              <Text style={styles.listTitle}>지원자 목록</Text>
+              <Text style={styles.count}>
+                <Text style={[styles.countSelected, { color: countColor }]}>{selectedCount}</Text> /{" "}
+                {posting.capacity}
+              </Text>
             </View>
-          )}
-        />
-      </View>
+          </>
+        }
+        renderItem={({ item }) => (
+          <View style={styles.row}>
+            <Text style={styles.name}>{item.name}</Text>
+            <Text style={styles.department}>{item.department}</Text>
+            {item.cancel ? (
+              <Pressable
+                style={[styles.selectBtn, styles.cancelBtn]}
+                onPress={() => setCancelTarget(item)}
+              >
+                <Text style={styles.cancelText}>취소 사유 확인</Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                style={[styles.selectBtn, item.selected && styles.selectBtnOn]}
+                onPress={() => selectApplicant(item)}
+              >
+                <Text style={[styles.selectText, item.selected && styles.selectTextOn]}>
+                  {item.selected ? "채택됨" : "채택"}
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        )}
+      />
 
       <Pressable
         style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
@@ -107,7 +111,7 @@ export default function ApplicantsScreen() {
       </Pressable>
 
       <CancelReasonSheet applicant={cancelTarget} onClose={() => setCancelTarget(null)} />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -120,12 +124,12 @@ const styles = StyleSheet.create({
     height: 6,
     backgroundColor: Colors.border,
   },
-  listArea: {
+  list: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 18,
   },
   listHeader: {
+    marginHorizontal: 20,
+    marginTop: 18,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -145,6 +149,7 @@ const styles = StyleSheet.create({
     color: Colors.success,
   },
   row: {
+    marginHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 13,

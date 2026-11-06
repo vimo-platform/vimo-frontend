@@ -13,7 +13,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Line, SvgUri } from 'react-native-svg';
 
 import { UserGnb } from '@/components/navigation/UserGnb';
@@ -236,8 +236,13 @@ function CaptureButton({
 }
 
 function CloseButton({ onPress }: { onPress: () => void }) {
+  const insets = useSafeAreaInsets();
   return (
-    <Pressable accessibilityLabel="닫기" hitSlop={12} style={styles.closeButton} onPress={onPress}>
+    <Pressable
+      accessibilityLabel="닫기"
+      hitSlop={12}
+      style={[styles.closeButton, { top: insets.top + 8 }]}
+      onPress={onPress}>
       <Svg height={24} viewBox="0 0 24 24" width={24}>
         <Line stroke="#FFFFFF" strokeLinecap="round" strokeWidth={2} x1={7} x2={17} y1={7} y2={17} />
         <Line stroke="#FFFFFF" strokeLinecap="round" strokeWidth={2} x1={17} x2={7} y1={7} y2={17} />
@@ -341,7 +346,6 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 55,
     right: 28,
     zIndex: 5,
     width: 48,

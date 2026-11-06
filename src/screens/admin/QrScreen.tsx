@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "rea
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import QRCode from "react-native-qrcode-svg";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { isAuthError } from "@/services/common/client";
 import { Figma } from "@/components/admin/Figma";
@@ -69,7 +70,7 @@ export default function QrScreen() {
   const isExpired = Boolean(token) && remaining <= 0;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={["bottom", "left", "right"]} style={styles.container}>
       <Stack.Screen
         options={{
           title: isStart ? "시작 QR 생성" : "종료 QR 생성",
@@ -128,7 +129,7 @@ export default function QrScreen() {
       >
         <Text style={styles.buttonText}>{loading ? "생성 중..." : "QR 다시 생성"}</Text>
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 }
 

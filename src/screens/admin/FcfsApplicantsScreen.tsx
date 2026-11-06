@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { fetchFcfsApplicants } from "@/services/admin/applicants";
 import { closePosting, fetchPosting } from "@/services/admin/postings";
@@ -41,49 +42,50 @@ export default function FcfsApplicantsScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <PostingSummary posting={posting} />
+    <SafeAreaView edges={["bottom", "left", "right"]} style={styles.container}>
+      <FlatList
+        style={styles.list}
+        contentInsetAdjustmentBehavior="never"
+        automaticallyAdjustContentInsets={false}
+        data={applicants}
+        keyExtractor={(a) => a.id}
+        ListHeaderComponent={
+          <>
+            <PostingSummary posting={posting} />
+            <View style={styles.divider} />
+            <View style={styles.listHeader}>
+              <Text style={styles.listTitle}>지원자 목록</Text>
+              <Text style={styles.count}>
+                <Text style={{ color: closed ? Colors.text : Colors.success }}>
+                  {confirmedCount}
+                </Text>{" "}
+                / {posting.capacity}
+              </Text>
+            </View>
+            {closed && (
+              <Text style={styles.closedNotice}>
+                선착순 {posting.capacity}명이 모두 채워져 모집이 마감되었습니다.
+              </Text>
+            )}
+          </>
+        }
+        renderItem={({ item, index }) => {
+          const confirmed = index < posting.capacity;
 
-      <View style={styles.divider} />
-
-      <View style={styles.listArea}>
-        <View style={styles.listHeader}>
-          <Text style={styles.listTitle}>지원자 목록</Text>
-          <Text style={styles.count}>
-            <Text style={{ color: closed ? Colors.text : Colors.success }}>
-              {confirmedCount}
-            </Text>{" "}
-            / {posting.capacity}
-          </Text>
-        </View>
-
-        {closed && (
-          <Text style={styles.closedNotice}>
-            선착순 {posting.capacity}명이 모두 채워져 모집이 마감되었습니다.
-          </Text>
-        )}
-
-        <FlatList
-          data={applicants}
-          keyExtractor={(a) => a.id}
-          renderItem={({ item, index }) => {
-            const confirmed = index < posting.capacity;
-
-            return (
-              <View style={styles.row}>
-                <Text style={styles.order}>{String(index + 1).padStart(2, "0")}.</Text>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.department}>{item.department}</Text>
-                <View style={[styles.badge, !confirmed && styles.badgeOff]}>
-                  <Text style={[styles.badgeText, !confirmed && styles.badgeTextOff]}>
-                    {confirmed ? "참여확정" : "모집 마감"}
-                  </Text>
-                </View>
+          return (
+            <View style={styles.row}>
+              <Text style={styles.order}>{String(index + 1).padStart(2, "0")}.</Text>
+              <Text style={styles.name}>{item.name}</Text>
+              <Text style={styles.department}>{item.department}</Text>
+              <View style={[styles.badge, !confirmed && styles.badgeOff]}>
+                <Text style={[styles.badgeText, !confirmed && styles.badgeTextOff]}>
+                  {confirmed ? "참여확정" : "모집 마감"}
+                </Text>
               </View>
-            );
-          }}
-        />
-      </View>
+            </View>
+          );
+        }}
+      />
 
       <Pressable
         style={({ pressed }) => [
@@ -98,7 +100,7 @@ export default function FcfsApplicantsScreen() {
           {closed ? "모집 마감됨" : "모집 마감"}
         </Text>
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -111,12 +113,12 @@ const styles = StyleSheet.create({
     height: 6,
     backgroundColor: Colors.border,
   },
-  listArea: {
+  list: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 18,
   },
   listHeader: {
+    marginHorizontal: 20,
+    marginTop: 18,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -133,12 +135,14 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   closedNotice: {
+    marginHorizontal: 20,
     fontSize: 12,
     fontWeight: "600",
     color: Colors.danger,
     marginBottom: 6,
   },
   row: {
+    marginHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 13,

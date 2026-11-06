@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { Button } from '@/components/common';
@@ -26,6 +26,7 @@ export function CertificationCompleteDetailScreen() {
 function CertificationDetailScreen({ variant }: { variant: CertificationDetailVariant }) {
   useUserSessionGuard();
 
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, 393);
@@ -49,7 +50,7 @@ function CertificationDetailScreen({ variant }: { variant: CertificationDetailVa
       <View style={[styles.screen, { width: contentWidth }]}>
         {isComplete ? <ConfettiBackground /> : null}
 
-        <View style={styles.topBar}>
+        <View style={[styles.topBar, { top: insets.top }]}>
           {!isComplete ? (
             <Pressable
               accessibilityLabel="이전 화면으로 이동"
@@ -313,7 +314,6 @@ const styles = StyleSheet.create({
   },
   topBar: {
     position: 'absolute',
-    top: 44,
     right: 0,
     left: 0,
     zIndex: 2,

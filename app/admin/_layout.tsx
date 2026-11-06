@@ -50,6 +50,10 @@ export default function RootLayout() {
         <View style={styles.frameInner}>
           <Stack
             screenOptions={{
+              // SDK 58의 iOS 기본 투명 헤더 대신 본문 공간을 확보하는 헤더를 사용한다.
+              headerTransparent: false,
+              headerStyle: { backgroundColor: Colors.card },
+              headerTintColor: Colors.text,
               headerShadowVisible: false,
               headerBackVisible: false,
               headerLeft: ({ canGoBack }) => <HeaderBackButton canGoBack={canGoBack} />,
